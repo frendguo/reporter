@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深度研究报告集</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #0070f3;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --bg-color-light: #ffffff;
+            --text-color-light: #1a1a1a;
+            --card-bg-light: #f8f9fa;
+            --border-light: #e9ecef;
+            --bg-color-dark: #121212;
+            --text-color-dark: #e6e6e6;
+            --card-bg-dark: #1e1e1e;
+            --border-dark: #333333;
+        }
+        
+        .light {
+            --bg-color: var(--bg-color-light);
+            --text-color: var(--text-color-light);
+            --card-bg: var(--card-bg-light);
+            --border: var(--border-light);
+        }
+        
+        .dark {
+            --bg-color: var(--bg-color-dark);
+            --text-color: var(--text-color-dark);
+            --card-bg: var(--card-bg-dark);
+            --border: var(--border-dark);
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--card-bg);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
+        }
+
+        /* 深色模式图标切换 */
+        .dark-icon, .light .light-icon, .dark .dark-icon {
+            display: inline-block;
+        }
+        
+        .light-icon, .light .dark-icon, .dark .light-icon {
+            display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header class="sticky top-0 z-50 bg-opacity-90 backdrop-filter backdrop-blur-lg" style="background-color: var(--bg-color);">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center border-b" style="border-color: var(--border);">
+            <div class="flex items-center">
+                <i class="fas fa-book-reader text-blue-500 mr-3 text-xl"></i>
+                <h1 class="text-xl md:text-2xl font-bold">深度研究报告集</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition duration-300">
+                    <i class="fas fa-sun text-yellow-500 light-icon"></i>
+                    <i class="fas fa-moon text-blue-300 dark-icon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容 -->
+    <main class="container mx-auto px-4 py-8 md:py-12">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Windows Update 报告卡片 -->
+            <a href="windows-update-webpage.html" class="card p-6 hover:border-blue-500 fade-in">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 p-4 rounded-lg mr-4">
+                        <i class="fas fa-sync-alt text-blue-500 text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold mb-2">Windows Update 系统深度研究报告</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">深入探讨 Windows Update 的架构设计、技术实现、特殊更新类型、企业级管理以及未来发展趋势。</p>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                            <i class="fas fa-clock mr-2"></i>
+                            <span>发布时间：2024-03-20</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+
+            <!-- 稍后阅读工具报告卡片 -->
+            <a href="read-it-later-reporter.html" class="card p-6 hover:border-green-500 fade-in">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 bg-green-100 dark:bg-green-900/30 p-4 rounded-lg mr-4">
+                        <i class="fas fa-book-open text-green-500 text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold mb-2">稍后阅读工具深度研究报告</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">解析信息时代的个人知识管理利器，深入剖析主流稍后阅读工具的功能特点、用户评价及市场前景。</p>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                            <i class="fas fa-clock mr-2"></i>
+                            <span>发布时间：2024-03-20</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 关于部分 -->
+        <div class="mt-12 pt-8 border-t" style="border-color: var(--border);">
+            <div class="text-center">
+                <h2 class="text-2xl font-bold mb-4">关于这些报告</h2>
+                <p class="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                    这些深度研究报告旨在为读者提供全面、专业的技术分析和见解。每份报告都经过深入研究和严谨的分析，
+                    涵盖了技术原理、应用场景、市场分析等多个维度，帮助读者更好地理解和应用相关技术。
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="py-6" style="background-color: var(--bg-color);">
+        <div class="container mx-auto px-4">
+            <div class="border-t pt-6" style="border-color: var(--border);">
+                <div class="flex flex-col md:flex-row items-center justify-between">
+                    <div class="flex items-center mb-4 md:mb-0">
+                        <div class="mr-4">
+                            <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-lg font-bold">
+                                FG
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold mb-1">frendguo</h3>
+                            <div class="flex items-center space-x-3">
+                                <a href="http://frendguo.com/" target="_blank" rel="noopener noreferrer" class="hover:text-blue-500 transition-colors">
+                                    <i class="fas fa-globe"></i>
+                                </a>
+                                <a href="https://x.com/frend_guo" target="_blank" rel="noopener noreferrer" class="hover:text-blue-500 transition-colors">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                                <a href="https://utilportal.com/" target="_blank" rel="noopener noreferrer" class="hover:text-blue-500 transition-colors">
+                                    <i class="fas fa-toolbox"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center md:text-right">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            © <span id="currentYear"></span> frendguo. All rights reserved.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 设置当前年份
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+        
+        // 主题管理
+        const themeToggle = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
+        
+        // 从localStorage获取保存的主题，如果没有则使用系统主题
+        function getThemePreference() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                return savedTheme;
+            }
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        // 设置主题
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                htmlElement.classList.remove('light');
+                htmlElement.classList.add('dark');
+            } else {
+                htmlElement.classList.remove('dark');
+                htmlElement.classList.add('light');
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // 初始化主题
+        setTheme(getThemePreference());
+        
+        // 切换主题
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = htmlElement.classList.contains('dark') ? 'dark' : 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        });
+
+        // 监听系统主题变化
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                setTheme(e.matches ? 'dark' : 'light');
+            }
+        });
+        
+        // 淡入动画
+        const fadeElements = document.querySelectorAll('.fade-in');
+        
+        const fadeInObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+        
+        fadeElements.forEach(element => {
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(10px)';
+            element.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            fadeInObserver.observe(element);
+        });
+    </script>
+</body>
+</html>
