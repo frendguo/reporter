@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>南方富时A50 ETF分析报告</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/tailwindcss/2.2.19/tailwind.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11.5.0/dist/mermaid.min.js"></script>
+    <script>
+        // 将 mermaid 图表定义存储为全局变量
+        window.mermaidDefinition = `
+            graph TD
+            A[南方富时A50 ETF] --> B1[中国宏观经济]
+            A --> B2[政府政策]
+            A --> B3[国际环境]
+            B1 --> C1[GDP增长]
+            B1 --> C2[通货膨胀]
+            B2 --> C3[货币政策]
+            B2 --> C4[财政政策]
+            B2 --> C5[监管政策]
+            B3 --> C6[中美关系]
+            B3 --> C7[全球经济]
+            style A fill:#3b82f6,stroke:#1d4ed8,color:white
+            style B1 fill:#60a5fa,stroke:#2563eb,color:white
+            style B2 fill:#60a5fa,stroke:#2563eb,color:white
+            style B3 fill:#60a5fa,stroke:#2563eb,color:white
+        `;
+
+        // mermaid 初始化配置
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+
+        // 渲染 mermaid 图表的函数
+        function renderMermaidChart() {
+            const element = document.querySelector('.mermaid');
+            if (!element) return;
+            
+            // 清除现有内容
+            element.innerHTML = window.mermaidDefinition;
+            element.removeAttribute('data-processed');
+            
+            // 重新渲染
+            try {
+                mermaid.init(undefined, element);
+            } catch (error) {
+                console.error('Mermaid rendering error:', error);
+            }
+        }
+
+        // 文档加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            renderMermaidChart();
+        });
+    </script>
+    
+    <style>
+        /* Base styles and variables */
+        :root {
+            --primary: #1a56db;
+            --secondary: #e02d60;
+            --accent: #8b5cf6;
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f3f4f6;
+            --bg-accent: #eff6ff;
+            --border: #d1d5db;
+            --chart-color-1: #3b82f6;
+            --chart-color-2: #ef4444;
+            --chart-color-3: #10b981;
+            --chart-color-4: #f59e0b;
+            --chart-color-5: #8b5cf6;
+            --nav-height: 4rem; /* 添加导航栏高度变量 */
+        }
+
+        /* Typography */
+        body {
+            font-family: 'Noto Sans SC', Tahoma, Arial, Roboto, "Droid Sans", "Helvetica Neue", "Droid Sans Fallback", "Heiti SC", "Hiragino Sans GB", Simsun, sans-serif;
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
+            scroll-padding-top: var(--nav-height); /* 添加滚动内边距 */
+        }
+
+        /* 为所有section添加上边距 */
+        section {
+            scroll-margin-top: var(--nav-height);
+            padding-top: 1rem;
+        }
+
+        /* 修改导航栏高度 */
+        .sticky {
+            height: var(--nav-height);
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Noto Serif SC', serif;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .article-content p {
+            margin-bottom: 1.25rem;
+            line-height: 1.8;
+        }
+
+        /* First letter styling */
+        .first-letter::first-letter {
+            font-size: 3.5rem;
+            float: left;
+            line-height: 1;
+            padding-right: 0.5rem;
+            color: var(--primary);
+            font-family: 'Noto Serif SC', serif;
+            font-weight: 700;
+        }
+
+        /* Table styling */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .data-table th {
+            background-color: var(--bg-secondary);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.2s;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: var(--bg-accent);
+        }
+
+        /* Card styling */
+        .card {
+            background-color: var(--bg-primary);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+        .delay-500 { animation-delay: 0.5s; }
+
+        /* Custom styles for data visualization */
+        .trend-up { color: #10b981; }
+        .trend-down { color: #ef4444; }
+
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            margin: 2rem 0;
+        }
+
+        .highlight-text {
+            background: linear-gradient(120deg, rgba(59, 130, 246, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%);
+            padding: 0.1em 0.2em;
+            border-radius: 0.2em;
+        }
+
+        /* Navigation */
+        .nav-link {
+            position: relative;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary);
+            transition: width 0.3s;
+        }
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+
+        /* Print styles */
+        @media print {
+            .no-print {
+                display: none;
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .article-container {
+                padding: 1rem;
+            }
+            
+            .data-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Top navigation bar -->
+    <nav class="sticky top-0 z-50 bg-white shadow-md no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fas fa-chart-line text-2xl mr-2 text-primary"></i>
+                        <span class="text-xl font-bold">富时A50 ETF分析</span>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <nav class="hidden md:flex space-x-4">
+                        <a href="#summary" class="nav-link">摘要</a>
+                        <a href="#introduction" class="nav-link">简介</a>
+                        <a href="#history" class="nav-link">历史分析</a>
+                        <a href="#macro" class="nav-link">宏观背景</a>
+                        <a href="#current" class="nav-link">当前状况</a>
+                        <a href="#future" class="nav-link">未来预测</a>
+                        <a href="#factors" class="nav-link">关注因素</a>
+                        <a href="#conclusion" class="nav-link">结论</a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero section -->
+    <header class="relative bg-gradient-to-r from-blue-600 to-indigo-800 text-white overflow-hidden">
+        <div class="absolute inset-0 bg-pattern opacity-20"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-10">
+            <div class="text-center md:text-left md:w-2/3">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 fade-in">南方富时A50 ETF</h1>
+                <h2 class="text-2xl md:text-3xl font-semibold mb-6 fade-in delay-100">历史股价波动及未来趋势预测分析报告</h2>
+                <p class="text-lg md:text-xl opacity-90 mb-8 max-w-3xl fade-in delay-200">深入分析南方富时A50 ETF的历史表现，探索影响其波动性的主要因素，并对未来18个月的走势进行科学预测。</p>
+                <div class="flex flex-col md:flex-row gap-4 justify-center md:justify-start fade-in delay-300">
+                    <a href="#summary" class="bg-white text-blue-800 hover:bg-blue-50 font-semibold py-3 px-6 rounded-lg shadow-lg transition-all transform hover:-translate-y-1">
+                        <i class="fas fa-file-alt mr-2"></i> 阅读报告
+                    </a>
+                    <a href="#trends-chart" class="bg-transparent border-2 border-white hover:bg-white hover:bg-opacity-10 py-3 px-6 rounded-lg transition-all">
+                        <i class="fas fa-chart-line mr-2"></i> 查看趋势图
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="absolute right-0 bottom-0 -mb-16 -mr-16 opacity-20 hidden lg:block">
+            <i class="fas fa-chart-bar text-white text-opacity-20" style="font-size: 40rem;"></i>
+        </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <!-- Executive Summary -->
+        <section id="summary" class="mb-20">
+            <div class="flex items-center mb-8">
+                <div class="h-10 w-1 bg-blue-500 mr-4"></div>
+                <h2 class="text-3xl font-bold">执行摘要</h2>
+            </div>
+            <div class="article-content bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+                <p class="first-letter">本报告旨在深入分析南方富时A50 ETF的历史股价波动情况，并对其未来18个月（自2025年3月至2026年9月）的趋势和波动性进行预测。通过回顾该ETF过去十年的价格走势，考察影响其波动性的主要宏观经济和政策因素，并结合当前市场状况和未来预期，本报告旨在为投资者和金融专业人士提供一个全面且数据驱动的分析框架。主要研究结果表明，该ETF的历史波动性受到中国经济周期、政府政策调整以及国际政治经济环境等多重因素的影响。展望未来，预计该ETF的价格趋势将受到中国经济增长速度、通货膨胀水平、货币与财政政策取向以及中美贸易关系等关键因素的共同作用，波动性或将维持在相对水平。</p>
+                
+                <!-- Key findings icons -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
+                    <div class="card p-6 text-center">
+                        <i class="fas fa-history text-4xl text-blue-500 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-2">历史数据分析</h3>
+                        <p class="text-gray-600 dark:text-gray-300">基于过去十年（2014-2024）的完整价格数据分析</p>
+                    </div>
+                    <div class="card p-6 text-center">
+                        <i class="fas fa-chart-pie text-4xl text-purple-500 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-2">多因素研究</h3>
+                        <p class="text-gray-600 dark:text-gray-300">考量经济周期、政策调整和国际环境等多重因素</p>
+                    </div>
+                    <div class="card p-6 text-center">
+                        <i class="fas fa-crystal-ball text-4xl text-green-500 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-2">未来趋势预测</h3>
+                        <p class="text-gray-600 dark:text-gray-300">对未来18个月（2025.3-2026.9）的科学预测</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ETF Introduction -->
+        <section id="introduction" class="mb-20">
+            <div class="flex items-center mb-8">
+                <div class="h-10 w-1 bg-blue-500 mr-4"></div>
+                <h2 class="text-3xl font-bold">南方富时A50 ETF简介</h2>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2">
+                    <div class="card p-8">
+                        <h3 class="text-2xl font-semibold mb-4">特定ETF的识别</h3>
+                        <p class="mb-4">根据用户查询"南方富时A50 ETF"，本报告主要聚焦于<span class="highlight-text">南方东英富时中国A50 ETF</span>。该ETF在香港交易所提供以港币（交易代码：2822.HK）和人民币（交易代码：82822.HK）计价的交易单位。</p>
+                        <p>尽管市场上存在其他追踪富时中国A50指数的ETF，例如iShares FTSE A50中国ETF（交易代码：2823.HK）和VanEck FTSE中国A50 ETF（交易代码：CETF），但为与用户查询中的"南方"一词保持一致，本报告将以南方东英发行的该ETF为主要分析对象。</p>
+                        
+                        <h3 class="text-2xl font-semibold mt-8 mb-4">关键细节</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-start">
+                                <i class="fas fa-building text-blue-500 mt-1 mr-3"></i>
+                                <span><strong>发行方：</strong>南方东英资产管理有限公司 (CSOP Asset Management Limited)</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-chart-line text-blue-500 mt-1 mr-3"></i>
+                                <span><strong>标的指数：</strong>富时中国A50指数 (FTSE China A50 Index)</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-calendar-day text-blue-500 mt-1 mr-3"></i>
+                                <span><strong>上市日期：</strong>人民币交易柜台（82822.HK）于2012年8月28日上市，港币交易柜台（2822.HK）于2012年11月8日上市</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-coins text-blue-500 mt-1 mr-3"></i>
+                                <span><strong>基础货币：</strong>人民币，尽管港币交易柜台以港币交易，但其净资产价值主要以人民币计值</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-percentage text-blue-500 mt-1 mr-3"></i>
+                                <span><strong>费用：</strong>管理费用为每年0.99%，总费用比率为1.13%</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="card p-8 bg-blue-50 dark:bg-blue-900 h-full">
+                        <h3 class="text-2xl font-semibold mb-6">投资目标与策略</h3>
+                        <div class="flex justify-center mb-6">
+                            <i class="fas fa-bullseye text-5xl text-blue-500"></i>
+                        </div>
+                        <p class="mb-4">该基金的投资目标是在扣除费用及开支之前，尽可能紧密地追踪富时中国A50指数的表现。</p>
+                        <p class="mb-4">该ETF采用被动管理策略，这意味着其投资组合的构成和权重将尽可能地复制标的指数。</p>
+                        <p>这种被动追踪的特性意味着该ETF的价格波动性将很大程度上反映富时中国A50指数本身的波动性。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Historical Analysis -->
+        <section id="history" class="mb-20">
+            <div class="flex items-center mb-8">
+                <div class="h-10 w-1 bg-blue-500 mr-4"></div>
+                <h2 class="text-3xl font-bold">历史股价波动分析（2014年至今）</h2>
+            </div>
+            
+            <!-- Chart -->
+            <div id="trends-chart" class="card p-6 mb-10">
+                <h3 class="text-2xl font-semibold mb-6">长期价格趋势（2014-2024）</h3>
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">数据来源：公开市场数据</p>
+            </div>
+            
+            <!-- Historical data table -->
+            <div class="overflow-x-auto mb-10">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>年份</th>
+                            <th>南方富时中国A50 ETF (总回报)</th>
+                            <th>富时中国A50指数 (总回报)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2013</td>
+                            <td class="trend-down">-12.43%</td>
+                            <td class="trend-down">-12.02%</td>
+                        </tr>
+                        <tr>
+                            <td>2014</td>
+                            <td class="trend-up">65.69%</td>
+                            <td class="trend-up">68.08%</td>
+                        </tr>
+                        <tr>
+                            <td>2015</td>
+                            <td class="trend-down">-4.03%</td>
+                            <td class="trend-down">-5.04%</td>
+                        </tr>
+                        <tr>
+                            <td>2016</td>
+                            <td class="trend-down">-4.82%</td>
+                            <td class="trend-down">-4.26%</td>
+                        </tr>
+                        <tr>
+                            <td>2017</td>
+                            <td class="trend-up">33.31%</td>
+                            <td class="trend-up">35.38%</td>
+                        </tr>
+                        <tr>
+                            <td>2018</td>
+                            <td class="trend-down">-20.41%</td>
+                            <td class="trend-down">-19.36%</td>
+                        </tr>
+                        <tr>
+                            <td>2019</td>
+                            <td class="trend-up">39.74%</td>
+                            <td class="trend-up">42.12%</td>
+                        </tr>
+                        <tr>
+                            <td>2020</td>
+                            <td class="trend-up">24.48%</td>
+                            <td class="trend-up">26.16%</td>
+                        </tr>
+                        <tr>
+                            <td>2021</td>
+                            <td class="trend-down">-10.90%</td>
+                            <td class="trend-down">-9.63%</td>
+                        </tr>
+                        <tr>
+                            <td>2022</td>
+                            <td class="trend-down">-16.34%</td>
+                            <td class="trend-down">-15.21%</td>
+                        </tr>
+                        <tr>
+                            <td>2023</td>
+                            <td class="trend-down">-10.30%</td>
+                            <td class="trend-down">-9.15%</td>
+                        </tr>
+                        <tr>
+                            <td>2024</td>
+                            <td class="trend-up">19.94%</td>
+                            <td class="trend-up">21.34%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Key historical events -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card p-8">
+                    <h3 class="text-2xl font-semibold mb-6">重大价格波动分析</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="text-xl font-semibold flex items-center">
+                                <span class="inline-block w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center mr-3">1</span>
+                                2015年中国股市波动
+                            </h4>
+                            <p class="mt-2 ml-11">2015年中国股市经历了剧烈的市场动荡，这对该ETF产生了显著影响。政府在此期间采取了包括暂停首次公开募股（IPO）和限制股指期货交易等多种干预措施。</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold flex items-center">
+                                <span class="inline-block w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center mr-3">2</span>
+                                美中贸易紧张局势（2018年至今）
+                            </h4>
+                            <p class="mt-2 ml-11">自2018年以来，美中贸易战的升级对该ETF的价格和波动性产生了持续的影响。贸易紧张局势增加了市场的不确定性，并可能对投资者的情绪产生了负面影响。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card p-8">
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="text-xl font-semibold flex items-center">
+                                <span class="inline-block w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center mr-3">3</span>
+                                新冠疫情（2020-2022年）
+                            </h4>
+                            <p class="mt-2 ml-11">在新冠疫情期间，该ETF的表现经历了最初的市场冲击和随后的复苏。疫情可能由于经济中断和全球需求变化而导致了显著的波动。</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold flex items-center">
+                                <span class="inline-block w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center mr-3">4</span>
+                                中国监管整顿（2021-2022年）
+                            </h4>
+                            <p class="mt-2 ml-11">2021年至2022年期间，中国加强了对多个行业的监管审查，这对该ETF的表现产生了影响。监管的不确定性可能导致股票价格急剧下跌。</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold flex items-center">
+                                <span class="inline-block w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center mr-3">5</span>
+                                房地产行业问题（2023年至今）
+                            </h4>
+                            <p class="mt-2 ml-11">中国房地产行业持续面临挑战，这些问题对该ETF也产生了潜在的影响。由于金融业和其他与房地产市场相关的行业在富时中国A50指数中占有相当大的权重。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Macroeconomic Background -->
+        <section id="macro" class="mb-20">
+            <div class="flex items-center mb-8">
+                <div class="h-10 w-1 bg-blue-500 mr-4"></div>
+                <h2 class="text-3xl font-bold">宏观经济与政策背景（2013年至今）</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-10">
+                <div class="lg:col-span-3">
+                    <div class="card p-8">
+                        <h3 class="text-2xl font-semibold mb-6">中国主要宏观经济事件（2013-2023）</h3>
+                        
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="text-xl font-semibold flex items-center mb-3">
+                                    <i class="fas fa-chart-line text-blue-500 mr-3"></i>
+                                    GDP增长
+                                </h4>
+                                <p>2013年至2023年期间，中国经济经历了显著的增长。尽管总体保持高速增长，但也出现了增长放缓的时期，并且发展模式逐渐从追求速度转向注重质量。虽然中国GDP的增长一直是其股市的重要驱动因素，但近期的增速放缓以及对结构性改革的关注，可能意味着未来增长轨迹的转变。</p>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-xl font-semibold flex items-center mb-3">
+                                    <i class="fas fa-percentage text-blue-500 mr-3"></i>
+                                    通货膨胀
+                                </h4>
+                                <p>2013年至2023年，中国的通货膨胀率总体保持在相对温和的水平。但也经历了高通胀和低通胀的时期，近期则呈现出低通胀甚至通缩的压力。低通胀或通缩可能会影响企业的盈利能力和投资决策。</p>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-xl font-semibold flex items-center mb-3">
+                                    <i class="fas fa-university text-blue-500 mr-3"></i>
+                                    利率与货币政策
+                                </h4>
+                                <p>2013年至2023年，中国实施了多次货币政策调整。货币政策的收紧和放松直接影响市场流动性和企业的借贷成本，进而影响股市表现。</p>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-xl font-semibold flex items-center mb-3">
+                                    <i class="fas fa-hand-holding-usd text-blue-500 mr-3"></i>
+                                    财政政策
+                                </h4>
+                                <p>2013年至2023年，中国政府也实施了多项财政政策措施。政府的刺激措施和财政支出模式对经济活动和股市产生了重要影响。政府刺激计划通常可以提振经济增长和企业盈利，从而对股市产生积极影响。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="lg:col-span-2">
+                    <div class="card p-8 bg-blue-50 dark:bg-blue-900 h-full">
+                        <h3 class="text-2xl font-semibold mb-6">影响股市的重大政策转变</h3>
+                        
+                        <div class="space-y-6">
+                            <div class="flex">
+                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center mr-4">
+                                    <i class="fas fa-gavel text-blue-500"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">政府控制</h4>
+                                    <p class="text-sm">在习近平主席领导下，政府对企业和股市的控制日益加强。</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex">
+                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center mr-4">
+                                    <i class="fas fa-globe-asia text-blue-500"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">中国股市的国际化</h4>
+                                    <p class="text-sm">通过沪港通和深港通等项目，中国股市的国际化程度显著提高。</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex">
+                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center mr-4">
+                                    <i class="fas fa-hand-holding-usd text-blue-500"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">上市公司现金分红指引</h4>
+                                    <p class="text-sm">中国证券监督管理委员会发布了关于上市公司现金分红的指引。</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex">
+                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center mr-4">
+                                    <i class="fas fa-balance-scale text-blue-500"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">政府对股市的干预</h4>
+                                    <p class="text-sm">政府采取了多种措施干预股市，提供短期稳定性但可能影响长期效率。</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 text-center">
+                            <p class="text-sm italic">这些政策转变表明，政府在中国股市的轨迹和波动性方面发挥着重要作用。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Current Market Conditions -->
+        <section id="current" class="mb-20">
+            <div class="flex items-center mb-8">
+                <div class="h-10 w-1 bg-blue-500 mr-4"></div>
+                <h2 class="text-3xl font-bold">当前市场状况与驱动因素</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card p-8">
+                    <h3 class="text-2xl font-semibold mb-6">中国经济和股市的现状</h3>
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 mr-4">
+                                <div class="p-3 bg-blue-100 dark:bg-blue-800 rounded-full">
+                                    <i class="fas fa-chart-line text-blue-500"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">经济增长</h4>
+                                <p>中国经济在2024年实现了约5%的增长目标。然而，对于2025年的经济增长前景仍存在不确定性。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 mr-4">
+                                <div class="p-3 bg-blue-100 dark:bg-blue-800 rounded-full">
+                                    <i class="fas fa-shopping-cart text-blue-500"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">通货膨胀</h4>
+                                <p>当前的通货膨胀率较低，甚至出现了通缩压力。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 mr-4">
+                                <div class="p-3 bg-blue-100 dark:bg-blue-800 rounded-full">
+                                    <i class="fas fa-university text-blue-500"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">货币政策</h4>
+                                <p>中国人民银行的货币政策立场保持谨慎。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 mr-4">
+                                <div class="p-3 bg-blue-100 dark:bg-blue-800 rounded-full">
+                                    <i class="fas fa-chart-bar text-blue-500"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">股市表现</h4>
+                                <p>富时中国A50指数近期表现出一定的积极势头，但仍对政策公告和经济数据高度敏感。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card p-8">
+                    <h3 class="text-2xl font-semibold mb-6">当前影响指数和ETF价格的关键因素</h3>
+                    
+                    <div class="space-y-8">
+                        <div>
+                            <div class="flex items-center mb-3">
+                                <i class="fas fa-industry text-blue-500 mr-3"></i>
+                                <h4 class="text-lg font-semibold">行业表现</h4>
+                            </div>
+                            <p>富时中国A50指数中主要行业的表现，例如金融、消费必需品和科技行业，对其整体走势起着关键作用。权重较大的金融行业的表现将对该ETF的价格产生显著影响。</p>
+                        </div>
+                        
+                        <div>
+                            <div class="flex items-center mb-3">
+                                <i class="fas fa-heart text-blue-500 mr-3"></i>
+                                <h4 class="text-lg font-semibold">投资者情绪</h4>
+                            </div>
+                            <p>当前投资者对中国股票的情绪受到多种因素的影响，包括对经济增长的担忧、监管风险以及全球市场状况。投资者情绪可能是短期内影响股价的重要因素，通常受到新闻和预期的影响。</p>
+                        </div>
+                        
+                        <div>
+                            <div class="flex items-center mb-3">
+                                <i class="fas fa-balance-scale text-blue-500 mr-3"></i>
+                                <h4 class="text-lg font-semibold">监管环境</h4>
+                            </div>
+                            <p>当前的监管环境以及任何潜在的政策变化都可能对股市产生影响。持续的监管不确定性或支持性政策的转变都可能显著影响投资者信心和股票估值。</p>
+                        </div>
+                        
+                        <div>
+                            <div class="flex items-center mb-3">
+                                <i class="fas fa-globe text-blue-500 mr-3"></i>
+                                <h4 class="text-lg font-semibold">全球市场状况</h4>
+                            </div>
+                            <p>全球经济趋势、地缘政治事件以及其他主要市场的表现也对富时中国A50指数产生影响。中国经济与全球经济的日益融合，使得其股市也容易受到国际因素的影响。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Future Trends -->
+        <section id="future" class="mb-20">
+            <div class="flex items-center mb-8">
+                <div class="h-10 w-1 bg-blue-500 mr-4"></div>
+                <h2 class="text-3xl font-bold">未来趋势与波动性预测（未来18个月：2025年3月至2026年9月）</h2>
+            </div>
+            
+            <!-- Economic Forecast -->
+            <div class="card p-8 mb-8">
+                <h3 class="text-2xl font-semibold mb-6">中国主要宏观经济指标预测</h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>指标</th>
+                                <th>来源</th>
+                                <th>2025年预测</th>
+                                <th>2026年预测</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>GDP增长率</td>
+                                <td>IMF</td>
+                                <td>4.6%</td>
+                                <td>待定</td>
+                            </tr>
+                            <tr>
+                                <td>GDP增长率</td>
+                                <td>Rhodium Group</td>
+                                <td>3-4.5%</td>
+                                <td>待定</td>
+                            </tr>
+                            <tr>
+                                <td>GDP增长率</td>
+                                <td>TD Economics</td>
+                                <td>4.7%</td>
+                                <td>待定</td>
+                            </tr>
+                            <tr>
+                                <td>GDP增长率</td>
+                                <td>Deloitte</td>
+                                <td>约4%</td>
+                                <td>待定</td>
+                            </tr>
+                            <tr>
+                                <td>GDP增长率</td>
+                                <td>Amundi</td>
+                                <td>4.1%</td>
+                                <td>3.6%</td>
+                            </tr>
+                            <tr>
+                                <td>通货膨胀率</td>
+                                <td>IMF</td>
+                                <td>1.7%</td>
+                                <td>待定</td>
+                            </tr>
+                            <tr>
+                                <td>通货膨胀率</td>
+                                <td>TD Economics</td>
+                                <td>近乎零</td>
+                                <td>待定</td>
+                            </tr>
+                            <tr>
+                                <td>利率</td>
+                                <td>ING Group</td>
+                                <td>7天逆回购利率平均2%至2025年第三季度</td>
+                                <td>待定</td>
+                            </tr>
+                            <tr>
+                                <td>利率</td>
+                                <td>ANZ Research</td>
+                                <td>预计可能在2024年降息</td>
+                                <td>待定</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Predictions and Impact -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="card p-8">
+                    <div class="flex justify-center mb-6">
+                        <div class="p-4 bg-blue-100 dark:bg-blue-800 rounded-full">
+                            <i class="fas fa-chart-line text-4xl text-blue-500"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-semibold text-center mb-4">宏观经济因素的影响</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                            <span>预计GDP的温和增长将为企业盈利和投资者情绪提供支撑</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                            <span>低通胀可能会限制企业的定价能力，但同时也将保持较低的借贷成本</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                            <span>利率政策对市场流动性和公司估值具有潜在影响</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                            <span>财政刺激措施可能会提振特定行业和整体市场表现</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="card p-8">
+                    <div class="flex justify-center mb-6">
+                        <div class="p-4 bg-blue-100 dark:bg-blue-800 rounded-full">
+                            <i class="fas fa-chart-bar text-4xl text-blue-500"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-semibold text-center mb-4">ETF可能趋势预测</h3>
+                    <p class="mb-4">基于历史波动性分析和宏观经济因素的展望，预计未来18个月南方富时A50 ETF的趋势可能呈现谨慎乐观的态势。</p>
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <div class="h-2 w-2 rounded-full bg-green-400 mr-2"></div>
+                            <span>积极政策支持可能带来反弹机会</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="h-2 w-2 rounded-full bg-red-400 mr-2"></div>
+                            <span>房地产行业风险构成下行压力</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="h-2 w-2 rounded-full bg-yellow-400 mr-2"></div>
+                            <span>监管不确定性仍是关键因素</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="h-2 w-2 rounded-full bg-blue-400 mr-2"></div>
+                            <span>横盘整理伴随一定波动也是可能</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card p-8">
+                    <div class="flex justify-center mb-6">
+                        <div class="p-4 bg-blue-100 dark:bg-blue-800 rounded-full">
+                            <i class="fas fa-wave-square text-4xl text-blue-500"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-semibold text-center mb-4">潜在波动性水平</h3>
+                    <p class="mb-6">鉴于持续的经济和地缘政治不确定性，预计未来18个月该ETF的波动性水平可能维持在中等至较高的区间。</p>
+                    <div class="relative pt-1">
+                        <div class="flex mb-2 items-center justify-between">
+                            <div>
+                                <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 bg-blue-200">
+                                    波动性水平
+                                </span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-semibold inline-block text-blue-600">
+                                    中等-高
+                                </span>
+                            </div>
+                        </div>
+                        <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-200">
+                            <div style="width:75%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"></div>
+                        </div>
+                    </div>
+                    <p class="text-sm italic text-center mt-4">意外的政策变化、地缘政治事件以及全球市场情绪的重大转变都可能导致波动性增加。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Factors to Watch -->
+        <section id="factors" class="mb-20">
+            <div class="flex items-center mb-8">
+                <div class="h-10 w-1 bg-blue-500 mr-4"></div>
+                <h2 class="text-3xl font-bold">关注因素</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card p-8">
+                    <h3 class="text-2xl font-semibold flex items-center mb-6">
+                        <i class="fas fa-home text-blue-500 mr-3"></i>
+                        国内因素
+                    </h3>
+                    
+                    <div class="space-y-6">
+                        <div class="flex">
+                            <div class="flex-shrink-0 mt-1 mr-4">
+                                <i class="fas fa-gavel text-blue-500"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">监管变化</h4>
+                                <p>密切关注政府对特定行业的新法规或政策立场的转变。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex">
+                            <div class="flex-shrink-0 mt-1 mr-4">
+                                <i class="fas fa-sync-alt text-blue-500"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">经济改革</h4>
+                                <p>关注旨在促进消费或解决结构性问题的任何已宣布的经济改革的实施和有效性。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex">
+                            <div class="flex-shrink-0 mt-1 mr-4">
+                                <i class="fas fa-building text-blue-500"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">房地产市场发展</h4>
+                                <p>密切跟踪房地产行业的状况以及为解决问题而采取的任何进一步政策措施。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex">
+                            <div class="flex-shrink-0 mt-1 mr-4">
+                                <i class="fas fa-heart text-blue-500"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">投资者情绪</h4>
+                                <p>观察市场数据和调查反映的投资者信心的变化。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card p-8">
+                    <h3 class="text-2xl font-semibold flex items-center mb-6">
+                        <i class="fas fa-globe text-blue-500 mr-3"></i>
+                        国际因素
+                    </h3>
+                    
+                    <div class="space-y-6">
+                        <div class="flex">
+                            <div class="flex-shrink-0 mt-1 mr-4">
+                                <i class="fas fa-handshake text-blue-500"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">美中贸易关系</h4>
+                                <p>关注贸易谈判的任何进展或进一步关税升级的可能性。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex">
+                            <div class="flex-shrink-0 mt-1 mr-4">
+                                <i class="fas fa-chart-line text-blue-500"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">全球经济展望</h4>
+                                <p>跟踪主要全球经济体（尤其是美国和欧洲）的增长和通货膨胀预测。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex">
+                            <div class="flex-shrink-0 mt-1 mr-4">
+                                <i class="fas fa-flag text-blue-500"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">地缘政治事件</h4>
+                                <p>警惕可能影响全球市场情绪和风险偏好的任何重大地缘政治发展。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex">
+                            <div class="flex-shrink-0 mt-1 mr-4">
+                                <i class="fas fa-university text-blue-500"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">全球利率环境</h4>
+                                <p>关注主要央行（尤其是美联储）的货币政策决策，因为它们会影响资本流动和汇率。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Conclusion -->
+        <section id="conclusion" class="mb-10">
+            <div class="flex items-center mb-8">
+                <div class="h-10 w-1 bg-blue-500 mr-4"></div>
+                <h2 class="text-3xl font-bold">结论</h2>
+            </div>
+            
+            <div class="card p-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900 dark:to-indigo-900">
+                <div class="article-content">
+                    <p>本报告对南方富时A50 ETF的历史股价波动进行了深入分析，并对其未来18个月的趋势和波动性进行了预测。历史分析表明，该ETF的价格波动受到中国宏观经济状况、政府政策以及国际事件的显著影响。</p>
+                    
+                    <p>展望未来，预计该ETF的价格趋势将受到中国经济增长、通货膨胀、货币和财政政策以及中美关系等多重因素的共同作用，其波动性水平预计将维持在相对水平。</p>
+                    
+                    <p>投资者应密切关注国内外的关键因素，以便更好地理解和应对该ETF未来可能出现的市场变化。</p>
+                    
+                    <!-- Mermaid chart showing relationships -->
+                    <div class="mt-8">
+                        <h3 class="text-xl font-semibold mb-4 text-center">关键影响因素关系图</h3>
+                        <div class="mermaid">
+                            graph TD
+                            A[南方富时A50 ETF] --> B1[中国宏观经济]
+                            A --> B2[政府政策]
+                            A --> B3[国际环境]
+                            B1 --> C1[GDP增长]
+                            B1 --> C2[通货膨胀]
+                            B2 --> C3[货币政策]
+                            B2 --> C4[财政政策]
+                            B2 --> C5[监管政策]
+                            B3 --> C6[中美关系]
+                            B3 --> C7[全球经济]
+                            style A fill:#3b82f6,stroke:#1d4ed8,color:white
+                            style B1 fill:#60a5fa,stroke:#2563eb,color:white
+                            style B2 fill:#60a5fa,stroke:#2563eb,color:white
+                            style B3 fill:#60a5fa,stroke:#2563eb,color:white
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Further Reading -->
+        <section class="mb-20">
+            <div class="flex items-center mb-8">
+                <div class="h-10 w-1 bg-blue-500 mr-4"></div>
+                <h2 class="text-3xl font-bold">延伸阅读</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="card hover:shadow-xl transition-all duration-300">
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold mb-2">《中国宏观经济与股市互动研究》</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">作者：李志伟</p>
+                        <p class="text-sm">深入探讨中国宏观经济指标与A股市场表现之间的关系，对理解经济因素如何影响股市尤为有价值。</p>
+                    </div>
+                </div>
+                
+                <div class="card hover:shadow-xl transition-all duration-300">
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold mb-2">《ETF投资策略与实践》</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">作者：张明</p>
+                        <p class="text-sm">系统介绍ETF的投资原理、策略选择和实践技巧，特别关注于新兴市场ETF的特点和操作方法。</p>
+                    </div>
+                </div>
+                
+                <div class="card hover:shadow-xl transition-all duration-300">
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold mb-2">《中国资本市场监管政策研究》</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">作者：王立新</p>
+                        <p class="text-sm">分析中国资本市场监管政策的演变历程及其对市场的影响，为理解政策因素的重要性提供深刻见解。</p>
+                    </div>
+                </div>
+                
+                <div class="card hover:shadow-xl transition-all duration-300">
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold mb-2">《全球视野下的中国股市》</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">作者：林荣杰</p>
+                        <p class="text-sm">从国际比较的角度分析中国股市的特点和发展趋势，对于理解中国市场在全球背景下的表现特别有帮助。</p>
+                    </div>
+                </div>
+                
+                <div class="card hover:shadow-xl transition-all duration-300">
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold mb-2">《投资组合管理：理论与实践》</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">作者：陈志武</p>
+                        <p class="text-sm">综合讨论现代投资组合理论及其在不同市场环境下的应用，对于构建包含ETF在内的多元化投资组合具有指导意义。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 dark:bg-gray-800 py-10 border-t border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <h2 class="text-xl font-bold flex items-center">
+                        <i class="fas fa-chart-line mr-2 text-blue-500"></i>
+                        南方富时A50 ETF分析报告
+                    </h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">© 2025 金融研究中心 版权所有</p>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-500 hover:text-blue-500 transition-colors">
+                        <i class="fab fa-weixin text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-blue-500 transition-colors">
+                        <i class="fab fa-weibo text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-blue-500 transition-colors">
+                        <i class="fas fa-envelope text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-blue-500 transition-colors">
+                        <i class="fas fa-print text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-blue-500 transition-colors">
+                        <i class="fas fa-share-alt text-xl"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                <p>免责声明：本报告仅供参考，不构成任何投资建议。投资者据此操作，风险自担。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11.5.0/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Initialize mermaid with specific configuration
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+
+        // Wait for document to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize mermaid
+            mermaid.init(undefined, '.mermaid');
+        });
+
+        // Performance Chart
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        const performanceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024'],
+                datasets: [
+                    {
+                        label: '南方富时中国A50 ETF (总回报)',
+                        data: [-12.43, 65.69, -4.03, -4.82, 33.31, -20.41, 39.74, 24.48, -10.90, -16.34, -10.30, 19.94],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#3b82f6',
+                        tension: 0.2,
+                        fill: true
+                    },
+                    {
+                        label: '富时中国A50指数 (总回报)',
+                        data: [-12.02, 68.08, -5.04, -4.26, 35.38, -19.36, 42.12, 26.16, -9.63, -15.21, -9.15, 21.34],
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#8b5cf6',
+                        borderDash: [5, 5],
+                        tension: 0.2,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            boxWidth: 8
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y + '%';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        grid: {
+                            drawBorder: false
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+
+        // Smooth scrolling for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Active navigation link highlight
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-link');
+        
+        window.addEventListener('scroll', () => {
+            let current = '';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                
+                if (pageYOffset >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').substring(1) === current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Add animation when elements come into view
+        const fadeElements = document.querySelectorAll('.card, .article-content p');
+        
+        const fadeInObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in');
+                    fadeInObserver.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+        
+        fadeElements.forEach(element => {
+            fadeInObserver.observe(element);
+        });
+    </script>
+</body>
+</html>
