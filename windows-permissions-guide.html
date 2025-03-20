@@ -1,0 +1,2101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows权限管理机制详解</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/tailwindcss/2.2.19/tailwind.min.css">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #1a56db;
+            --secondary-color: #e1effe;
+            --accent-color: #3f83f8;
+            --text-color: #1f2937;
+            --bg-color: #f9fafb;
+            --border-color: #e5e7eb;
+            --card-bg: #ffffff;
+            --navbar-bg: #f3f4f6;
+            --table-header-bg: #e5edff;
+            --table-stripe: #f8fafc;
+            --code-bg: #f1f5f9;
+            --highlight-color: #fef3c7;
+            --primary-button: #2563eb;
+            --primary-button-hover: #1d4ed8;
+        }
+        
+        .dark {
+            --primary-color: #60a5fa;
+            --secondary-color: #1e3a8a;
+            --accent-color: #3b82f6;
+            --text-color: #e5e7eb;
+            --bg-color: #111827;
+            --border-color: #374151;
+            --card-bg: #1f2937;
+            --navbar-bg: #0f172a;
+            --table-header-bg: #1e3a8a;
+            --table-stripe: #1e293b;
+            --code-bg: #1e293b;
+            --highlight-color: #92400e;
+            --primary-button: #3b82f6;
+            --primary-button-hover: #2563eb;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', Tahoma, Arial, Roboto, "Droid Sans", "Helvetica Neue", "Droid Sans Fallback", "Heiti SC", "Hiragino Sans GB", Simsun, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            max-width: 1400px;  /* 从1200px增加到1400px */
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Noto Serif SC', serif;
+            font-weight: 600;
+        }
+        
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+        
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar {
+            background-color: var(--navbar-bg);
+            border-right: 1px solid var(--border-color);
+            transition: background-color 0.3s;
+        }
+        
+        .sidebar-item {
+            color: var(--text-color);
+            border-left: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-item:hover {
+            border-left: 3px solid var(--accent-color);
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        
+        .sidebar-item.active {
+            border-left: 3px solid var(--accent-color);
+            background-color: rgba(59, 130, 246, 0.15);
+            font-weight: 500;
+        }
+        
+        .content-area {
+            background-color: var(--card-bg);
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        table th {
+            background-color: var(--table-header-bg);
+            color: var(--text-color);
+            font-weight: 600;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        table tr:nth-child(even) {
+            background-color: var(--table-stripe);
+        }
+        
+        table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+        
+        .btn {
+            background-color: var(--primary-button);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-button-hover);
+        }
+        
+        .highlight {
+            background-color: var(--highlight-color);
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
+        }
+        
+        .code {
+            font-family: 'Courier New', monospace;
+            background-color: var(--code-bg);
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+        
+        .dropcap::first-letter {
+            font-size: 3.5rem;
+            font-weight: 700;
+            float: left;
+            line-height: 0.8;
+            margin-right: 0.5rem;
+            color: var(--primary-color);
+            font-family: 'Noto Serif SC', serif;
+        }
+        
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: var(--primary-button);
+            color: white;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s, background-color 0.3s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            z-index: 50;
+        }
+        
+        .back-to-top.show {
+            opacity: 1;
+        }
+        
+        .back-to-top:hover {
+            background-color: var(--primary-button-hover);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -100%;
+                top: 0;
+                width: 80%;
+                max-width: 320px;
+                height: 100%;
+                z-index: 50;
+                transition: left 0.3s ease;
+            }
+            
+            .sidebar.open {
+                left: 0;
+            }
+            
+            .overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 40;
+                display: none;
+            }
+            
+            .overlay.show {
+                display: block;
+            }
+        }
+        
+        /* Mermaid 图表样式 */
+        .mermaid {
+            margin: 2rem 0;
+        }
+        
+        /* 进度指示器 */
+        .progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: transparent;
+            z-index: 100;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: var(--accent-color);
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        /* 首字下沉 */
+        .chapter-content > p:first-of-type {
+            font-size: 1.125rem;
+            line-height: 1.75;
+        }
+        
+        /* 交互式术语表 */
+        .term {
+            text-decoration: underline dotted;
+            cursor: help;
+            position: relative;
+            color: var(--primary-color);
+        }
+        
+        .term:hover::after {
+            content: attr(data-definition);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            z-index: 10;
+            font-size: 0.875rem;
+            border: 1px solid var(--border-color);
+        }
+        
+        /* 引用样式 */
+        blockquote {
+            border-left: 4px solid var(--accent-color);
+            padding-left: 1rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: var(--text-color);
+            background-color: rgba(59, 130, 246, 0.05);
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+        
+        /* 图表标题 */
+        .chart-title {
+            text-align: center;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+        
+        /* 添加滚动偏移，防止标题被顶部导航栏遮挡 */
+        section[id] {
+            scroll-margin-top: 40px;  /* 从80px减小到60px */
+        }
+
+        /* 同样调整html的滚动内边距 */
+        html {
+            scroll-padding-top: 40px;  /* 从80px减小到60px */
+        }
+        
+        /* 添加内容居中样式 */
+        main {
+            width: 100%;
+            max-width: 1000px;  /* 从900px增加到1000px */
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- 进度指示器 -->
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- 返回顶部按钮 -->
+    <div class="back-to-top" id="backToTop">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+
+    <!-- 移动端菜单背景遮罩 -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- 顶部导航栏 -->
+    <header class="sticky top-0 z-40 bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div class="container px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <button id="menuToggle" class="mr-4 md:hidden text-gray-700 dark:text-gray-300 focus:outline-none">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <h1 class="text-lg sm:text-xl font-bold text-blue-700 dark:text-blue-400">
+                    <i class="fas fa-shield-alt mr-2"></i>Windows权限管理机制
+                </h1>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex min-h-screen">
+        <!-- 侧边导航栏 -->
+        <aside class="sidebar w-64 md:w-72 fixed top-0 h-screen overflow-y-auto py-6 px-4 z-50" id="sidebar">
+            <div class="flex justify-between items-center mb-6 px-2">
+                <h2 class="text-lg font-bold">目录</h2>
+                <button id="closeSidebar" class="md:hidden text-gray-700 dark:text-gray-300 focus:outline-none">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <nav>
+                <ul class="space-y-1">
+                    <li><a href="#intro" class="sidebar-item block px-2 py-2 rounded-md"><i class="fas fa-info-circle mr-2"></i>1. 引言</a></li>
+                    <li><a href="#access-control" class="sidebar-item block px-2 py-2 rounded-md"><i class="fas fa-key mr-2"></i>2. 访问控制模型</a></li>
+                    <li><a href="#ntfs" class="sidebar-item block px-2 py-2 rounded-md"><i class="fas fa-folder mr-2"></i>3. NTFS 权限详解</a></li>
+                    <li><a href="#share" class="sidebar-item block px-2 py-2 rounded-md"><i class="fas fa-share-alt mr-2"></i>4. 共享权限</a></li>
+                    <li><a href="#registry" class="sidebar-item block px-2 py-2 rounded-md"><i class="fas fa-database mr-2"></i>5. 注册表权限</a></li>
+                    <li><a href="#gp" class="sidebar-item block px-2 py-2 rounded-md"><i class="fas fa-tasks mr-2"></i>6. 组策略管理</a></li>
+                    <li><a href="#uac" class="sidebar-item block px-2 py-2 rounded-md"><i class="fas fa-user-shield mr-2"></i>7. 用户账户控制</a></li>
+                    <li><a href="#best-practice" class="sidebar-item block px-2 py-2 rounded-md"><i class="fas fa-check-circle mr-2"></i>8. 最佳实践</a></li>
+                    <li><a href="#audit" class="sidebar-item block px-2 py-2 rounded-md"><i class="fas fa-clipboard-list mr-2"></i>9. 审计权限</a></li>
+                    <li><a href="#advanced" class="sidebar-item block px-2 py-2 rounded-md"><i class="fas fa-cogs mr-2"></i>10. 高级功能</a></li>
+                    <li><a href="#admin-accounts" class="sidebar-item block px-2 py-2 rounded-md"><i class="fas fa-user-cog mr-2"></i>11. 管理账户安全</a></li>
+                    <li><a href="#troubleshooting" class="sidebar-item block px-2 py-2 rounded-md"><i class="fas fa-wrench mr-2"></i>12. 权限问题排除</a></li>
+                    <li><a href="#compliance" class="sidebar-item block px-2 py-2 rounded-md"><i class="fas fa-clipboard-check mr-2"></i>13. 合规性标准</a></li>
+                    <li><a href="#services" class="sidebar-item block px-2 py-2 rounded-md"><i class="fas fa-server mr-2"></i>14. 特定服务权限</a></li>
+                    <li><a href="#powershell" class="sidebar-item block px-2 py-2 rounded-md"><i class="fas fa-terminal mr-2"></i>15. PowerShell 自动化</a></li>
+                    <li><a href="#conclusion" class="sidebar-item block px-2 py-2 rounded-md"><i class="fas fa-flag-checkered mr-2"></i>16. 结论</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- 主内容区域 -->
+        <main class="flex-1 p-4 md:p-8 ml-0 md:ml-72">
+            <!-- Hero 区域 -->
+            <section class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg shadow-lg mb-8 overflow-hidden">
+                <div class="p-6 md:p-10 relative">
+                    <div class="absolute top-0 right-0 opacity-10">
+                        <i class="fas fa-shield-alt text-9xl transform -rotate-15"></i>
+                    </div>
+                    <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">Windows 权限管理机制详解</h1>
+                    <p class="text-xl md:text-2xl font-light mb-6 max-w-3xl">全面解析 Windows 操作系统的权限管理机制，从核心概念到高级应用，为系统管理员和安全专业人员提供权威指南。</p>
+                    <div class="flex flex-wrap gap-4">
+                        <a href="#intro" class="inline-flex items-center px-4 py-2 bg-white text-blue-600 rounded-md shadow hover:bg-blue-50 transition-colors">
+                            <i class="fas fa-book-open mr-2"></i>开始阅读
+                        </a>
+                        <a href="#best-practice" class="inline-flex items-center px-4 py-2 bg-blue-700 text-white rounded-md shadow hover:bg-blue-800 transition-colors">
+                            <i class="fas fa-check-circle mr-2"></i>最佳实践
+                        </a>
+                    </div>
+                </div>
+                <div class="bg-blue-800 px-6 md:px-10 py-3 flex justify-between items-center text-sm">
+                    <div>
+                        <i class="fas fa-calendar-alt mr-1"></i> 更新日期: 2025年3月19日
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-graduation-cap mr-1"></i> 适用对象: 系统管理员、安全专业人员
+                    </div>
+                </div>
+            </section>
+
+            <!-- 核心概念卡片 -->
+            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                <div class="card p-6">
+                    <div class="text-blue-600 dark:text-blue-400 mb-4">
+                        <i class="fas fa-user-shield text-3xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">安全主体</h3>
+                    <p class="text-gray-600 dark:text-gray-300">可以请求访问资源的实体，包括用户账户、组和服务账户，每个安全主体都有唯一的安全标识符 (SID)。</p>
+                </div>
+
+                <div class="card p-6">
+                    <div class="text-blue-600 dark:text-blue-400 mb-4">
+                        <i class="fas fa-lock text-3xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">可保护对象</h3>
+                    <p class="text-gray-600 dark:text-gray-300">可以通过访问控制模型进行保护的系统资源，如文件、文件夹、注册表项、打印机和进程等。</p>
+                </div>
+
+                <div class="card p-6">
+                    <div class="text-blue-600 dark:text-blue-400 mb-4">
+                        <i class="fas fa-id-card text-3xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">安全描述符</h3>
+                    <p class="text-gray-600 dark:text-gray-300">与保护对象关联的数据结构，包含所有者SID、DACL、SACL和安全信息，控制谁可以访问资源。</p>
+                </div>
+
+                <div class="card p-6">
+                    <div class="text-blue-600 dark:text-blue-400 mb-4">
+                        <i class="fas fa-key text-3xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">访问令牌</h3>
+                    <p class="text-gray-600 dark:text-gray-300">代表用户身份和安全上下文的对象，包含用户SID、组成员身份和用户权限，用于访问控制决策。</p>
+                </div>
+            </section>
+
+            <!-- 章节内容 -->
+            <div class="content-area p-6 md:p-8">
+                <!-- 1. 引言 -->
+                <section id="intro" class="mb-12">
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-md bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 mr-4">
+                            <i class="fas fa-info-circle text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-bold">1. 引言</h2>
+                    </div>
+                    <div class="chapter-content ml-14">
+                        <p class="dropcap">权限管理是操作系统安全和数据完整性的基石。在 Windows 操作系统中，权限管理机制负责控制用户和进程对系统资源（如文件、文件夹、注册表项等）的访问。理解 Windows 的权限管理机制对于系统管理员、安全专业人员以及希望深入了解操作系统安全性的用户至关重要。本报告旨在全面解析 Windows 的权限管理机制，涵盖其核心概念、不同类型的权限、配置方法、最佳实践以及高级特性。</p>
+                        
+                        <p class="mt-6">本报告将深入探讨 Windows 访问控制模型的关键组成部分，包括安全主体、安全描述符、访问控制列表和访问令牌。随后，将详细阐述 NTFS 文件系统权限，包括基本权限和高级权限，以及权限继承和有效权限的概念。报告还将介绍共享权限的功能和配置，以及它与 NTFS 权限的交互方式。</p>
+                        
+                        <div class="card bg-blue-50 dark:bg-blue-900/30 p-4 mt-6">
+                            <h4 class="font-semibold text-blue-700 dark:text-blue-300 mb-2">报告目标读者</h4>
+                            <ul class="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300">
+                                <li>系统管理员</li>
+                                <li>安全专业人员</li>
+                                <li>IT 支持人员</li>
+                                <li>网络管理员</li>
+                                <li>希望深入了解 Windows 安全性的高级用户</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. Windows 访问控制模型核心概念 -->
+                <section id="access-control" class="mb-12">
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-md bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 mr-4">
+                            <i class="fas fa-key text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-bold">2. Windows 访问控制模型核心概念</h2>
+                    </div>
+                    <div class="chapter-content ml-14">
+                        <p>Windows 操作系统采用一套完善的访问控制模型来保护系统资源免受未经授权的访问。该模型由几个核心组件组成，它们协同工作以确定是否允许安全主体访问受保护的对象。</p>
+                        
+                        <!-- 可视化图表 -->
+                        <div class="my-8">
+                            <h4 class="chart-title">Windows 访问控制模型工作流程</h4>
+                            <div class="mermaid">
+                                graph TB
+                                    A[用户登录] --> B[创建访问令牌]
+                                    B --> C[进程继承访问令牌]
+                                    C --> D[尝试访问对象]
+                                    D --> E[安全引用监视器拦截请求]
+                                    E --> F[检查对象的安全描述符]
+                                    F --> G{评估DACL中的ACE}
+                                    G -->|允许访问| H[授予请求的访问权限]
+                                    G -->|拒绝访问| I[拒绝访问请求]
+                                    
+                                    style A fill:#d4e6ff,stroke:#3b82f6
+                                    style B fill:#d4e6ff,stroke:#3b82f6
+                                    style C fill:#d4e6ff,stroke:#3b82f6
+                                    style D fill:#d4e6ff,stroke:#3b82f6
+                                    style E fill:#bbd6ff,stroke:#3b82f6
+                                    style F fill:#bbd6ff,stroke:#3b82f6
+                                    style G fill:#bbd6ff,stroke:#3b82f6
+                                    style H fill:#c6f6d5,stroke:#38a169
+                                    style I fill:#fed7d7,stroke:#e53e3e
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">2.1 安全主体 (Security Principals)</h3>
+                        <p>安全主体是指可以请求访问受保护资源的实体。在 Windows 中，安全主体主要包括用户账户、组账户、计算机账户以及服务账户。每个安全主体在系统中都拥有一个唯一的安全标识符（SID）。SID 是操作系统用来识别和区分不同安全主体的内部标识，它不依赖于用户或组的名称，即使名称发生更改，SID 也会保持不变。</p>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">2.2 可保护对象 (Securable Objects)</h3>
+                        <p>可保护对象是指那些可以通过访问控制模型进行保护的系统资源。这些资源可以是文件、文件夹、注册表项、打印机、进程等。每个可保护对象都关联着一个安全描述符，其中包含了关于谁可以访问该对象以及允许或拒绝何种类型的访问的信息。</p>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">2.3 安全描述符 (Security Descriptors)</h3>
+                        <p>每个可保护对象都拥有一个与其关联的安全描述符。安全描述符本质上是一个数据结构，包含了对象安全相关的所有信息。一个典型的安全描述符包含以下主要组成部分：</p>
+                        
+                        <ul class="list-disc list-inside mt-4 space-y-2 pl-4">
+                            <li><span class="font-semibold">所有者 SID (Owner SID):</span> 标识了对象的拥有者。对象拥有者通常拥有更改对象权限的特殊权利。</li>
+                            <li><span class="font-semibold">组 SID (Group SID):</span> 标识了对象的主要组。虽然组 SID 的作用不如所有者 SID 显著，但在某些特定的访问控制决策中可能会被使用。</li>
+                            <li><span class="font-semibold">自主访问控制列表 (Discretionary Access Control List, DACL):</span> 指定了允许或拒绝哪些安全主体访问对象以及访问的类型（例如，读取、写入、执行）。DACL 由一个或多个访问控制项（ACE）组成，系统会按顺序评估这些 ACE，直到找到一个或多个允许所有请求的访问权限的 ACE，或者遇到任何拒绝请求的访问权限的 ACE。</li>
+                            <li><span class="font-semibold">系统访问控制列表 (System Access Control List, SACL):</span> 控制对对象访问尝试的审计。SACL 中包含了 ACE，用于指定当特定安全主体尝试执行特定类型的访问时，系统是否应该在安全日志中生成审计记录。SACL 可以记录访问尝试成功、失败或两者兼有的情况。</li>
+                        </ul>
+                        
+                        <div class="card bg-blue-50 dark:bg-blue-900/30 p-4 mt-6">
+                            <h4 class="font-semibold text-blue-700 dark:text-blue-300 mb-2">专业术语解释</h4>
+                            <dl class="space-y-2">
+                                <dt class="font-medium">SID (Security Identifier)</dt>
+                                <dd class="pl-4 text-gray-700 dark:text-gray-300">用于唯一标识用户、组和计算机账户的值。SID 的格式如 S-1-5-21-3623811015-3361044348-30300820-1013，其中包含标识域控制器的域标识符和一个相对标识符 (RID)。</dd>
+                                
+                                <dt class="font-medium">ACE (Access Control Entry)</dt>
+                                <dd class="pl-4 text-gray-700 dark:text-gray-300">访问控制列表中的条目，定义了特定安全主体的访问权限或审计规则。每个 ACE 包含安全主体的 SID、访问掩码和一组标志。</dd>
+                            </dl>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">2.4 访问控制列表项 (Access Control Entries, ACEs)</h3>
+                        <p>DACL 和 SACL 都由零个或多个访问控制列表项（ACE）组成。每个 ACE 规定了特定安全主体的访问控制规则。在 DACL 中，ACE 可以允许或拒绝特定安全主体的访问。在 SACL 中，ACE 指定了哪些访问尝试应该被审计。ACE 中包含了安全主体的 SID、一个指定访问权限的访问掩码、一个指示 ACE 类型的标志以及一组用于确定子容器或对象是否可以从父对象继承 ACE 的标志。</p>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">2.5 访问令牌 (Access Tokens)</h3>
+                        <p>当用户成功登录 Windows 系统后，系统会为该用户创建一个访问令牌。访问令牌包含了关于用户身份、用户所属组以及用户所拥有的权限等信息。每当用户运行一个进程时，该进程都会与用户的访问令牌关联。当进程尝试访问一个可保护对象时，系统会检查进程关联的访问令牌，以确定用户是否拥有访问该对象的权限。</p>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">2.6 安全引用监视器 (Security Reference Monitor, SRM)</h3>
+                        <p>安全引用监视器是 Windows 访问控制模型的核心组件。当一个线程尝试访问一个可保护对象时，SRM 会拦截该请求。SRM 会检查线程进程的访问令牌以及对象的安全描述符，以确定是否应该授予请求的访问权限。SRM 主要负责执行在对象的 DACL 中定义的访问控制规则。</p>
+                    </div>
+                </section>
+
+                <!-- 3. NTFS 权限详解 -->
+                <section id="ntfs" class="mb-12">
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-md bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 mr-4">
+                            <i class="fas fa-folder text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-bold">3. NTFS 权限详解</h2>
+                    </div>
+                    <div class="chapter-content ml-14">
+                        <p>NTFS（New Technology File System）是现代 Windows 操作系统及其服务器版本的主要文件系统。它提供了丰富的功能，包括安全描述符、加密、磁盘配额和丰富的元数据。NTFS 权限是管理存储在 NTFS 文件系统中的文件和文件夹访问的关键机制。</p>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">3.1 基本 NTFS 权限</h3>
+                        <p>NTFS 提供了六种基本权限，可以为用户或组设置这些权限，以控制他们对文件和文件夹的访问。</p>
+                        
+                        <div class="table-container">
+                            <table>
+                                <caption class="text-lg font-semibold mb-2">表 1: 基本 NTFS 权限及其对文件和文件夹的影响</caption>
+                                <thead>
+                                    <tr>
+                                        <th>权限名称</th>
+                                        <th>对文件夹的影响</th>
+                                        <th>对文件的影响</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="font-semibold">完全控制</td>
+                                        <td>允许读取、写入、修改和删除文件夹及其子文件夹和文件。此外，用户还可以更改所有文件和子目录的权限设置并取得所有权。</td>
+                                        <td>允许读取、写入、修改和删除文件。此外，用户还可以更改文件的权限设置并取得所有权。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">修改</td>
+                                        <td>允许读取和写入文件夹及其子文件夹和文件；也允许删除文件夹。</td>
+                                        <td>允许读取和写入文件；也允许删除文件。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">读取和执行</td>
+                                        <td>允许查看和列出文件夹及其子文件夹和文件，以及运行可执行文件，包括脚本。</td>
+                                        <td>允许查看文件内容和运行可执行文件。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">列出文件夹内容</td>
+                                        <td>允许查看和列出文件夹中的文件和子文件夹，以及执行文件；此权限仅由文件夹继承。</td>
+                                        <td>不适用</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">读取</td>
+                                        <td>允许查看文件夹及其子文件夹和文件的内容。</td>
+                                        <td>允许查看文件内容。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">写入</td>
+                                        <td>允许在文件夹中添加文件和子文件夹。</td>
+                                        <td>允许更改文件内容。</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">3.2 高级 NTFS 权限</h3>
+                        <p>除了基本权限外，NTFS 还提供了更精细的控制选项，称为高级权限或特殊权限。这些权限可以在文件或文件夹的"属性"对话框中，通过"安全"选项卡下的"高级"按钮进行配置。</p>
+                        
+                        <div class="my-6 bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-md border-l-4 border-yellow-400">
+                            <p class="text-yellow-800 dark:text-yellow-300"><i class="fas fa-exclamation-triangle mr-2"></i><strong>注意：</strong> 高级权限提供了更精细的控制，但不当配置可能导致意外的访问问题。在更改高级权限前，请确保您充分了解其影响。</p>
+                        </div>
+                        
+                        <p>NTFS 高级权限包括：遍历文件夹/执行文件、列出文件夹/读取数据、读取属性、读取扩展属性、创建文件/写入数据、创建文件夹/追加数据、写入属性、写入扩展属性、删除子文件夹和文件、删除、读取权限、更改权限、取得所有权、同步等。</p>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">3.3 权限继承</h3>
+                        <p>默认情况下，NTFS 权限具有继承性，这意味着应用于父文件夹的权限会自动传播到其子文件夹和文件。这种机制简化了权限管理，因为管理员可以在一个地方设置权限，并确保它们应用于整个文件夹结构。然而，在某些情况下，可能需要阻止继承，以便为特定的子文件夹或文件设置唯一的权限。权限可以是显式的（直接分配给对象）或继承的（从父对象获取）。显式权限优先于相同类型的继承权限。</p>
+                        
+                        <div class="my-8">
+                            <h4 class="chart-title">NTFS 权限继承机制</h4>
+                            <div class="mermaid">
+                                graph TD
+                                    A[根文件夹 / 设置权限] --> B[子文件夹 1]
+                                    A --> C[子文件夹 2]
+                                    B --> D[子文件夹 1.1]
+                                    B --> E[文件 1.1]
+                                    C --> F[文件 2.1]
+                                    
+                                    style A fill:#d4e6ff,stroke:#3b82f6
+                                    style B fill:#bbd6ff,stroke:#3b82f6
+                                    style C fill:#bbd6ff,stroke:#3b82f6
+                                    style D fill:#bbd6ff,stroke:#3b82f6
+                                    style E fill:#c6f6d5,stroke:#38a169
+                                    style F fill:#c6f6d5,stroke:#38a169
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">3.4 有效权限</h3>
+                        <p>用户对文件或文件夹的最终访问权限称为有效权限。有效权限是根据用户的个人权限、用户所属组的权限、显式权限和继承权限以及允许和拒绝设置的组合来确定的。在评估有效权限时，拒绝权限始终优先于允许权限，而显式权限通常优先于继承权限。Windows 提供了一些工具，例如文件资源管理器中的"有效访问"选项，可以帮助管理员查看用户或组对特定文件或文件夹的有效权限。</p>
+                        
+                        <div class="card bg-blue-50 dark:bg-blue-900/30 p-4 mt-6">
+                            <h4 class="font-semibold text-blue-700 dark:text-blue-300 mb-2">有效权限确定的优先级规则</h4>
+                            <ol class="list-decimal list-inside space-y-1 text-gray-700 dark:text-gray-300">
+                                <li>显式拒绝权限优先于所有其他权限</li>
+                                <li>显式允许权限优先于继承允许权限</li>
+                                <li>继承拒绝权限优先于继承允许权限</li>
+                                <li>如果没有设置任何权限，用户将无法访问资源</li>
+                            </ol>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">3.5 移动和复制文件时的 NTFS 权限</h3>
+                        <p>在 NTFS 卷中移动或复制文件和文件夹时，权限的处理方式取决于操作是在同一卷内进行还是跨卷进行：</p>
+                        
+                        <ul class="list-disc list-inside mt-4 space-y-2 pl-4">
+                            <li><span class="font-semibold">在同一卷内移动：</span> 当文件或文件夹在同一 NTFS 卷的不同文件夹之间移动时，它会保留其原始权限。</li>
+                            <li><span class="font-semibold">在同一卷内复制：</span> 当文件或文件夹在同一 NTFS 卷内从一个位置复制到另一个位置时，它会继承目标父文件夹的权限。</li>
+                            <li><span class="font-semibold">跨卷移动或复制：</span> 当文件或文件夹移动或复制到不同的 NTFS 卷时，它会继承目标父文件夹的权限。</li>
+                        </ul>
+                        
+                        <p class="mt-4">可以使用 Xcopy.exe 和 Robocopy.exe 等工具在移动或复制文件时保留其原始权限。此外，可以通过修改注册表设置来更改 Windows 资源管理器在跨卷复制或在同一卷内移动对象时处理权限的默认行为。</p>
+                    </div>
+                </section>
+
+                <!-- 4. 共享权限的理解与配置 -->
+                <section id="share" class="mb-12">
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-md bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 mr-4">
+                            <i class="fas fa-share-alt text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-bold">4. 共享权限的理解与配置</h2>
+                    </div>
+                    <div class="chapter-content ml-14">
+                        <p>共享权限用于控制通过网络访问共享文件夹的权限。与 NTFS 权限管理本地访问不同，共享权限专门用于管理网络访问。</p>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">4.1 共享权限的类型</h3>
+                        <p>Windows 提供了三种类型的共享权限：</p>
+                        
+                        <div class="table-container">
+                            <table>
+                                <caption class="text-lg font-semibold mb-2">表 3: 共享权限级别及其功能</caption>
+                                <thead>
+                                    <tr>
+                                        <th>共享权限级别</th>
+                                        <th>允许的功能</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="font-semibold">读取</td>
+                                        <td>查看文件和子文件夹名称，读取文件数据，运行程序。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">更改</td>
+                                        <td>包括"读取"权限的所有功能，以及添加文件和子文件夹，更改文件数据，删除子文件夹和文件。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">完全控制</td>
+                                        <td>包括"读取"和"更改"权限的所有功能，以及更改 NTFS 文件和文件夹的权限并取得所有权。</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">4.2 配置共享权限</h3>
+                        <p>可以使用 Windows 资源管理器来配置共享权限。以下是配置共享权限的步骤：</p>
+                        
+                        <ol class="list-decimal list-inside mt-4 space-y-2 pl-4">
+                            <li>右键单击要共享的文件夹。</li>
+                            <li>选择"属性"。</li>
+                            <li>切换到"共享"选项卡。</li>
+                            <li>单击"高级共享"。</li>
+                            <li>在"高级共享"对话框中，选中"共享此文件夹"。</li>
+                            <li>单击"权限"。</li>
+                            <li>在"权限"对话框中，如有必要，删除"Everyone"组。</li>
+                            <li>单击"添加"以添加需要访问共享文件夹的用户或组。</li>
+                            <li>为添加的用户或组指定所需的权限级别（读取、更改或完全控制）。</li>
+                            <li>单击"确定"保存更改。</li>
+                        </ol>
+                        
+                        <div class="my-6 bg-green-50 dark:bg-green-900/20 p-4 rounded-md border-l-4 border-green-400">
+                            <p class="text-green-800 dark:text-green-300"><i class="fas fa-lightbulb mr-2"></i><strong>提示：</strong> 为增强安全性，通常建议删除默认的"Everyone"组，并添加特定的用户或组并分配适当的权限。此外，可以通过在共享名称末尾添加"$"符号来隐藏共享。</p>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">4.3 共享权限与 NTFS 权限的交互</h3>
+                        <p>当用户通过网络访问共享资源时，系统会同时检查共享权限和 NTFS 权限，最终生效的是限制性更强的权限。例如，如果共享文件夹的共享权限为"更改"，但用户对该文件夹中的特定文件只有"读取"的 NTFS 权限，则该用户通过网络访问该文件时只能读取该文件。</p>
+                        
+                        <div class="my-8">
+                            <h4 class="chart-title">NTFS 与共享权限交互</h4>
+                            <div class="mermaid">
+                                graph LR
+                                    A[用户通过网络访问]
+                                    B[检查共享权限]
+                                    C[检查NTFS权限]
+                                    D[取最严格的限制]
+                                    E[最终有效权限]
+                                    
+                                    A --> B
+                                    A --> C
+                                    B --> D
+                                    C --> D
+                                    D --> E
+                                    
+                                    style A fill:#d4e6ff,stroke:#3b82f6
+                                    style B fill:#bbd6ff,stroke:#3b82f6
+                                    style C fill:#bbd6ff,stroke:#3b82f6
+                                    style D fill:#bbd6ff,stroke:#3b82f6
+                                    style E fill:#c6f6d5,stroke:#38a169
+                            </div>
+                        </div>
+                        
+                        <div class="card bg-blue-50 dark:bg-blue-900/30 p-4 mt-6">
+                            <h4 class="font-semibold text-blue-700 dark:text-blue-300 mb-2">NTFS vs 共享权限：最佳实践</h4>
+                            <p class="text-gray-700 dark:text-gray-300 mb-2">管理共享文件夹时，一个常见的最佳实践是：</p>
+                            <ul class="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300">
+                                <li>将共享权限设置为相对宽松（例如，"更改"或"完全控制"针对域用户）</li>
+                                <li>使用 NTFS 权限来实施更精细的访问控制</li>
+                                <li>对于本地用户直接在服务器上访问资源的情况，则仅应用 NTFS 权限</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. Windows 注册表权限管理 -->
+                <section id="registry" class="mb-12">
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-md bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 mr-4">
+                            <i class="fas fa-database text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-bold">5. Windows 注册表权限管理</h2>
+                    </div>
+                    <div class="chapter-content ml-14">
+                        <p>Windows 注册表是一个存储操作系统、用户、应用程序和硬件设备配置信息的中央分层数据库。控制对注册表项的访问权限对于维护系统稳定性和安全性至关重要。</p>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">5.1 Windows 注册表的结构</h3>
+                        <p>注册表以分层树状结构组织，包含键（类似文件夹）、子键和值（存储实际配置数据）。注册表被划分为几个主要的根键，也称为注册表单元（hives），包括 HKEY_LOCAL_MACHINE (HKLM)、HKEY_CURRENT_USER (HKCU)、HKEY_USERS (HKU)、HKEY_CLASSES_ROOT (HKCR) 和 HKEY_CURRENT_CONFIG。每个键都可以包含子键和值。</p>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">5.2 注册表项的权限</h3>
+                        <p>可以为注册表中的每个键设置权限，以控制哪些用户或组可以读取、写入或修改该键及其子键和值。注册表项的标准访问权限包括查询值、设置值、创建子项、枚举子项、通知、创建链接、删除、写入 DACL、写入所有者和读取控制等。KEY_ALL_ACCESS 是一个组合权限，包含了所有这些标准权限。</p>
+                        
+                        <div class="table-container">
+                            <table>
+                                <caption class="text-lg font-semibold mb-2">表 4: Windows 注册表项的标准访问权限</caption>
+                                <thead>
+                                    <tr>
+                                        <th>访问权限名称</th>
+                                        <th>含义/描述</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="font-semibold">查询值 (Query Value)</td>
+                                        <td>读取注册表项值的权限。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">设置值 (Set Value)</td>
+                                        <td>写入新值的权限。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">创建子项 (Create Subkey)</td>
+                                        <td>创建子项的权限。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">枚举子项 (Enumerate Subkeys)</td>
+                                        <td>列出子项的权限。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">通知 (Notify)</td>
+                                        <td>请求注册表键或子键更改通知的权限。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">创建链接 (Create Link)</td>
+                                        <td>系统保留使用。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">删除 (Delete)</td>
+                                        <td>删除键的权限。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">写入 DACL (Write DACL)</td>
+                                        <td>修改容器 DACL 权限的权限。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">写入所有者 (Write Owner)</td>
+                                        <td>修改容器所有者的权限。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">读取控制 (Read Control)</td>
+                                        <td>读取 DACL 的权限。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">KEY_ALL_ACCESS</td>
+                                        <td>组合了 STANDARD_RIGHTS_REQUIRED、KEY_QUERY_VALUE、KEY_SET_VALUE、KEY_CREATE_SUB_KEY、KEY_ENUMERATE_SUB_KEYS、KEY_NOTIFY 和 KEY_CREATE_LINK 访问权限。</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">5.3 使用注册表编辑器管理注册表权限</h3>
+                        <p>可以使用注册表编辑器（Regedit.exe）来查看和修改注册表项的权限。要管理注册表权限，请按照以下步骤操作：</p>
+                        
+                        <ol class="list-decimal list-inside mt-4 space-y-2 pl-4">
+                            <li>打开注册表编辑器（在"运行"对话框中输入 regedit 并按 Enter）。</li>
+                            <li>导航到要修改权限的注册表项。</li>
+                            <li>右键单击该注册表项，然后选择"权限"。</li>
+                            <li>在"权限"对话框中，可以查看当前用户的权限和组。</li>
+                            <li>要添加新的用户或组，请单击"添加"。</li>
+                            <li>要修改现有用户或组的权限，请在列表中选择该用户或组。</li>
+                            <li>在"权限"部分，选中或取消选中相应的复选框以允许或拒绝特定的权限。</li>
+                            <li>单击"高级"以进行更精细的权限控制，例如更改所有者或配置审核。</li>
+                            <li>单击"确定"保存更改。</li>
+                        </ol>
+                        
+                        <div class="my-6 bg-red-50 dark:bg-red-900/20 p-4 rounded-md border-l-4 border-red-400">
+                            <p class="text-red-800 dark:text-red-300"><i class="fas fa-exclamation-circle mr-2"></i><strong>警告：</strong> 修改注册表权限时务必小心，因为不正确的更改可能导致系统不稳定。建议仅授予必要的权限给特定的注册表项。</p>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">5.4 使用 Regini.exe 管理注册表权限</h3>
+                        <p>Regini.exe 是一个命令行实用工具，包含在 Windows 资源工具包中，可用于从命令行或脚本更改注册表值或权限。要使用 Regini.exe 管理注册表权限，需要创建一个包含注册表更改的脚本文件，并以特定的格式指定注册表项路径和所需的权限（以二进制数字表示）。Regini.exe 替换现有权限，而不是编辑它们，因此在使用时需要格外注意。</p>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">5.5 远程注册表管理</h3>
+                        <p>Windows 允许管理员远程编辑另一台计算机的注册表。要远程编辑注册表，需要在本地计算机上启动注册表编辑器，然后连接到远程计算机的注册表。需要确保本地计算机和远程计算机运行相同的操作系统版本和服务包级别。远程编辑注册表需要谨慎操作，因为不正确的修改可能导致远程系统出现问题。</p>
+                    </div>
+                </section>
+
+                <!-- 6. 使用组策略进行集中化管理 -->
+                <section id="gp" class="mb-12">
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-md bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 mr-4">
+                            <i class="fas fa-tasks text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-bold">6. 使用组策略进行集中化管理</h2>
+                    </div>
+                    <div class="chapter-content ml-14">
+                        <p>组策略是 Windows 提供的一项强大功能，允许管理员集中配置和管理网络中用户和计算机的设置，包括安全设置和权限管理。组策略设置包含在组策略对象（GPO）中，这些 GPO 可以链接到 Active Directory 中的站点、域和组织单元（OU），从而将策略设置应用于这些容器中的用户和计算机。</p>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">6.1 组策略概述</h3>
+                        <p>组策略通过在计算机启动时应用计算机相关的策略，并在用户登录时应用用户相关的策略来工作。初始策略处理可以是同步的或异步的。系统还会定期在后台刷新组策略，应用异步策略设置。管理员可以使用组策略对象编辑器（作为组策略管理控制台（GPMC）的扩展）来创建和管理 GPO。通过将 GPO 链接到 OU，管理员可以将特定的设置应用于特定的用户或计算机组。</p>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">6.2 使用组策略管理安全设置</h3>
+                        <p>组策略管理控制台中的"安全设置"扩展允许管理员定义安全配置作为 GPO 的一部分。这些安全设置策略可用于保护域控制器、服务器、客户端和其他组织资源。可以配置的常见安全策略类型包括：</p>
+                        
+                        <ul class="list-disc list-inside mt-4 space-y-2 pl-4">
+                            <li><span class="font-semibold">账户策略：</span> 包括密码策略、账户锁定策略和 Kerberos 策略，用于管理用户账户的密码要求、锁定条件和 Kerberos 相关设置。</li>
+                            <li><span class="font-semibold">本地策略：</span> 包括审核策略、用户权限分配和安全选项，用于控制安全事件的日志记录、用户权限和计算机的各种安全设置。例如，可以使用组策略来设置系统服务的权限。</li>
+                            <li><span class="font-semibold">注册表设置：</span> 可以通过组策略来部署和管理注册表设置，从而集中控制应用程序和系统行为。</li>
+                        </ul>
+                        
+                        <div class="my-8">
+                            <h4 class="chart-title">组策略在 Active Directory 中的应用模型</h4>
+                            <div class="mermaid">
+                                flowchart TD
+                                    A["组策略对象 (GPO)"]
+                                    B["站点"]
+                                    C["域"]
+                                    D["组织单元 (OU)"]
+                                    E["用户和计算机"]
+                                    
+                                    A --> B
+                                    A --> C
+                                    A --> D
+                                    D --> E
+                                    
+                                    style A fill:#d4e6ff,stroke:#3b82f6
+                                    style B fill:#bbd6ff,stroke:#3b82f6
+                                    style C fill:#bbd6ff,stroke:#3b82f6
+                                    style D fill:#bbd6ff,stroke:#3b82f6
+                                    style E fill:#c6f6d5,stroke:#38a169
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">6.3 组策略的继承和优先级</h3>
+                        <p>默认情况下，组策略是继承和累积的，影响 Active Directory 容器及其子容器中的所有计算机和用户。计算机相关的策略设置优先于用户相关的策略设置。GPO 的处理顺序为：本地 GPO、站点链接的 GPO、域链接的 GPO 和组织单元链接的 GPO。应用于更低级别容器的策略会覆盖应用于更高级别容器的策略。</p>
+                        
+                        <p class="mt-4">可以通过设置 GPO 链接的"强制"选项来阻止较低级别容器中的 GPO 覆盖策略，或者在 OU 级别应用"阻止继承"设置来阻止来自父容器的设置应用。链接顺序也决定了同一容器中多个 GPO 的优先级，链接顺序号最低的 GPO 具有最高的优先级。可以使用组策略结果（gpresult）和组策略建模来验证策略的应用情况。</p>
+                        
+                        <div class="card bg-blue-50 dark:bg-blue-900/30 p-4 mt-6">
+                            <h4 class="font-semibold text-blue-700 dark:text-blue-300 mb-2">组策略处理顺序（从低优先级到高优先级）</h4>
+                            <ol class="list-decimal list-inside space-y-1 text-gray-700 dark:text-gray-300">
+                                <li>本地组策略</li>
+                                <li>站点级 GPO</li>
+                                <li>域级 GPO</li>
+                                <li>OU 级 GPO（从父 OU 到子 OU）</li>
+                                <li>同级别的 GPO 按照链接顺序处理（链接顺序号小的优先）</li>
+                            </ol>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">6.4 创建和链接 GPO</h3>
+                        <p>可以使用组策略管理控制台（GPMC）创建新的 GPO 并将其链接到域或组织单元。要创建 GPO，请在 GPMC 中右键单击"组策略对象"，然后选择"新建"。要链接 GPO，请右键单击要链接到的站点、域或 OU，然后选择"链接现有 GPO"。还可以通过拖放操作在同一域内链接 GPO。可以更改 GPO 的链接顺序以调整其优先级。</p>
+                    </div>
+                </section>
+
+                <!-- 7. 用户账户控制 (UAC) 的作用 -->
+                <section id="uac" class="mb-12">
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-md bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 mr-4">
+                            <i class="fas fa-user-shield text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-bold">7. 用户账户控制 (UAC) 的作用</h2>
+                    </div>
+                    <div class="chapter-content ml-14">
+                        <p>用户账户控制（UAC）是 Windows 中的一项安全功能，旨在防止对操作系统进行未经授权的更改。当系统更改需要管理员级别的权限时，UAC 会通知用户，并提供批准或拒绝操作的机会。UAC 通过限制恶意代码以管理员权限执行的能力来提高 Windows 设备的安全性。</p>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">7.1 UAC 的工作原理</h3>
+                        <p>启用 UAC 后，每个需要管理员访问令牌的应用程序都必须提示最终用户进行确认。唯一的例外是父进程和子进程之间的关系，子进程会从父进程继承用户的访问令牌。Windows 使用完整性级别来衡量信任度，例如，执行修改系统数据任务的应用程序具有高完整性级别，而可能危及操作系统的应用程序（如 Web 浏览器）具有低完整性级别。当标准用户或管理员（在管理审批模式下）尝试运行需要管理员访问令牌的应用程序时，UAC 会触发提升提示。</p>
+                        
+                        <div class="my-8">
+                            <h4 class="chart-title">UAC 工作流程</h4>
+                            <div class="mermaid">
+                                graph TD
+                                    A[用户尝试执行需要管理员权限的操作]
+                                    B{用户是管理员?}
+                                    C[显示UAC提示]
+                                    D{用户批准?}
+                                    E[操作以管理员权限执行]
+                                    F[操作被拒绝]
+                                    G[操作以标准用户权限执行]
+                                    
+                                    A --> B
+                                    B -->|是| C
+                                    B -->|否| G
+                                    C --> D
+                                    D -->|是| E
+                                    D -->|否| F
+                                    
+                                    style A fill:#d4e6ff,stroke:#3b82f6
+                                    style B fill:#bbd6ff,stroke:#3b82f6
+                                    style C fill:#bbd6ff,stroke:#3b82f6
+                                    style D fill:#bbd6ff,stroke:#3b82f6
+                                    style E fill:#c6f6d5,stroke:#38a169
+                                    style F fill:#fed7d7,stroke:#e53e3e
+                                    style G fill:#feebc8,stroke:#dd6b20
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">7.2 UAC 通知级别和设置</h3>
+                        <p>UAC 提供了四个不同的通知级别，用户可以根据自己的需求和安全偏好进行选择：</p>
+                        
+                        <ol class="list-decimal list-inside mt-4 space-y-4 pl-4">
+                            <li><span class="font-semibold">始终通知：</span> 当程序尝试安装软件或更改计算机时通知您，当您更改 Windows 设置时也通知您。并且会冻结其他任务直到您响应。如果经常安装新软件或访问不熟悉的网站，建议使用此选项。</li>
+                            <li><span class="font-semibold">仅当应用尝试更改我的计算机时通知我（默认）：</span> 当程序尝试安装软件或更改计算机时通知您，但当您更改 Windows 设置时不会通知您。并且会冻结其他任务直到您响应。如果经常安装新软件或访问不熟悉的网站，但不想在更改 Windows 设置时收到通知，建议使用此选项。</li>
+                            <li><span class="font-semibold">仅当程序尝试更改我的计算机时通知我（不使我的桌面变暗）：</span> 与上一个级别类似，但不会切换到安全桌面或使桌面变暗，也不会冻结其他任务。仅当计算机使桌面变暗需要很长时间时才建议使用此选项，否则不建议使用，因为它会降低安全性。</li>
+                            <li><span class="font-semibold">从不通知（禁用 UAC 提示）：</span> 不会在程序尝试安装软件或更改计算机时通知您，也不会在您更改 Windows 设置时通知您。并且不会冻结其他任务。由于安全隐患，强烈不建议使用此设置。即使选择此设置，UAC 服务仍然运行，管理员的提升请求会自动批准，而标准用户的请求会自动拒绝。要完全禁用 UAC，需要禁用组策略设置"用户账户控制：以管理员批准模式运行所有管理员"。</li>
+                        </ol>
+                        
+                        <p class="mt-4">这些设置可以在"控制面板">"系统和安全">"更改用户账户控制设置"中进行调整。</p>
+                        
+                        <div class="my-6 bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-md border-l-4 border-yellow-400">
+                            <p class="text-yellow-800 dark:text-yellow-300"><i class="fas fa-exclamation-triangle mr-2"></i><strong>注意：</strong> 降低 UAC 安全级别可能会使系统更容易受到恶意软件的攻击。建议保持默认设置或使用较高的安全级别，尤其是在共享计算机或处理敏感数据的情况下。</p>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">7.3 UAC 和远程限制</h3>
+                        <p>为了更好地保护本地 Administrators 组的成员，Windows 对网络上的 UAC 实施了限制。此机制有助于防止环回攻击，并防止本地恶意软件以管理员权限远程运行。对于本地用户账户，即使是本地 Administrators 组的成员通过网络进行远程管理连接，也不会以完全管理员身份连接。用户在远程计算机上没有提升权限的潜力，并且无法执行管理任务。要使用安全账户管理器（SAM）账户管理工作站，用户必须通过远程协助或远程桌面等服务交互式登录到要管理的计算机。对于域用户账户，如果域用户是远程 Windows 计算机上的 Administrators 组的成员，则该域用户将在远程计算机上以完全管理员访问令牌运行，并且 UAC 不会生效。</p>
+                    </div>
+                </section>
+
+                <!-- 8. Windows 权限管理最佳实践 -->
+                <section id="best-practice" class="mb-12">
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-md bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 mr-4">
+                            <i class="fas fa-check-circle text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-bold">8. Windows 权限管理最佳实践</h2>
+                    </div>
+                    <div class="chapter-content ml-14">
+                        <p>实施有效的权限管理对于保护 Windows 系统和数据的安全至关重要。以下是一些关键的最佳实践：</p>
+                        
+                        <div class="table-container">
+                            <table>
+                                <caption class="text-lg font-semibold mb-2">表 5: Windows 权限管理最佳实践</caption>
+                                <thead>
+                                    <tr>
+                                        <th>最佳实践</th>
+                                        <th>描述/解释</th>
+                                        <th>合规性相关性</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="font-semibold">最小权限原则</td>
+                                        <td>仅授予完成任务所需的最低权限。</td>
+                                        <td>是，许多合规性框架（如 ISO 27001、NIST CSF、HIPAA、GDPR）都强调最小权限原则。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">使用安全组</td>
+                                        <td>使用组来管理权限，而不是直接分配给用户。</td>
+                                        <td>是，简化管理和审计，符合许多合规性要求。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">强密码策略</td>
+                                        <td>实施复杂的密码要求、定期更改和账户锁定策略。</td>
+                                        <td>是，许多合规性标准都有密码要求。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">定期审查和审计权限</td>
+                                        <td>定期检查权限设置以确保其仍然合适。</td>
+                                        <td>是，对于证明符合许多法规至关重要。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">保护管理账户</td>
+                                        <td>对特权账户采取额外的安全措施。</td>
+                                        <td>是，保护高权限账户对于防止重大安全漏洞至关重要。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">实施基于访问的枚举 (ABE)</td>
+                                        <td>仅显示用户有权访问的文件和文件夹。</td>
+                                        <td>否，但可以提高用户体验和安全性。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">避免对敏感资源使用"Everyone"组</td>
+                                        <td>使用更具体的组来限制访问。</td>
+                                        <td>是，有助于确保只有授权用户可以访问敏感数据。</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-semibold">建立标准化的权限管理流程和文档</td>
+                                        <td>定义清晰的流程和记录权限设置。</td>
+                                        <td>是，有助于确保一致性和可审计性。</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                            <!-- 最佳实践卡片1 -->
+                            <div class="card p-6">
+                                <div class="flex items-center mb-4">
+                                    <div class="flex-shrink-0 h-10 w-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center text-green-600 dark:text-green-300 mr-4">
+                                        <i class="fas fa-user-shield text-xl"></i>
+                                    </div>
+                                    <h3 class="text-lg font-semibold">最小权限原则</h3>
+                                </div>
+                                <p class="text-gray-600 dark:text-gray-300">为用户和程序分配执行其任务所需的最低权限级别。过度权限会增加系统遭受攻击的风险。定期审查权限分配，确保符合用户当前的工作需求。</p>
+                            </div>
+                            
+                            <!-- 最佳实践卡片2 -->
+                            <div class="card p-6">
+                                <div class="flex items-center mb-4">
+                                    <div class="flex-shrink-0 h-10 w-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center text-green-600 dark:text-green-300 mr-4">
+                                        <i class="fas fa-users-cog text-xl"></i>
+                                    </div>
+                                    <h3 class="text-lg font-semibold">使用安全组管理权限</h3>
+                                </div>
+                                <p class="text-gray-600 dark:text-gray-300">向安全组而非个人用户授予权限。这简化了管理，提高了一致性，并降低了人为错误的风险。组织级别的权限变更只需要修改一次组成员资格，即可生效。</p>
+                            </div>
+                            
+                            <!-- 最佳实践卡片3 -->
+                            <div class="card p-6">
+                                <div class="flex items-center mb-4">
+                                    <div class="flex-shrink-0 h-10 w-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center text-green-600 dark:text-green-300 mr-4">
+                                        <i class="fas fa-clipboard-check text-xl"></i>
+                                    </div>
+                                    <h3 class="text-lg font-semibold">定期审查和审计权限</h3>
+                                </div>
+                                <p class="text-gray-600 dark:text-gray-300">建立定期审查权限分配的流程，确保它们仍然合适。识别并移除不必要的权限和过时的账户。使用审计工具和日志监控权限更改，及时发现潜在问题。</p>
+                            </div>
+                            
+                            <!-- 最佳实践卡片4 -->
+                            <div class="card p-6">
+                                <div class="flex items-center mb-4">
+                                    <div class="flex-shrink-0 h-10 w-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center text-green-600 dark:text-green-300 mr-4">
+                                        <i class="fas fa-key text-xl"></i>
+                                    </div>
+                                    <h3 class="text-lg font-semibold">权限分离和职责划分</h3>
+                                </div>
+                                <p class="text-gray-600 dark:text-gray-300">为不同角色和职能分配不同的权限，避免单一账户拥有过多特权。实施权限分离原则，确保敏感操作需要多人授权才能完成，降低内部威胁风险。</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 9. 审计权限更改和访问 -->
+                <section id="audit" class="mb-12">
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-md bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 mr-4">
+                            <i class="fas fa-clipboard-list text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-bold">9. 审计权限更改和访问</h2>
+                    </div>
+                    <div class="chapter-content ml-14">
+                        <p>审计是 Windows 权限管理的一个重要方面，它允许跟踪对文件、文件夹、注册表项和其他对象的访问尝试以及权限更改。审计对于安全监控、事件响应和满足合规性要求至关重要。</p>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">9.1 配置审计策略</h3>
+                        <p>可以使用组策略或本地安全策略启用审核策略。可以配置审核对象访问设置以跟踪对文件系统对象、注册表项等的访问。高级审核策略配置提供了更精细的控制，可以审核特定的安全事件，例如文件系统更改、注册表修改和登录/注销事件。</p>
+                        
+                        <div class="my-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-md">
+                            <h4 class="font-semibold text-blue-700 dark:text-blue-300 mb-2">常见的审计策略类别</h4>
+                            <ul class="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300">
+                                <li>账户登录事件（成功和失败）</li>
+                                <li>账户管理（用户创建、删除、组成员资格更改）</li>
+                                <li>对象访问（文件、文件夹、注册表的访问）</li>
+                                <li>策略更改（安全策略、用户权限更改）</li>
+                                <li>特权使用（提升特权操作）</li>
+                                <li>系统事件（启动、关闭、系统时间更改）</li>
+                            </ul>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">9.2 系统访问控制列表 (SACL)</h3>
+                        <p>系统访问控制列表（SACL）用于定义特定对象的审核规则。可以在 SACL 中指定要审核的访问尝试类型（成功、失败或两者兼有）。安全事件日志包含有关权限相关活动的重要信息。可以使用事件查看器和其他工具来分析这些日志，以识别潜在的安全事件。</p>
+                        
+                        <p class="mt-4">配置对象的 SACL 的步骤：</p>
+                        <ol class="list-decimal list-inside mt-4 space-y-2 pl-4">
+                            <li>右键单击对象（如文件或文件夹），然后选择"属性"。</li>
+                            <li>切换到"安全"选项卡，然后单击"高级"。</li>
+                            <li>切换到"审核"选项卡。</li>
+                            <li>单击"添加"以添加审核项。</li>
+                            <li>指定要审核的安全主体（用户或组）。</li>
+                            <li>选择要审核的访问类型（成功、失败或两者）。</li>
+                            <li>选择要审核的权限（如读取、写入、执行等）。</li>
+                            <li>单击"确定"保存设置。</li>
+                        </ol>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">9.3 审计最佳实践</h3>
+                        <p>审核权限和访问的最佳实践包括关注关键资源和活动，平衡详细程度与性能考虑，以及集中化日志收集和分析。</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                            <!-- 审计最佳实践卡片1 -->
+                            <div class="card p-6">
+                                <h4 class="font-semibold mb-2">关注关键资源</h4>
+                                <p class="text-gray-600 dark:text-gray-300">将审计重点放在敏感数据和关键系统组件上。优先审计包含个人身份信息 (PII)、财务数据和知识产权的资源，以及关键系统文件和注册表项。</p>
+                            </div>
+                            
+                            <!-- 审计最佳实践卡片2 -->
+                            <div class="card p-6">
+                                <h4 class="font-semibold mb-2">平衡详细程度与性能</h4>
+                                <p class="text-gray-600 dark:text-gray-300">过度审计会产生大量日志并影响系统性能。根据资源的敏感性和业务需求，选择适当的审计详细程度。审计成功和失败的访问尝试，但仅限于关键操作。</p>
+                            </div>
+                            
+                            <!-- 审计最佳实践卡片3 -->
+                            <div class="card p-6">
+                                <h4 class="font-semibold mb-2">集中化日志管理</h4>
+                                <p class="text-gray-600 dark:text-gray-300">使用安全信息和事件管理 (SIEM) 系统集中收集、存储和分析审计日志。这使得跨多个系统的事件关联成为可能，有助于检测复杂的安全威胁。</p>
+                            </div>
+                            
+                            <!-- 审计最佳实践卡片4 -->
+                            <div class="card p-6">
+                                <h4 class="font-semibold mb-2">定期审查和监控</h4>
+                                <p class="text-gray-600 dark:text-gray-300">建立定期审查审计日志的流程，确保及时发现异常行为。配置自动告警，在检测到可疑活动（如反复的身份验证失败或在非工作时间访问敏感数据）时通知管理员。</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 10. 高级权限管理功能 -->
+                <section id="advanced" class="mb-12">
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-md bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 mr-4">
+                            <i class="fas fa-cogs text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-bold">10. 高级权限管理功能</h2>
+                    </div>
+                    <div class="chapter-content ml-14">
+                        <p>Windows 提供了一些高级权限管理功能，以满足更复杂的安全需求。这些功能为管理员提供了更精细和动态的访问控制能力，可以基于用户属性、资源特性和环境条件来授权访问。</p>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">10.1 动态访问控制 (DAC)</h3>
+                        <p>动态访问控制（DAC）是一种基于规则的访问控制机制，它允许管理员根据资源的敏感性、用户的角色和用于访问资源的设备的配置来应用访问控制权限和限制。DAC 利用中央访问规则和策略、声明（关于用户、设备和资源的属性）以及条件表达式来实现细粒度的访问控制。它对于需要根据上下文动态更改用户权限的大型组织非常有用。</p>
+                        
+                        <div class="my-6 bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-md">
+                            <h4 class="font-semibold text-yellow-800 dark:text-yellow-300 mb-2">DAC 主要组件</h4>
+                            <ul class="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300">
+                                <li><span class="font-medium">声明 (Claims)：</span> 关于用户、设备和资源的属性信息，如部门、职位级别、敏感度分类等。</li>
+                                <li><span class="font-medium">中央访问规则 (Central Access Rules)：</span> 定义访问条件的表达式，如"允许财务部门成员访问所有财务文档"。</li>
+                                <li><span class="font-medium">中央访问策略 (Central Access Policies)：</span> 包含一组规则的容器，可通过组策略部署到文件服务器。</li>
+                                <li><span class="font-medium">资源属性 (Resource Properties)：</span> 分配给文件和文件夹的元数据，用于决定哪些访问策略适用。</li>
+                            </ul>
+                        </div>
+                        
+                        <p>DAC 的优势包括：</p>
+                        <ul class="list-disc list-inside mt-4 space-y-2 pl-4">
+                            <li>基于用户和资源属性的细粒度访问控制</li>
+                            <li>集中管理和部署访问策略</li>
+                            <li>审计和报告功能的增强</li>
+                            <li>策略更改的集中化管理，无需修改单个文件和文件夹权限</li>
+                        </ul>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">10.2 Microsoft Entra 权限管理</h3>
+                        <p>Microsoft Entra 权限管理（以前称为 CloudKnox）是一种云基础设施权利管理（CIEM）解决方案，用于管理多云环境（Azure、AWS、GCP）中的权限。它提供了跨云平台的权限可见性，可以自动实施最小权限原则，并统一云访问策略。</p>
+                        
+                        <p>主要功能包括：</p>
+                        <ul class="list-disc list-inside mt-4 space-y-2 pl-4">
+                            <li>权限使用分析，识别过度权限</li>
+                            <li>基于历史活动的最小权限建议</li>
+                            <li>跨云环境的一致权限管理</li>
+                            <li>权限风险监控和告警</li>
+                            <li>访问审查和合规性报告</li>
+                        </ul>
+                        
+                        <div class="my-8">
+                            <h4 class="chart-title">高级权限管理概述</h4>
+                            <div class="mermaid">
+                                graph TD
+                                    A[传统权限管理]
+                                    B[高级权限管理]
+                                    C[基于身份的静态权限]
+                                    D[基于属性的动态权限]
+                                    E[简单允许/拒绝规则]
+                                    F[复杂条件表达式]
+                                    G[手动权限分配]
+                                    H[自动化权限推荐]
+                                    I[孤立的权限系统]
+                                    J[集成的权限管理]
+                                    
+                                    A --> C
+                                    A --> E
+                                    A --> G
+                                    A --> I
+                                    B --> D
+                                    B --> F
+                                    B --> H
+                                    B --> J
+                                    
+                                    style A fill:#d4e6ff,stroke:#3b82f6
+                                    style B fill:#d4e6ff,stroke:#3b82f6
+                                    style C fill:#bbd6ff,stroke:#3b82f6
+                                    style D fill:#c6f6d5,stroke:#38a169
+                                    style E fill:#bbd6ff,stroke:#3b82f6
+                                    style F fill:#c6f6d5,stroke:#38a169
+                                    style G fill:#bbd6ff,stroke:#3b82f6
+                                    style H fill:#c6f6d5,stroke:#38a169
+                                    style I fill:#bbd6ff,stroke:#3b82f6
+                                    style J fill:#c6f6d5,stroke:#38a169
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 11. 保障管理账户安全和实施最小权限 -->
+                <section id="admin-accounts" class="mb-12">
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-md bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 mr-4">
+                            <i class="fas fa-user-cog text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-bold">11. 保障管理账户安全和实施最小权限</h2>
+                    </div>
+                    <div class="chapter-content ml-14">
+                        <p>保障管理账户的安全对于防止未经授权的访问和潜在的系统损害至关重要。管理账户通常拥有广泛的系统权限，因此是攻击者的主要目标。实施强大的保护措施和遵循最小权限原则是确保系统安全的关键。</p>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">11.1 保护管理账户</h3>
+                        <p>保护管理账户的最佳实践包括：</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                            <!-- 管理账户安全卡片1 -->
+                            <div class="card p-6">
+                                <div class="flex items-center mb-4 text-red-600 dark:text-red-400">
+                                    <i class="fas fa-user-lock text-xl mr-2"></i>
+                                    <h4 class="font-semibold">重命名或禁用内置管理员账户</h4>
+                                </div>
+                                <p class="text-gray-600 dark:text-gray-300">默认的Administrator账户是攻击者的已知目标。重命名这个账户可以减少针对性攻击的风险。在可能的情况下，创建命名的管理员账户，并禁用默认账户。</p>
+                            </div>
+                            
+                            <!-- 管理账户安全卡片2 -->
+                            <div class="card p-6">
+                                <div class="flex items-center mb-4 text-red-600 dark:text-red-400">
+                                    <i class="fas fa-user-shield text-xl mr-2"></i>
+                                    <h4 class="font-semibold">使用专用管理账户</h4>
+                                </div>
+                                <p class="text-gray-600 dark:text-gray-300">为管理任务创建单独的账户，与日常使用的账户分开。管理员应使用标准权限账户进行日常工作，仅在执行管理任务时使用特权账户。</p>
+                            </div>
+                            
+                            <!-- 管理账户安全卡片3 -->
+                            <div class="card p-6">
+                                <div class="flex items-center mb-4 text-red-600 dark:text-red-400">
+                                    <i class="fas fa-fingerprint text-xl mr-2"></i>
+                                    <h4 class="font-semibold">多因素身份验证</h4>
+                                </div>
+                                <p class="text-gray-600 dark:text-gray-300">为所有特权账户实施多因素身份验证 (MFA)。这为管理账户提供了额外的安全层，即使密码被泄露，攻击者也无法未经授权地访问系统。</p>
+                            </div>
+                            
+                            <!-- 管理账户安全卡片4 -->
+                            <div class="card p-6">
+                                <div class="flex items-center mb-4 text-red-600 dark:text-red-400">
+                                    <i class="fas fa-network-wired text-xl mr-2"></i>
+                                    <h4 class="font-semibold">限制网络访问</h4>
+                                </div>
+                                <p class="text-gray-600 dark:text-gray-300">限制管理账户的网络访问权限，仅允许从特定安全工作站进行访问。使用防火墙规则、IPsec策略和网络访问控制来限制对管理接口的访问。</p>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">11.2 实施最小权限管理模型</h3>
+                        <p>最小权限管理模型是将最小权限原则应用于管理角色的过程。这包括使用基于角色的管理、使用特权身份管理（PIM）进行临时权限提升，以及创建非特权账户来管理特权账户。</p>
+                        
+                        <div class="my-8">
+                            <h4 class="chart-title">最小权限管理模型</h4>
+                            <div class="mermaid">
+                                flowchart TD
+                                    A[标准用户账户] --> B{需要执行管理任务?}
+                                    B -->|是| C[临时权限提升]
+                                    C --> D[执行管理任务]
+                                    D --> E[权限自动降级]
+                                    E --> A
+                                    B -->|否| A
+                                    
+                                    style A fill:#d4e6ff,stroke:#3b82f6
+                                    style B fill:#bbd6ff,stroke:#3b82f6
+                                    style C fill:#c6f6d5,stroke:#38a169
+                                    style D fill:#c6f6d5,stroke:#38a169
+                                    style E fill:#bbd6ff,stroke:#3b82f6
+                            </div>
+                        </div>
+                        
+                        <p>实施最小权限管理的关键策略：</p>
+                        <ul class="list-disc list-inside mt-4 space-y-2 pl-4">
+                            <li><span class="font-semibold">基于角色的管理：</span> 根据工作职责分配特定的管理权限，而不是授予完全管理权限。例如，为帮助台人员提供重置密码的能力，但不允许他们修改安全策略。</li>
+                            <li><span class="font-semibold">即时提升 (Just-in-Time Elevation)：</span> 使用特权身份管理 (PIM) 解决方案，按需提供临时管理权限，在完成任务后自动撤销。</li>
+                            <li><span class="font-semibold">特权访问工作站 (PAW)：</span> 使用专门配置和隔离的工作站执行管理任务，降低管理账户被恶意软件感染的风险。</li>
+                            <li><span class="font-semibold">权限界限：</span> 创建逻辑边界，限制特权账户的影响范围，防止一个受损的管理账户危及整个环境。</li>
+                        </ul>
+                        
+                        <div class="my-6 bg-green-50 dark:bg-green-900/20 p-4 rounded-md border-l-4 border-green-400">
+                            <p class="text-green-800 dark:text-green-300"><i class="fas fa-lightbulb mr-2"></i><strong>最佳实践：</strong> 采用特权访问管理 (PAM) 解决方案，提供集中管理、审计和控制特权账户的功能。PAM 系统可以自动化账户提供、权限提升和访问审查流程，大幅降低特权账户相关的安全风险。</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 12. 常见 Windows 权限问题故障排除 -->
+                <section id="troubleshooting" class="mb-12">
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-md bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 mr-4">
+                            <i class="fas fa-wrench text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-bold">12. 常见 Windows 权限问题故障排除</h2>
+                    </div>
+                    <div class="chapter-content ml-14">
+                        <p>用户可能会遇到各种 Windows 权限问题，最常见的是"拒绝访问"错误。此错误可能由多种原因引起，包括文件所有权不正确、权限不足、文件或文件夹加密、文件被 Windows 或防病毒软件阻止、文件系统或用户配置文件损坏以及组策略限制等。</p>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">12.1 常见权限问题及解决方案</h3>
+                        
+                        <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 mt-6">
+                            <div class="bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="font-semibold">常见权限错误故障排除指南</h4>
+                                </div>
+                            </div>
+                            <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <!-- 故障问题 1 -->
+                                <div class="p-4">
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 pt-1">
+                                            <i class="fas fa-exclamation-circle text-red-500"></i>
+                                        </div>
+                                        <div class="ml-3 w-full">
+                                            <h5 class="font-semibold text-gray-900 dark:text-white">拒绝访问错误</h5>
+                                            <p class="text-gray-600 dark:text-gray-300 mt-1">尝试访问文件或文件夹时收到"拒绝访问"消息。</p>
+                                            <div class="mt-2">
+                                                <p class="font-medium text-gray-700 dark:text-gray-200">解决方案:</p>
+                                                <ul class="list-disc list-inside text-gray-600 dark:text-gray-300 mt-1 pl-4">
+                                                    <li>检查您对该资源的权限设置</li>
+                                                    <li>取得文件所有权（右键单击文件 > 属性 > 安全 > 高级 > 所有者 > 编辑）</li>
+                                                    <li>以管理员身份运行应用程序</li>
+                                                    <li>使用 icacls 命令重置权限: <code class="code">icacls "path_to_file" /reset</code></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 故障问题 2 -->
+                                <div class="p-4">
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 pt-1">
+                                            <i class="fas fa-exclamation-circle text-red-500"></i>
+                                        </div>
+                                        <div class="ml-3 w-full">
+                                            <h5 class="font-semibold text-gray-900 dark:text-white">文件被阻止错误</h5>
+                                            <p class="text-gray-600 dark:text-gray-300 mt-1">由于安全原因，Windows 阻止了文件的执行或访问。</p>
+                                            <div class="mt-2">
+                                                <p class="font-medium text-gray-700 dark:text-gray-200">解决方案:</p>
+                                                <ul class="list-disc list-inside text-gray-600 dark:text-gray-300 mt-1 pl-4">
+                                                    <li>右键单击文件 > 属性 > 常规选项卡</li>
+                                                    <li>在底部找到"安全"部分，勾选"解除锁定"</li>
+                                                    <li>点击应用和确定</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 故障问题 3 -->
+                                <div class="p-4">
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 pt-1">
+                                            <i class="fas fa-exclamation-circle text-red-500"></i>
+                                        </div>
+                                        <div class="ml-3 w-full">
+                                            <h5 class="font-semibold text-gray-900 dark:text-white">无法修改/删除继承的权限</h5>
+                                            <p class="text-gray-600 dark:text-gray-300 mt-1">尝试修改继承的权限时遇到困难。</p>
+                                            <div class="mt-2">
+                                                <p class="font-medium text-gray-700 dark:text-gray-200">解决方案:</p>
+                                                <ul class="list-disc list-inside text-gray-600 dark:text-gray-300 mt-1 pl-4">
+                                                    <li>右键单击文件/文件夹 > 属性 > 安全 > 高级</li>
+                                                    <li>点击"禁用继承"</li>
+                                                    <li>选择"将继承的权限转换为此对象的显式权限"</li>
+                                                    <li>现在可以修改或删除原先继承的权限</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 故障问题 4 -->
+                                <div class="p-4">
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 pt-1">
+                                            <i class="fas fa-exclamation-circle text-red-500"></i>
+                                        </div>
+                                        <div class="ml-3 w-full">
+                                            <h5 class="font-semibold text-gray-900 dark:text-white">组策略限制导致的权限问题</h5>
+                                            <p class="text-gray-600 dark:text-gray-300 mt-1">由于组策略设置导致无法访问某些功能或资源。</p>
+                                            <div class="mt-2">
+                                                <p class="font-medium text-gray-700 dark:text-gray-200">解决方案:</p>
+                                                <ul class="list-disc list-inside text-gray-600 dark:text-gray-300 mt-1 pl-4">
+                                                    <li>使用 gpresult /r 命令检查应用了哪些组策略</li>
+                                                    <li>联系系统管理员或 IT 部门请求必要的权限</li>
+                                                    <li>查看事件日志中的组策略相关错误</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">12.2 高级故障排除工具</h3>
+                        <p>Windows 提供了多种工具来帮助诊断和解决权限问题：</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                            <!-- 工具卡片1 -->
+                            <div class="card p-6">
+                                <h4 class="font-semibold mb-2">Effective Access 选项卡</h4>
+                                <p class="text-gray-600 dark:text-gray-300">在文件或文件夹属性的"安全"选项卡中，通过"高级"按钮可以访问"有效访问"选项卡。此工具允许您选择特定用户或组，并查看他们对该资源的实际有效权限，包括继承权限和组成员资格的影响。</p>
+                            </div>
+                            
+                            <!-- 工具卡片2 -->
+                            <div class="card p-6">
+                                <h4 class="font-semibold mb-2">icacls 命令行工具</h4>
+                                <p class="text-gray-600 dark:text-gray-300">功能强大的命令行工具，用于显示或修改文件和目录的访问控制列表 (ACL)。可用于批量重置权限、授予特定权限或保存和恢复权限设置。例如：<code class="code">icacls C:\Data /grant John:(OI)(CI)F</code> 给予John对Data文件夹的完全控制权限。</p>
+                            </div>
+                            
+                            <!-- 工具卡片3 -->
+                            <div class="card p-6">
+                                <h4 class="font-semibold mb-2">Process Monitor</h4>
+                                <p class="text-gray-600 dark:text-gray-300">Microsoft Sysinternals 提供的高级工具，可以实时监控文件系统、注册表和进程/线程活动。在访问被拒的情况下，Process Monitor 可以精确显示哪个权限检查失败以及原因，非常适合复杂权限问题的故障排除。</p>
+                            </div>
+                            
+                            <!-- 工具卡片4 -->
+                            <div class="card p-6">
+                                <h4 class="font-semibold mb-2">Event Viewer (事件查看器)</h4>
+                                <p class="text-gray-600 dark:text-gray-300">Windows 事件查看器可以显示安全相关的事件日志，包括访问尝试失败的记录（如果启用了审计）。检查"Windows 日志" > "安全"类别，过滤事件 ID 4656（请求句柄到对象）和 4663（尝试访问对象）来找出权限问题。</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 13. Windows 权限管理与合规性标准 -->
+                <section id="compliance" class="mb-12">
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-md bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 mr-4">
+                            <i class="fas fa-clipboard-check text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-bold">13. Windows 权限管理与合规性标准</h2>
+                    </div>
+                    <div class="chapter-content ml-14">
+                        <p>有效的 Windows 权限管理对于满足各种合规性框架（如 ISO 27001、NIST CSF、HIPAA、GDPR 和 PCI DSS）的要求至关重要。通过正确配置权限，组织可以确保数据的机密性和完整性，控制对敏感数据的访问，并审核访问和更改以进行合规性报告。</p>
+                        
+                        <div class="my-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-md">
+                            <h4 class="font-semibold text-blue-700 dark:text-blue-300 mb-2">权限管理与主要合规性标准的关系</h4>
+                            <ul class="space-y-3">
+                                <li>
+                                    <div class="font-medium">ISO 27001</div>
+                                    <p class="text-gray-600 dark:text-gray-300 text-sm">要求组织实施访问控制政策，基于业务和安全要求。Windows 权限管理可帮助实现控制访问权限分配、用户注册和注销流程，以及特权访问权限控制等安全控制措施。</p>
+                                </li>
+                                <li>
+                                    <div class="font-medium">GDPR</div>
+                                    <p class="text-gray-600 dark:text-gray-300 text-sm">要求组织实施适当的技术和组织措施来保护个人数据。Windows 权限管理可帮助限制对个人数据的访问，确保只有授权人员才能访问这些信息，从而满足数据保护要求。</p>
+                                </li>
+                                <li>
+                                    <div class="font-medium">HIPAA</div>
+                                    <p class="text-gray-600 dark:text-gray-300 text-sm">要求实施技术保障措施，保护电子受保护健康信息 (ePHI)。Windows 权限控制可帮助限制和控制对包含 ePHI 的系统的访问，并满足最小权限要求。</p>
+                                </li>
+                                <li>
+                                    <div class="font-medium">PCI DSS</div>
+                                    <p class="text-gray-600 dark:text-gray-300 text-sm">要求限制对持卡人数据的访问，只允许业务需要的人员访问。Windows 权限管理支持基于角色的访问控制，并帮助组织实现"需要知道"的访问原则。</p>
+                                </li>
+                                <li>
+                                    <div class="font-medium">NIST Cybersecurity Framework</div>
+                                    <p class="text-gray-600 dark:text-gray-300 text-sm">强调身份管理、访问控制和特权账户管理的重要性。Windows 权限管理直接支持这些安全功能，帮助组织实现框架中的各种安全控制。</p>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">13.1 合规性权限管理策略</h3>
+                        <p>为了支持合规性要求，组织应考虑实施以下权限管理策略：</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                            <!-- 合规策略卡片1 -->
+                            <div class="card p-6">
+                                <div class="text-purple-600 dark:text-purple-400 mb-4">
+                                    <i class="fas fa-tasks text-2xl"></i>
+                                </div>
+                                <h4 class="font-semibold mb-2">基于角色的访问控制 (RBAC)</h4>
+                                <p class="text-gray-600 dark:text-gray-300">根据用户角色和职责分配权限，确保用户只能访问执行工作所需的资源。定期审查角色分配，确保其与用户的当前职责相符。</p>
+                            </div>
+                            
+                            <!-- 合规策略卡片2 -->
+                            <div class="card p-6">
+                                <div class="text-purple-600 dark:text-purple-400 mb-4">
+                                    <i class="fas fa-clipboard-list text-2xl"></i>
+                                </div>
+                                <h4 class="font-semibold mb-2">全面的审计计划</h4>
+                                <p class="text-gray-600 dark:text-gray-300">对敏感数据和系统实施详细的审计策略，记录所有关键访问尝试和权限更改。定期审查审计日志，识别潜在的安全事件和合规性问题。</p>
+                            </div>
+                            
+                            <!-- 合规策略卡片3 -->
+                            <div class="card p-6">
+                                <div class="text-purple-600 dark:text-purple-400 mb-4">
+                                    <i class="fas fa-file-signature text-2xl"></i>
+                                </div>
+                                <h4 class="font-semibold mb-2">正式的权限审查流程</h4>
+                                <p class="text-gray-600 dark:text-gray-300">建立定期权限审查的正式流程，记录审查结果和采取的任何纠正措施。确保此流程涵盖所有关键系统和包含敏感数据的位置。</p>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">13.2 权限管理合规性文档</h3>
+                        <p>充分的文档是合规性的关键方面。组织应维护以下与权限相关的文档：</p>
+                        
+                        <ul class="list-disc list-inside mt-4 space-y-2 pl-4">
+                            <li>权限策略和程序</li>
+                            <li>用户访问权限授权记录</li>
+                            <li>权限审查记录和结果</li>
+                            <li>特权账户管理程序</li>
+                            <li>权限更改日志和审核记录</li>
+                            <li>安全事件响应程序</li>
+                            <li>员工安全意识培训记录</li>
+                        </ul>
+                        
+                        <div class="my-6 bg-green-50 dark:bg-green-900/20 p-4 rounded-md border-l-4 border-green-400">
+                            <p class="text-green-800 dark:text-green-300"><i class="fas fa-lightbulb mr-2"></i><strong>提示：</strong> 实施自动化工具来监控权限合规性可以显著减轻管理负担。这些工具可以自动检测不合规的权限配置，生成合规性报告，并支持权限审查流程。</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 14. 特定 Windows 服务和功能中的权限管理 -->
+                <section id="services" class="mb-12">
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-md bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 mr-4">
+                            <i class="fas fa-server text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-bold">14. 特定 Windows 服务和功能中的权限管理</h2>
+                    </div>
+                    <div class="chapter-content ml-14">
+                        <p>不同的 Windows 服务和功能可能具有特定的权限管理要求。理解这些特定服务的权限管理对于确保它们的安全和正常运行至关重要。</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                            <!-- 服务权限卡片1 -->
+                            <div class="card p-6">
+                                <h4 class="font-semibold mb-3">
+                                    <i class="fas fa-desktop text-blue-600 dark:text-blue-400 mr-2"></i>
+                                    远程桌面服务 (RDS)
+                                </h4>
+                                <p class="text-gray-600 dark:text-gray-300 mb-3">远程桌面服务需要授予用户连接的权限，并且可以管理对特定 RemoteApp 程序和集合的访问。</p>
+                                <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="font-medium">关键权限考虑：</div>
+                                    <ul class="list-disc list-inside pl-4 mt-1">
+                                        <li>通过"允许通过远程桌面服务登录"用户权限控制谁可以远程连接</li>
+                                        <li>使用远程桌面会话主机配置来设置会话限制和超时</li>
+                                        <li>利用远程桌面网关实施额外的访问控制和身份验证</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- 服务权限卡片2 -->
+                            <div class="card p-6">
+                                <h4 class="font-semibold mb-3">
+                                    <i class="fas fa-project-diagram text-blue-600 dark:text-blue-400 mr-2"></i>
+                                    分布式文件系统 (DFS)
+                                </h4>
+                                <p class="text-gray-600 dark:text-gray-300 mb-3">分布式文件系统具有自己的权限继承和显式权限设置，以及委派管理权限的功能。</p>
+                                <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="font-medium">关键权限考虑：</div>
+                                    <ul class="list-disc list-inside pl-4 mt-1">
+                                        <li>DFS 命名空间权限与 NTFS 权限协同工作</li>
+                                        <li>链接级访问权限可控制谁可以看到特定的 DFS 链接</li>
+                                        <li>应在 DFS 共享和目标文件夹中一致地应用权限</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- 服务权限卡片3 -->
+                            <div class="card p-6">
+                                <h4 class="font-semibold mb-3">
+                                    <i class="fas fa-exchange-alt text-blue-600 dark:text-blue-400 mr-2"></i>
+                                    Active Directory 信任关系
+                                </h4>
+                                <p class="text-gray-600 dark:text-gray-300 mb-3">在具有 Active Directory 信任关系的环境中，需要管理跨信任域和林授予资源访问权限的方式。</p>
+                                <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="font-medium">关键权限考虑：</div>
+                                    <ul class="list-disc list-inside pl-4 mt-1">
+                                        <li>使用全局组和域本地组来实现跨林访问</li>
+                                        <li>配置选择性身份验证以限制哪些账户可以通过信任进行身份验证</li>
+                                        <li>谨慎管理林间信任和传递性信任的权限</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- 服务权限卡片4 -->
+                            <div class="card p-6">
+                                <h4 class="font-semibold mb-3">
+                                    <i class="fas fa-database text-blue-600 dark:text-blue-400 mr-2"></i>
+                                    SQL Server 权限管理
+                                </h4>
+                                <p class="text-gray-600 dark:text-gray-300 mb-3">SQL Server 具有自己的安全模型，与 Windows 权限管理集成，可使用 Windows 身份验证和混合模式身份验证。</p>
+                                <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="font-medium">关键权限考虑：</div>
+                                    <ul class="list-disc list-inside pl-4 mt-1">
+                                        <li>服务器级角色控制管理操作和实例级别的访问</li>
+                                        <li>数据库级角色控制对特定数据库对象的访问</li>
+                                        <li>可通过 Windows 组管理 SQL Server 角色成员资格</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">14.1 云和混合环境中的权限管理</h3>
+                        <p>随着组织采用云和混合环境，Windows 权限管理变得更加复杂，需要整合本地和云权限。</p>
+                        
+                        <div class="my-8">
+                            <h4 class="chart-title">混合环境权限管理架构</h4>
+                            <div class="mermaid">
+                                graph TD
+                                    A[中央身份管理]
+                                    B[本地 Active Directory]
+                                    C[Microsoft Entra ID]
+                                    D[本地资源]
+                                    E[云资源]
+                                    F[条件访问策略]
+                                    G[权限管理服务]
+                                    
+                                    A --> B
+                                    A --> C
+                                    B --> D
+                                    C --> E
+                                    C --> F
+                                    A --> G
+                                    G --> B
+                                    G --> C
+                                    
+                                    style A fill:#d4e6ff,stroke:#3b82f6
+                                    style B fill:#bbd6ff,stroke:#3b82f6
+                                    style C fill:#bbd6ff,stroke:#3b82f6
+                                    style D fill:#c6f6d5,stroke:#38a169
+                                    style E fill:#c6f6d5,stroke:#38a169
+                                    style F fill:#bbd6ff,stroke:#3b82f6
+                                    style G fill:#bbd6ff,stroke:#3b82f6
+                            </div>
+                        </div>
+                        
+                        <p>混合环境中管理 Windows 权限的关键注意事项：</p>
+                        <ul class="list-disc list-inside mt-4 space-y-2 pl-4">
+                            <li>实施单点登录 (SSO) 解决方案，为用户提供无缝体验</li>
+                            <li>使用 Microsoft Entra Connect 同步本地 AD 和 Entra ID 中的身份</li>
+                            <li>应用条件访问策略，基于用户、设备、位置和风险级别控制资源访问</li>
+                            <li>采用特权访问管理 (PAM) 解决方案，集中管理本地和云中的特权账户</li>
+                            <li>实施一致的权限审计和审查流程，涵盖本地和云环境</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- 15. 使用 PowerShell 自动化权限管理 -->
+                <section id="powershell" class="mb-12">
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-md bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 mr-4">
+                            <i class="fas fa-terminal text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-bold">15. 使用 PowerShell 自动化权限管理</h2>
+                    </div>
+                    <div class="chapter-content ml-14">
+                        <p>PowerShell 是一种强大的脚本语言，可用于自动化 Windows 权限管理任务。可以使用 Get-Acl 和 Set-Acl 等 cmdlet 来检索和修改 NTFS 权限。可以编写脚本来设置、修改和删除权限，管理继承，以及更改文件和文件夹的所有权。PowerShell 还可以用于管理条件访问策略，尤其是在混合或多云场景中。</p>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">15.1 PowerShell 权限管理基础命令</h3>
+                        <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 overflow-x-auto font-mono text-sm my-6">
+                            <pre><code># 获取文件的当前 ACL
+$acl = Get-Acl -Path "C:\Data\file.txt"
+
+# 显示当前权限
+$acl | Format-List
+
+# 创建新的访问规则
+$identity = "DOMAIN\Username"
+$rights = "FullControl"
+$inheritance = "ContainerInherit, ObjectInherit"
+$propagation = "None"
+$type = "Allow"
+$accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule($identity, $rights, $inheritance, $propagation, $type)
+
+# 将新规则添加到 ACL
+$acl.AddAccessRule($accessRule)
+
+# 应用更新后的 ACL
+Set-Acl -Path "C:\Data\file.txt" -AclObject $acl</code></pre>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">15.2 批量权限管理示例</h3>
+                        <p>PowerShell 在处理大量文件和文件夹的权限时特别有用：</p>
+                        
+                        <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 overflow-x-auto font-mono text-sm my-6">
+                            <pre><code># 对目录中的所有文件应用同一权限设置
+$directory = "C:\Projects"
+$files = Get-ChildItem -Path $directory -Recurse -File
+
+foreach ($file in $files) {
+    $acl = Get-Acl -Path $file.FullName
+    $accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule("DOMAIN\ProjectGroup", "ReadAndExecute", "Allow")
+    $acl.AddAccessRule($accessRule)
+    Set-Acl -Path $file.FullName -AclObject $acl
+}</code></pre>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">15.3 权限报告和审计</h3>
+                        <p>PowerShell 还可以用于生成权限报告和执行权限审计：</p>
+                        
+                        <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 overflow-x-auto font-mono text-sm my-6">
+                            <pre><code># 生成目录权限报告
+function Get-FolderPermissionReport {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$Path,
+        [string]$OutputFile = "C:\Temp\PermissionReport.csv"
+    )
+    
+    $results = @()
+    $folders = Get-ChildItem -Path $Path -Directory -Recurse
+    
+    foreach ($folder in $folders) {
+        $acl = Get-Acl -Path $folder.FullName
+        foreach ($access in $acl.Access) {
+            $result = New-Object PSObject -Property @{
+                Folder = $folder.FullName
+                IdentityReference = $access.IdentityReference
+                AccessType = $access.AccessControlType
+                Rights = $access.FileSystemRights
+                IsInherited = $access.IsInherited
+            }
+            $results += $result
+        }
+    }
+    
+    $results | Export-Csv -Path $OutputFile -NoTypeInformation
+    Write-Host "Permission report exported to $OutputFile"
+}
+
+# 使用函数生成报告
+Get-FolderPermissionReport -Path "D:\SharedData"</code></pre>
+                        </div>
+                        
+                        <div class="my-6 bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-md border-l-4 border-yellow-400">
+                            <p class="text-yellow-800 dark:text-yellow-300"><i class="fas fa-exclamation-triangle mr-2"></i><strong>注意：</strong> 在执行修改大量文件或文件夹权限的脚本前，强烈建议先进行备份和在测试环境中验证脚本。权限更改可能对系统安全性和用户访问产生重大影响。</p>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">15.4 管理特殊权限和高级场景</h3>
+                        <p>PowerShell 也可以用于管理更复杂的权限场景：</p>
+                        
+                        <ul class="list-disc list-inside mt-4 space-y-2 pl-4">
+                            <li>管理注册表权限</li>
+                            <li>配置 Active Directory 权限</li>
+                            <li>管理共享权限</li>
+                            <li>设置打印机权限</li>
+                            <li>管理 WMI 命名空间安全性</li>
+                            <li>配置服务权限</li>
+                        </ul>
+                        
+                        <div class="my-6 bg-green-50 dark:bg-green-900/20 p-4 rounded-md border-l-4 border-green-400">
+                            <p class="text-green-800 dark:text-green-300"><i class="fas fa-lightbulb mr-2"></i><strong>最佳实践：</strong> 创建一个 PowerShell 模块来封装您的组织中常用的权限管理功能。这样，管理员可以使用一致且经过测试的功能来管理权限，减少错误并提高效率。确保在模块中包含详细的日志记录功能，以便跟踪所有权限更改。</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 16. 结论 -->
+                <section id="conclusion" class="mb-12">
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-md bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 mr-4">
+                            <i class="fas fa-flag-checkered text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-bold">16. 结论</h2>
+                    </div>
+                    <div class="chapter-content ml-14">
+                        <p>Windows 权限管理机制是一个复杂但至关重要的系统，用于保护系统资源和数据的安全。理解其核心概念、不同类型的权限、配置方法、最佳实践以及高级特性对于任何需要管理和保护 Windows 环境的人员都至关重要。一个精心规划和一致应用的权限策略是确保安全性和操作效率的关键。随着技术的不断发展，及时了解 Windows 安全最佳实践对于维护一个安全可靠的系统至关重要。</p>
+                        
+                        <div class="my-8 bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg">
+                            <h3 class="text-xl font-semibold text-blue-700 dark:text-blue-300 mb-4">关键要点总结</h3>
+                            <ul class="space-y-3">
+                                <li class="flex items-start">
+                                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3 mt-0.5">
+                                        <i class="fas fa-check text-sm"></i>
+                                    </div>
+                                    <div>遵循最小权限原则，只授予用户完成工作所需的权限。</div>
+                                </li>
+                                <li class="flex items-start">
+                                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3 mt-0.5">
+                                        <i class="fas fa-check text-sm"></i>
+                                    </div>
+                                    <div>使用安全组而不是单个用户来分配权限，简化管理并提高一致性。</div>
+                                </li>
+                                <li class="flex items-start">
+                                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3 mt-0.5">
+                                        <i class="fas fa-check text-sm"></i>
+                                    </div>
+                                    <div>了解 NTFS 权限与共享权限之间的区别和交互，以及它们如何影响资源访问。</div>
+                                </li>
+                                <li class="flex items-start">
+                                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3 mt-0.5">
+                                        <i class="fas fa-check text-sm"></i>
+                                    </div>
+                                    <div>保护管理员账户，使用专用账户进行管理任务，并实施多因素身份验证。</div>
+                                </li>
+                                <li class="flex items-start">
+                                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3 mt-0.5">
+                                        <i class="fas fa-check text-sm"></i>
+                                    </div>
+                                    <div>实施有效的审计策略，监控关键资源访问和权限更改。</div>
+                                </li>
+                                <li class="flex items-start">
+                                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3 mt-0.5">
+                                        <i class="fas fa-check text-sm"></i>
+                                    </div>
+                                    <div>利用组策略进行集中化权限管理，确保一致的安全配置。</div>
+                                </li>
+                                <li class="flex items-start">
+                                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3 mt-0.5">
+                                        <i class="fas fa-check text-sm"></i>
+                                    </div>
+                                    <div>定期审查权限分配，移除不必要的访问权限，确保权限设置符合当前业务需求。</div>
+                                </li>
+                                <li class="flex items-start">
+                                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3 mt-0.5">
+                                        <i class="fas fa-check text-sm"></i>
+                                    </div>
+                                    <div>考虑高级权限管理功能，如动态访问控制，以满足复杂环境的需求。</div>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mt-8 mb-4">进一步学习资源</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                            <!-- 推荐资源卡片1 -->
+                            <div class="card p-6">
+                                <div class="flex items-center mb-4">
+                                    <div class="flex-shrink-0 text-green-600 dark:text-green-400 mr-3">
+                                        <i class="fas fa-book text-xl"></i>
+                                    </div>
+                                    <h4 class="font-semibold">《Windows 安全内部原理》</h4>
+                                </div>
+                                <p class="text-gray-600 dark:text-gray-300">深入探讨 Windows 安全架构，包括访问控制模型、认证机制和权限管理的基础书籍。适合希望全面了解 Windows 安全基础的读者。</p>
+                            </div>
+                            
+                            <!-- 推荐资源卡片2 -->
+                            <div class="card p-6">
+                                <div class="flex items-center mb-4">
+                                    <div class="flex-shrink-0 text-green-600 dark:text-green-400 mr-3">
+                                        <i class="fas fa-graduation-cap text-xl"></i>
+                                    </div>
+                                    <h4 class="font-semibold">Microsoft Learn 安全模块</h4>
+                                </div>
+                                <p class="text-gray-600 dark:text-gray-300">Microsoft 提供的免费在线学习平台，包含关于 Windows 和 Active Directory 权限管理的详细教程和实践练习。特别推荐"实施和管理 Windows 安全"模块。</p>
+                            </div>
+                            
+                            <!-- 推荐资源卡片3 -->
+                            <div class="card p-6">
+                                <div class="flex items-center mb-4">
+                                    <div class="flex-shrink-0 text-green-600 dark:text-green-400 mr-3">
+                                        <i class="fas fa-certificate text-xl"></i>
+                                    </div>
+                                    <h4 class="font-semibold">Microsoft 认证: Security, Compliance, and Identity Fundamentals</h4>
+                                </div>
+                                <p class="text-gray-600 dark:text-gray-300">专注于安全基础知识的入门级认证，涵盖 Microsoft 安全、合规性和身份解决方案的概念。适合希望在 Windows 安全领域建立职业的 IT 专业人员。</p>
+                            </div>
+                            
+                            <!-- 推荐资源卡片4 -->
+                            <div class="card p-6">
+                                <div class="flex items-center mb-4">
+                                    <div class="flex-shrink-0 text-green-600 dark:text-green-400 mr-3">
+                                        <i class="fas fa-code text-xl"></i>
+                                    </div>
+                                    <h4 class="font-semibold">PowerShell 权限管理模块</h4>
+                                </div>
+                                <p class="text-gray-600 dark:text-gray-300">GitHub 上提供的开源 PowerShell 模块，如 NTFSSecurity 和 AclTools，提供了丰富的命令来管理 NTFS 权限、审计设置和所有权。包含详细文档和使用示例。</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 参考文献 -->
+                <section id="references" class="mb-12">
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-md bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 mr-4">
+                            <i class="fas fa-book text-xl"></i>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl font-bold">参考文献</h2>
+                    </div>
+                    <div class="chapter-content ml-14">
+                        <p class="mb-4">本报告参考了以下资料和文档：</p>
+                        
+                        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+                            <ol class="list-decimal space-y-3 ml-6">
+                                <li>How do I set up user accounts and manage permissions in Windows? - Microsoft Learn, accessed March 19, 2025, <a href="https://learn.microsoft.com/en-us/answers/questions/1389054/how-do-i-set-up-user-accounts-and-manage-permissio" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank">链接</a></li>
+                                <li>Access Control overview | Microsoft Learn, accessed March 19, 2025, <a href="https://learn.microsoft.com/en-us/windows/security/identity-protection/access-control/access-control" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank">链接</a></li>
+                                <li>Access Control Model - Win32 apps | Microsoft Learn, accessed March 19, 2025, <a href="https://learn.microsoft.com/en-us/windows/win32/secauthz/access-control-model" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank">链接</a></li>
+                                <li>NTFS overview | Microsoft Learn, accessed March 19, 2025, <a href="https://learn.microsoft.com/en-us/windows-server/storage/file-server/ntfs-overview" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank">链接</a></li>
+                                <li>How User Account Control works | Microsoft Learn, accessed March 19, 2025, <a href="https://learn.microsoft.com/en-us/windows/security/application-security/application-control/user-account-control/how-it-works" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank">链接</a></li>
+                                <li>NTFS Permissions vs Share: Everything You Need to Know - Varonis, accessed March 19, 2025, <a href="https://www.varonis.com/blog/ntfs-permissions-vs-share" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank">链接</a></li>
+                                <li>Dynamic Access Control Overview | Microsoft Learn, accessed March 19, 2025, <a href="https://learn.microsoft.com/en-us/windows-server/identity/solution-guides/dynamic-access-control-overview" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank">链接</a></li>
+                                <li>Best Practices for Securing Active Directory | Microsoft Learn, accessed March 19, 2025, <a href="https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/best-practices-for-securing-active-directory" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank">链接</a></li>
+                            </ol>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            theme: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
+            startOnLoad: true,
+            flowchart: { useMaxWidth: true }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 切换深色/浅色模式
+            const themeToggle = document.getElementById('themeToggle');
+            const prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            // 初始化主题
+            if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && prefersDarkMode)) {
+                document.documentElement.classList.add('dark');
+                mermaid.initialize({ theme: 'dark' });
+            } else {
+                document.documentElement.classList.remove('dark');
+                mermaid.initialize({ theme: 'default' });
+            }
+            
+            // 主题切换按钮
+            themeToggle.addEventListener('click', function() {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                    mermaid.initialize({ theme: 'default' });
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                    mermaid.initialize({ theme: 'dark' });
+                }
+                
+                // 重新渲染图表
+                mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+            });
+            
+            // 移动端菜单切换
+            const menuToggle = document.getElementById('menuToggle');
+            const closeSidebar = document.getElementById('closeSidebar');
+            const overlay = document.getElementById('overlay');
+            const sidebar = document.getElementById('sidebar');
+            
+            menuToggle.addEventListener('click', function() {
+                sidebar.classList.add('open');
+                overlay.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            });
+            
+            closeSidebar.addEventListener('click', function() {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('show');
+                document.body.style.overflow = '';
+            });
+            
+            overlay.addEventListener('click', function() {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('show');
+                document.body.style.overflow = '';
+            });
+            
+            // 侧边栏链接点击事件
+            const sidebarLinks = document.querySelectorAll('.sidebar-item');
+            
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    // 移除其他链接的激活状态
+                    sidebarLinks.forEach(l => l.classList.remove('active'));
+                    // 添加当前链接的激活状态
+                    this.classList.add('active');
+                    
+                    // 在移动设备上关闭侧边栏
+                    if (window.innerWidth < 768) {
+                        sidebar.classList.remove('open');
+                        overlay.classList.remove('show');
+                        document.body.style.overflow = '';
+                    }
+                });
+            });
+            
+            // 滚动进度条
+            window.addEventListener('scroll', function() {
+                const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+                const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+                const clientHeight = document.documentElement.clientHeight || window.innerHeight;
+                const scrolled = (scrollTop / (scrollHeight - clientHeight)) * 100;
+                document.getElementById('progressBar').style.width = scrolled + '%';
+                
+                // 返回顶部按钮显示/隐藏
+                const backToTop = document.getElementById('backToTop');
+                if (scrollTop > 300) {
+                    backToTop.classList.add('show');
+                } else {
+                    backToTop.classList.remove('show');
+                }
+                
+                // 更新侧边栏活动状态
+                const sections = document.querySelectorAll('section[id]');
+                let currentSection = '';
+                
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.offsetHeight;
+                    
+                    if (scrollTop >= sectionTop - 100 && scrollTop < sectionTop + sectionHeight - 100) {
+                        currentSection = section.getAttribute('id');
+                    }
+                });
+                
+                if (currentSection) {
+                    sidebarLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === '#' + currentSection) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+            
+            // 返回顶部按钮点击事件
+            document.getElementById('backToTop').addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+            
+            // 设置第一个侧边栏链接为活动状态
+            if (sidebarLinks.length > 0) {
+                sidebarLinks[0].classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>
