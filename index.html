@@ -119,152 +119,257 @@
                 <h1 class="text-xl md:text-2xl font-bold">深度研究报告集</h1>
             </div>
             <div class="flex items-center space-x-4">
+                <div class="relative hidden md:block">
+                    <input type="text" id="search-input" placeholder="搜索报告..." class="pl-10 pr-4 py-2 rounded-full w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300" style="background-color: var(--card-bg); color: var(--text-color); border: 1px solid var(--border);">
+                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
                 <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition duration-300">
                     <i class="fas fa-sun text-yellow-500 light-icon"></i>
                     <i class="fas fa-moon text-blue-300 dark-icon"></i>
                 </button>
             </div>
         </div>
+        <!-- 移动端搜索框 -->
+        <div class="md:hidden px-4 py-2 border-b" style="border-color: var(--border);">
+            <div class="relative">
+                <input type="text" id="search-input-mobile" placeholder="搜索报告..." class="pl-10 pr-4 py-2 rounded-full w-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300" style="background-color: var(--card-bg); color: var(--text-color); border: 1px solid var(--border);">
+                <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                    <i class="fas fa-search"></i>
+                </div>
+            </div>
+        </div>
     </header>
 
     <!-- 主要内容 -->
     <main class="container mx-auto px-4 py-8 md:py-12">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Windows 文件锁定报告卡片 -->
-            <a href="windows-file-lock.html" class="card p-6 hover:border-green-500 fade-in">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0 bg-green-100 dark:bg-green-900/30 p-4 rounded-lg mr-4">
-                        <i class="fas fa-lock-open text-green-500 text-2xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-bold mb-2">Windows文件锁定机制研究报告</h2>
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">深入探究Windows操作系统中的文件锁定机制，解析其基本原理、类型、实现方式及优化策略。</p>
-                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                            <i class="fas fa-clock mr-2"></i>
-                            <span>发布时间：2024-03-19</span>
+        <!-- 分类标题：Windows 系统 -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold mb-6 pb-2 border-b-2 border-blue-500 inline-block">Windows 系统研究</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Windows 文件锁定报告卡片 -->
+                <a href="windows-file-lock.html" class="card p-6 hover:border-green-500 fade-in">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 bg-green-100 dark:bg-green-900/30 p-4 rounded-lg mr-4">
+                            <i class="fas fa-lock-open text-green-500 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold mb-2">Windows文件锁定机制研究报告</h2>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">深入探究Windows操作系统中的文件锁定机制，解析其基本原理、类型、实现方式及优化策略。</p>
+                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                                <span class="inline-block bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-100 text-xs px-2 py-1 rounded-full">Windows</span>
+                                <span class="inline-block bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-100 text-xs px-2 py-1 rounded-full">文件系统</span>
+                                <span class="inline-block bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-100 text-xs px-2 py-1 rounded-full">安全机制</span>
+                            </div>
+                            <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-clock mr-2"></i>
+                                <span>发布时间：2024-03-19</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </a>
+                </a>
 
-            <!-- Windows 锁机制报告卡片 -->
-            <a href="windows-lock-mechanism.html" class="card p-6 hover:border-indigo-500 fade-in">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0 bg-indigo-100 dark:bg-indigo-900/30 p-4 rounded-lg mr-4">
-                        <i class="fas fa-lock text-indigo-500 text-2xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-bold mb-2">Windows锁机制深度研究报告</h2>
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">深入探讨Windows操作系统中的各种锁机制原理、性能特点及应用场景，为并发程序设计提供全面指南。</p>
-                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                            <i class="fas fa-clock mr-2"></i>
-                            <span>发布时间：2024-03-19</span>
+                <!-- Windows 锁机制报告卡片 -->
+                <a href="windows-lock-mechanism.html" class="card p-6 hover:border-indigo-500 fade-in">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 bg-indigo-100 dark:bg-indigo-900/30 p-4 rounded-lg mr-4">
+                            <i class="fas fa-lock text-indigo-500 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold mb-2">Windows锁机制深度研究报告</h2>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">深入探讨Windows操作系统中的各种锁机制原理、性能特点及应用场景，为并发程序设计提供全面指南。</p>
+                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                                <span class="inline-block bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-100 text-xs px-2 py-1 rounded-full">并发控制</span>
+                                <span class="inline-block bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-100 text-xs px-2 py-1 rounded-full">系统开发</span>
+                                <span class="inline-block bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-100 text-xs px-2 py-1 rounded-full">性能优化</span>
+                            </div>
+                            <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-clock mr-2"></i>
+                                <span>发布时间：2024-03-19</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </a>
+                </a>
 
-            <!-- Windows 内存报告卡片 -->
-            <a href="windows-memory-webpage.html" class="card p-6 hover:border-red-500 fade-in">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0 bg-red-100 dark:bg-red-900/30 p-4 rounded-lg mr-4">
-                        <i class="fas fa-memory text-red-500 text-2xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-bold mb-2">Windows内存占用深度研究报告</h2>
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">深入探讨 Windows 内存管理机制，解答"内存占用是否越小越好"的疑问，并提供实用的内存优化建议。</p>
-                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                            <i class="fas fa-clock mr-2"></i>
-                            <span>发布时间：2024-03-18</span>
+                <!-- Windows 内存报告卡片 -->
+                <a href="windows-memory-webpage.html" class="card p-6 hover:border-red-500 fade-in">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 bg-red-100 dark:bg-red-900/30 p-4 rounded-lg mr-4">
+                            <i class="fas fa-memory text-red-500 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold mb-2">Windows内存占用深度研究报告</h2>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">深入探讨 Windows 内存管理机制，解答"内存占用是否越小越好"的疑问，并提供实用的内存优化建议。</p>
+                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                                <span class="inline-block bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-100 text-xs px-2 py-1 rounded-full">内存管理</span>
+                                <span class="inline-block bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-100 text-xs px-2 py-1 rounded-full">系统性能</span>
+                                <span class="inline-block bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-100 text-xs px-2 py-1 rounded-full">优化指南</span>
+                            </div>
+                            <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-clock mr-2"></i>
+                                <span>发布时间：2024-03-18</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </a>
+                </a>
 
-            <!-- Windows Update 报告卡片 -->
-            <a href="windows-update-webpage.html" class="card p-6 hover:border-blue-500 fade-in">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 p-4 rounded-lg mr-4">
-                        <i class="fas fa-sync-alt text-blue-500 text-2xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-bold mb-2">Windows Update 系统深度研究报告</h2>
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">深入探讨 Windows Update 的架构设计、技术实现、特殊更新类型、企业级管理以及未来发展趋势。</p>
-                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                            <i class="fas fa-clock mr-2"></i>
-                            <span>发布时间：2024-03-18</span>
+                <!-- Windows Update 报告卡片 -->
+                <a href="windows-update-webpage.html" class="card p-6 hover:border-blue-500 fade-in">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 p-4 rounded-lg mr-4">
+                            <i class="fas fa-sync-alt text-blue-500 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold mb-2">Windows Update 系统深度研究报告</h2>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">深入探讨 Windows Update 的架构设计、技术实现、特殊更新类型、企业级管理以及未来发展趋势。</p>
+                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                                <span class="inline-block bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100 text-xs px-2 py-1 rounded-full">系统更新</span>
+                                <span class="inline-block bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100 text-xs px-2 py-1 rounded-full">企业管理</span>
+                                <span class="inline-block bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100 text-xs px-2 py-1 rounded-full">技术架构</span>
+                            </div>
+                            <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-clock mr-2"></i>
+                                <span>发布时间：2024-03-18</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </a>
+                </a>
+            </div>
+        </div>
 
-            <!-- 南方富时A50 ETF报告卡片 -->
-            <a href="a50-etf.html" class="card p-6 hover:border-purple-500 fade-in">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0 bg-purple-100 dark:bg-purple-900/30 p-4 rounded-lg mr-4">
-                        <i class="fas fa-chart-line text-purple-500 text-2xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-bold mb-2">南方富时A50 ETF深度研究报告</h2>
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">深入分析南方富时A50 ETF的历史表现，探索影响其波动性的主要因素，并对未来18个月的走势进行科学预测。</p>
-                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                            <i class="fas fa-clock mr-2"></i>
-                            <span>发布时间：2024-03-18</span>
+        <!-- 分类标题：Windows 安全 -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold mb-6 pb-2 border-b-2 border-yellow-500 inline-block">Windows 安全研究</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Windows 权限指南报告卡片 -->
+                <a href="windows-permissions-guide.html" class="card p-6 hover:border-yellow-500 fade-in">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 bg-yellow-100 dark:bg-yellow-900/30 p-4 rounded-lg mr-4">
+                            <i class="fas fa-shield-alt text-yellow-500 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold mb-2">Windows 权限管理深度指南</h2>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">全面解析 Windows 系统权限体系结构、安全设置最佳实践以及企业环境中的高级权限管理策略。</p>
+                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                                <span class="inline-block bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-100 text-xs px-2 py-1 rounded-full">系统安全</span>
+                                <span class="inline-block bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-100 text-xs px-2 py-1 rounded-full">权限控制</span>
+                                <span class="inline-block bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-100 text-xs px-2 py-1 rounded-full">企业管理</span>
+                            </div>
+                            <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-clock mr-2"></i>
+                                <span>发布时间：2024-03-20</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </a>
+                </a>
 
-            <!-- 稍后阅读工具报告卡片 -->
-            <a href="read-it-later-reporter.html" class="card p-6 hover:border-green-500 fade-in">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0 bg-green-100 dark:bg-green-900/30 p-4 rounded-lg mr-4">
-                        <i class="fas fa-book-open text-green-500 text-2xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-bold mb-2">稍后阅读工具深度研究报告</h2>
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">解析信息时代的个人知识管理利器，深入剖析主流稍后阅读工具的功能特点、用户评价及市场前景。</p>
-                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                            <i class="fas fa-clock mr-2"></i>
-                            <span>发布时间：2024-03-18</span>
+                <!-- Windows UAC 技术详解卡片 -->
+                <a href="uac-webpage.html" class="card p-6 hover:border-purple-500 fade-in">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 bg-purple-100 dark:bg-purple-900/30 p-4 rounded-lg mr-4">
+                            <i class="fas fa-user-shield text-purple-500 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold mb-2">Windows UAC 技术详解</h2>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">深入探讨 Windows 用户账户控制机制的工作原理、架构设计、完整性级别以及企业环境中的最佳实践。</p>
+                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                                <span class="inline-block bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-100 text-xs px-2 py-1 rounded-full">用户控制</span>
+                                <span class="inline-block bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-100 text-xs px-2 py-1 rounded-full">安全机制</span>
+                                <span class="inline-block bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-100 text-xs px-2 py-1 rounded-full">系统架构</span>
+                            </div>
+                            <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-clock mr-2"></i>
+                                <span>发布时间：2024-03-21</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </a>
+                </a>
+            </div>
+        </div>
 
-            <!-- Windows 权限指南报告卡片 -->
-            <a href="windows-permissions-guide.html" class="card p-6 hover:border-yellow-500 fade-in">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0 bg-yellow-100 dark:bg-yellow-900/30 p-4 rounded-lg mr-4">
-                        <i class="fas fa-shield-alt text-yellow-500 text-2xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-bold mb-2">Windows 权限管理深度指南</h2>
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">全面解析 Windows 系统权限体系结构、安全设置最佳实践以及企业环境中的高级权限管理策略。</p>
-                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                            <i class="fas fa-clock mr-2"></i>
-                            <span>发布时间：2024-03-20</span>
+        <!-- 分类标题：金融与投资 -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold mb-6 pb-2 border-b-2 border-purple-500 inline-block">金融与投资研究</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- 南方富时A50 ETF报告卡片 -->
+                <a href="a50-etf.html" class="card p-6 hover:border-purple-500 fade-in">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 bg-purple-100 dark:bg-purple-900/30 p-4 rounded-lg mr-4">
+                            <i class="fas fa-chart-line text-purple-500 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold mb-2">南方富时A50 ETF深度研究报告</h2>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">深入分析南方富时A50 ETF的历史表现，探索影响其波动性的主要因素，并对未来18个月的走势进行科学预测。</p>
+                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                                <span class="inline-block bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-100 text-xs px-2 py-1 rounded-full">投资分析</span>
+                                <span class="inline-block bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-100 text-xs px-2 py-1 rounded-full">ETF研究</span>
+                                <span class="inline-block bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-100 text-xs px-2 py-1 rounded-full">市场预测</span>
+                            </div>
+                            <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-clock mr-2"></i>
+                                <span>发布时间：2024-03-18</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </a>
+                </a>
+            </div>
+        </div>
 
-            <!-- Windows UAC 技术详解卡片 -->
-            <a href="uac-webpage.html" class="card p-6 hover:border-purple-500 fade-in">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0 bg-purple-100 dark:bg-purple-900/30 p-4 rounded-lg mr-4">
-                        <i class="fas fa-user-shield text-purple-500 text-2xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-bold mb-2">Windows UAC 技术详解</h2>
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">深入探讨 Windows 用户账户控制机制的工作原理、架构设计、完整性级别以及企业环境中的最佳实践。</p>
-                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                            <i class="fas fa-clock mr-2"></i>
-                            <span>发布时间：2024-03-21</span>
+        <!-- 分类标题：商业智能与数据分析 -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold mb-6 pb-2 border-b-2 border-orange-500 inline-block">商业智能与数据分析</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- MicroStrategy 研究报告卡片 -->
+                <a href="microstrategy-report.html" class="card p-6 hover:border-orange-500 fade-in">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 bg-orange-100 dark:bg-orange-900/30 p-4 rounded-lg mr-4">
+                            <i class="fas fa-chart-pie text-orange-500 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold mb-2">MicroStrategy 商业智能平台深度研究</h2>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">全面剖析 MicroStrategy 商业智能平台的架构设计、核心功能、数据分析能力及在企业决策中的实际应用价值。</p>
+                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                                <span class="inline-block bg-orange-100 dark:bg-orange-800 text-orange-800 dark:text-orange-100 text-xs px-2 py-1 rounded-full">商业智能</span>
+                                <span class="inline-block bg-orange-100 dark:bg-orange-800 text-orange-800 dark:text-orange-100 text-xs px-2 py-1 rounded-full">数据分析</span>
+                                <span class="inline-block bg-orange-100 dark:bg-orange-800 text-orange-800 dark:text-orange-100 text-xs px-2 py-1 rounded-full">企业决策</span>
+                            </div>
+                            <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-clock mr-2"></i>
+                                <span>发布时间：2025-03-21</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </a>
+                </a>
+            </div>
+        </div>
+
+        <!-- 分类标题：生产力工具 -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold mb-6 pb-2 border-b-2 border-green-500 inline-block">生产力工具研究</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- 稍后阅读工具报告卡片 -->
+                <a href="read-it-later-reporter.html" class="card p-6 hover:border-green-500 fade-in">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 bg-green-100 dark:bg-green-900/30 p-4 rounded-lg mr-4">
+                            <i class="fas fa-book-open text-green-500 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold mb-2">稍后阅读工具深度研究报告</h2>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">解析信息时代的个人知识管理利器，深入剖析主流稍后阅读工具的功能特点、用户评价及市场前景。</p>
+                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                                <span class="inline-block bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-100 text-xs px-2 py-1 rounded-full">知识管理</span>
+                                <span class="inline-block bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-100 text-xs px-2 py-1 rounded-full">工具评测</span>
+                                <span class="inline-block bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-100 text-xs px-2 py-1 rounded-full">生产力</span>
+                            </div>
+                            <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-clock mr-2"></i>
+                                <span>发布时间：2024-03-18</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
         </div>
 
         <!-- 关于部分 -->
@@ -380,6 +485,49 @@
             element.style.transform = 'translateY(10px)';
             element.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
             fadeInObserver.observe(element);
+        });
+        
+        // 搜索功能
+        const searchInput = document.getElementById('search-input');
+        const searchInputMobile = document.getElementById('search-input-mobile');
+        const reportCards = document.querySelectorAll('.card');
+        
+        function performSearch(searchTerm) {
+            searchTerm = searchTerm.toLowerCase().trim();
+            
+            if (searchTerm === '') {
+                // 如果搜索内容为空，显示所有报告
+                reportCards.forEach(card => {
+                    card.style.display = 'block';
+                });
+                return;
+            }
+            
+            reportCards.forEach(card => {
+                const title = card.querySelector('h2').textContent.toLowerCase();
+                const description = card.querySelector('p').textContent.toLowerCase();
+                const tags = Array.from(card.querySelectorAll('.flex-wrap span')).map(tag => tag.textContent.toLowerCase());
+                
+                // 如果标题、描述或任何标签包含搜索词，显示卡片
+                if (title.includes(searchTerm) || description.includes(searchTerm) || tags.some(tag => tag.includes(searchTerm))) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        // 为两个搜索框添加事件监听
+        searchInput.addEventListener('input', () => {
+            performSearch(searchInput.value);
+            // 同步移动端搜索框
+            searchInputMobile.value = searchInput.value;
+        });
+        
+        searchInputMobile.addEventListener('input', () => {
+            performSearch(searchInputMobile.value);
+            // 同步桌面端搜索框
+            searchInput.value = searchInputMobile.value;
         });
     </script>
 </body>

@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微策略(MSTR)近三年股价波动及资本策略分析报告</title>
+    <link rel="stylesheet" href="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/tailwindcss/2.2.19/tailwind.min.css">
+    <link rel="stylesheet" href="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-100-M/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+    <script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/mermaid/8.14.0/mermaid.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #1a56db;
+            --secondary-color: #7e22ce;
+            --accent-color: #f59e0b;
+            --text-color: #1f2937;
+            --bg-color: #ffffff;
+            --card-bg: #f9fafb;
+            --muted-color: #6b7280;
+            --border-color: #e5e7eb;
+            --chart-color-1: #1a56db;
+            --chart-color-2: #7e22ce;
+            --chart-color-3: #f59e0b;
+            --chart-color-4: #10b981;
+            --chart-color-5: #ef4444;
+            --bitcoin-color: #f7931a;
+        }
+
+        .dark {
+            --primary-color: #3b82f6;
+            --secondary-color: #a855f7;
+            --accent-color: #fbbf24;
+            --text-color: #f9fafb;
+            --bg-color: #111827;
+            --card-bg: #1f2937;
+            --muted-color: #9ca3af;
+            --border-color: #374151;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', Tahoma, Arial, Roboto, "Droid Sans", "Helvetica Neue", "Droid Sans Fallback", "Heiti SC", "Hiragino Sans GB", Simsun, sans-serif;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Noto Serif SC', serif;
+            font-weight: 700;
+        }
+
+        .serif {
+            font-family: 'Noto Serif SC', serif;
+        }
+
+        .sans {
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            text-align: left;
+            padding: 0.75rem 1rem;
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .dark tr:hover td {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .topic-tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .first-letter::first-letter {
+            font-size: 3.5em;
+            font-weight: 700;
+            float: left;
+            line-height: 0.8;
+            margin-right: 0.1em;
+            color: var(--primary-color);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            color: white;
+            background-color: var(--primary-color);
+            border-radius: 0.375rem;
+            transition: background-color 0.3s;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn i {
+            margin-right: 0.5rem;
+        }
+
+        .theme-toggle {
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 9999px;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .chart-container {
+            height: 400px;
+            margin: 2rem 0;
+        }
+
+        .sticky-nav {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background-color: var(--bg-color);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .bitcoin-icon {
+            color: var(--bitcoin-color);
+        }
+
+        .section-anchor {
+            display: block;
+            position: relative;
+            top: -80px;
+            visibility: hidden;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .first-letter::first-letter {
+                font-size: 2.5em;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+        }
+
+        /* Floating TOC */
+        .floating-toc {
+            position: fixed;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: var(--card-bg);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            max-width: 250px;
+            display: none;
+        }
+
+        @media (min-width: 1400px) {
+            .floating-toc {
+                display: block;
+            }
+        }
+
+        .floating-toc ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .floating-toc li {
+            margin-bottom: 0.5rem;
+        }
+
+        .floating-toc a {
+            text-decoration: none;
+            color: var(--text-color);
+            transition: color 0.3s;
+            font-size: 0.875rem;
+        }
+
+        .floating-toc a:hover {
+            color: var(--primary-color);
+        }
+
+        .floating-toc-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            color: var(--primary-color);
+        }
+
+        /* Citation styling */
+        .citation {
+            font-size: 0.8rem;
+            color: var(--muted-color);
+            vertical-align: super;
+            cursor: pointer;
+        }
+
+        .citation-content {
+            display: none;
+            position: absolute;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            width: 300px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            z-index: 10;
+        }
+
+        /* Data ranges */
+        .data-range {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .range-item {
+            flex: 1;
+            text-align: center;
+            padding: 0.5rem;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .range-item:last-child {
+            border-right: none;
+        }
+
+        .range-title {
+            font-size: 0.875rem;
+            color: var(--muted-color);
+        }
+
+        .range-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        /* Progress bars */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: var(--border-color);
+            border-radius: 4px;
+            margin-top: 0.5rem;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 4px;
+            background-color: var(--primary-color);
+        }
+
+        /* Key metrics */
+        .key-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .metric-card {
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            background-color: var(--card-bg);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .metric-title {
+            font-size: 0.875rem;
+            color: var(--muted-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .metric-change {
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .positive-change {
+            color: #10b981;
+        }
+
+        .negative-change {
+            color: #ef4444;
+        }
+
+        /* Price chart */
+        .price-chart {
+            width: 100%;
+            height: 300px;
+            background-color: var(--card-bg);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            position: relative;
+            overflow: hidden;
+            margin-top: 1.5rem;
+        }
+
+        .chart-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            transform: scaleY(0.3);
+            transform-origin: bottom;
+        }
+
+        .btc-line {
+            stroke: var(--bitcoin-color);
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .mstr-line {
+            stroke: var(--primary-color);
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .chart-label {
+            position: absolute;
+            bottom: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--muted-color);
+        }
+
+        .chart-label.left {
+            left: 0.5rem;
+        }
+
+        .chart-label.right {
+            right: 0.5rem;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            margin: 2rem 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 1rem;
+            height: 100%;
+            width: 2px;
+            background-color: var(--primary-color);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0.7rem;
+            top: 0.375rem;
+            width: 0.625rem;
+            height: 0.625rem;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+        }
+
+        .timeline-date {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-content {
+            background-color: var(--card-bg);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Reading progress bar */
+        .progress-bar-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            z-index: 30;
+        }
+
+        .reading-progress-bar {
+            height: 100%;
+            background-color: var(--accent-color);
+            width: 0;
+        }
+
+        /* Annotations */
+        .annotation {
+            position: relative;
+            cursor: pointer;
+            border-bottom: 1px dashed var(--primary-color);
+        }
+
+        .annotation-content {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            z-index: 10;
+            font-size: 0.875rem;
+        }
+
+        .annotation:hover .annotation-content {
+            display: block;
+        }
+
+        /* Bitcoin styling */
+        .bitcoin-box {
+            background: linear-gradient(135deg, rgba(247, 147, 26, 0.2), rgba(247, 147, 26, 0.1));
+            border-left: 4px solid var(--bitcoin-color);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Reading progress bar -->
+    <div class="progress-bar-container">
+        <div class="reading-progress-bar" id="readingProgressBar"></div>
+    </div>
+
+    <!-- Sticky navigation -->
+    <nav class="sticky-nav py-4 transition-all duration-300">
+        <div class="container flex justify-between items-center">
+            <div class="flex items-center">
+                <i class="fas fa-chart-line text-2xl mr-3 text-primary-600" style="color: var(--primary-color);"></i>
+                <h1 class="text-xl font-bold truncate">微策略(MSTR)分析报告</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="#执行摘要" class="hidden md:block hover:text-primary-600 transition-colors duration-300" style="color: var(--text-color); hover: var(--primary-color);">执行摘要</a>
+                <a href="#股价波动" class="hidden md:block hover:text-primary-600 transition-colors duration-300" style="color: var(--text-color); hover: var(--primary-color);">股价波动</a>
+                <a href="#资本策略" class="hidden md:block hover:text-primary-600 transition-colors duration-300" style="color: var(--text-color); hover: var(--primary-color);">资本策略</a>
+                <a href="#比特币影响" class="hidden md:block hover:text-primary-600 transition-colors duration-300" style="color: var(--text-color); hover: var(--primary-color);">比特币影响</a>
+                <a href="#财务业绩" class="hidden md:block hover:text-primary-600 transition-colors duration-300" style="color: var(--text-color); hover: var(--primary-color);">财务业绩</a>
+                <a href="#分析师评级" class="hidden md:block hover:text-primary-600 transition-colors duration-300" style="color: var(--text-color); hover: var(--primary-color);">分析师评级</a>
+                <button id="themeToggle" class="theme-toggle">
+                    <i id="themeIcon" class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero section -->
+    <header class="py-12 md:py-20 relative overflow-hidden">
+        <div class="container relative z-10">
+            <div class="max-w-4xl">
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <span class="topic-tag"><i class="fas fa-tag mr-1"></i>股票分析</span>
+                    <span class="topic-tag"><i class="fab fa-bitcoin mr-1"></i>比特币</span>
+                    <span class="topic-tag"><i class="fas fa-chart-pie mr-1"></i>资本策略</span>
+                    <span class="topic-tag"><i class="fas fa-money-bill-wave mr-1"></i>投资</span>
+                </div>
+                <h1 class="text-3xl md:text-5xl font-bold mb-6 leading-tight">
+                    <span class="gradient-text">微策略（MSTR）</span>近三年股价波动及资本策略分析报告
+                </h1>
+                <p class="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 serif">
+                    一家将企业分析软件与大规模比特币投资相结合的独特上市公司
+                </p>
+                <div class="flex flex-wrap gap-4 mb-8">
+                    <div class="data-range card p-4">
+                        <div class="range-item">
+                            <div class="range-title">研究期间</div>
+                            <div class="range-value">2022-2025</div>
+                        </div>
+                        <div class="range-item">
+                            <div class="range-title">报告日期</div>
+                            <div class="range-value">2025年3月</div>
+                        </div>
+                        <div class="range-item">
+                            <div class="range-title">比特币持有量</div>
+                            <div class="range-value">45万+</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="absolute top-0 right-0 w-full md:w-1/2 h-full opacity-10 pointer-events-none">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                <path fill="var(--primary-color)" d="M37.6,-65.2C48.1,-56,55.8,-44.2,62.8,-31.6C69.8,-18.9,76.2,-5.3,76.8,8.7C77.4,22.7,72.2,37.2,63.4,49.3C54.5,61.5,42,71.3,28.2,74.6C14.4,78,-0.6,74.9,-14.9,70.6C-29.2,66.3,-42.8,60.9,-53.2,51.2C-63.6,41.5,-70.8,27.5,-75,12.3C-79.2,-2.9,-80.3,-19.4,-73.4,-30.9C-66.5,-42.3,-51.5,-48.7,-37.7,-56.7C-23.9,-64.7,-11.9,-74.3,1.1,-76C14.1,-77.7,28.1,-71.4,37.6,-65.2Z" transform="translate(100 100)" />
+            </svg>
+        </div>
+    </header>
+
+    <main class="container py-8">
+        <!-- Executive Summary -->
+        <section id="执行摘要" class="mb-16">
+            <span class="section-anchor" id="执行摘要"></span>
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 pb-2 border-b-2" style="border-color: var(--primary-color);">
+                <i class="fas fa-file-alt mr-2" style="color: var(--primary-color);"></i>执行摘要
+            </h2>
+            <div class="mb-8">
+                <p class="first-letter serif text-lg leading-relaxed mb-4">
+                    微策略（MicroStrategy，纳斯达克代码：MSTR）是一家独特的上市公司，其业务模式融合了企业分析软件的开发与大规模比特币的持有。过去三年，微策略的股价经历了显著的波动，这与公司积极的比特币投资策略和频繁的资本运作密切相关。本报告旨在分析微策略在2022年至2025年期间的股价波动情况，并深入探讨其所采用的资本策略，重点关注其对比特币的持续投资以及为此进行的融资活动。
+                </p>
+                <p class="serif text-lg leading-relaxed">
+                    分析表明，微策略的股价与比特币的价格走势呈现高度相关性，公司的资本策略主要围绕通过股权和债务融资来增加其比特币持有量。尽管其核心软件业务表现出一定的增长，但公司的整体财务表现和市场估值很大程度上受到比特币价格波动的影响。分析师对微策略的未来前景普遍持乐观态度，但同时也存在对其高杠杆和对比特币价格依赖性的担忧。
+                </p>
+            </div>
+            
+            <!-- Key metrics overview -->
+            <div class="key-metrics">
+                <div class="metric-card">
+                    <div class="metric-title">比特币持有量</div>
+                    <div class="metric-value">447,470枚</div>
+                    <div class="metric-change positive-change">
+                        <i class="fas fa-arrow-up mr-1"></i> 136% (vs 2023年末)
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">最新股价 (2025.3.19)</div>
+                    <div class="metric-value">$297</div>
+                    <div class="metric-change negative-change">
+                        <i class="fas fa-arrow-down mr-1"></i> 2.6% (年初至今)
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">2024年收入</div>
+                    <div class="metric-value">$463.5百万</div>
+                    <div class="metric-change negative-change">
+                        <i class="fas fa-arrow-down mr-1"></i> 7% (vs 2023)
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">分析师目标价</div>
+                    <div class="metric-value">$368.57</div>
+                    <div class="metric-change positive-change">
+                        <i class="fas fa-arrow-up mr-1"></i> 24% (vs 当前价格)
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stock Price Fluctuations -->
+        <section id="股价波动" class="mb-16">
+            <span class="section-anchor" id="股价波动"></span>
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 pb-2 border-b-2" style="border-color: var(--primary-color);">
+                <i class="fas fa-chart-line mr-2" style="color: var(--primary-color);"></i>微策略股价波动分析（2022年3月至2025年3月）
+            </h2>
+            
+            <!-- Interactive chart placeholder -->
+            <div class="price-chart mb-8">
+                <svg viewBox="0 0 800 300" width="100%" height="100%">
+                    <!-- MSTR price path -->
+                    <path class="mstr-line" d="M0,250 C50,240 100,260 150,150 S200,50 250,100 S300,180 350,70 S400,50 450,30 S500,70 550,90 S600,50 650,100 S700,150 800,120"></path>
+                    <!-- BTC price path -->
+                    <path class="btc-line" d="M0,230 C50,220 100,200 150,180 S200,120 250,130 S300,150 350,100 S400,80 450,60 S500,90 550,110 S600,90 650,120 S700,140 800,100"></path>
+                    
+                    <!-- Chart legend -->
+                    <text x="20" y="20" style="fill:var(--primary-color); font-weight:bold; font-size:14px;">MSTR股价</text>
+                    <text x="120" y="20" style="fill:var(--bitcoin-color); font-weight:bold; font-size:14px;">比特币价格</text>
+                    
+                    <!-- X-axis labels -->
+                    <text x="0" y="290" style="fill:var(--muted-color); font-size:12px;">2022年3月</text>
+                    <text x="200" y="290" style="fill:var(--muted-color); font-size:12px;">2023年3月</text>
+                    <text x="400" y="290" style="fill:var(--muted-color); font-size:12px;">2024年3月</text>
+                    <text x="600" y="290" style="fill:var(--muted-color); font-size:12px;">2025年3月</text>
+                </svg>
+            </div>
+            
+            <div class="mb-8">
+                <p class="serif text-lg leading-relaxed mb-4">
+                    对微策略过去三年股价走势的考察显示出显著的波动性，这与加密货币市场的整体波动性以及公司自身对比特币的战略性投资紧密相连。在2022年，加密货币市场经历了显著的下跌，比特币价格大幅回调，这直接影响了微策略的股价。尽管如此，微策略在这一年继续积极购入比特币，显示出对长期持有策略的坚定信念。
+                </p>
+                <p class="serif text-lg leading-relaxed mb-4">
+                    2023年，随着比特币价格的回升，微策略的股价也呈现出复苏的态势。公司持续利用其股票价格的上涨，通过发行股票和可转换债券等方式筹集资金，进一步扩大其比特币持有量。2024年，微策略的股价经历了更为剧烈的波动。在这一年中，公司股价一度创下历史新高，这与比特币价格的大幅上涨以及市场对比特币现货ETF的乐观预期有关。
+                </p>
+                <p class="serif text-lg leading-relaxed">
+                    微策略股价的波动性直接反映了其作为比特币持有者的市场风险敞口。比特币价格的显著波动往往会迅速传导至微策略的股票，使得其股价表现出比传统软件公司更高的波动性。投资者在评估微策略的投资价值时，必须充分考虑这种与比特币价格的高度相关性。
+                </p>
+            </div>
+            
+            <!-- Stock price statistics table -->
+            <div class="card p-6 mb-8">
+                <h3 class="text-xl font-bold mb-4">表 1：关键股价统计数据（近似年度数据）</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>年份/期间</th>
+                                <th>近似年初开盘价</th>
+                                <th>近似年末/最新收盘价</th>
+                                <th>年度/期间最高价</th>
+                                <th>年度/期间最低价</th>
+                                <th>年度/期间涨跌幅</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2022</td>
+                                <td>~$400</td>
+                                <td>~$130</td>
+                                <td>~$470</td>
+                                <td>~$117</td>
+                                <td class="negative-change">-67.5%</td>
+                            </tr>
+                            <tr>
+                                <td>2023</td>
+                                <td>~$130</td>
+                                <td>~$300</td>
+                                <td>~$340</td>
+                                <td>~$100</td>
+                                <td class="positive-change">+130.8%</td>
+                            </tr>
+                            <tr>
+                                <td>2024</td>
+                                <td>~$300</td>
+                                <td>~$305</td>
+                                <td>~$543</td>
+                                <td>~$195</td>
+                                <td class="positive-change">+1.7%</td>
+                            </tr>
+                            <tr>
+                                <td>2025 (截至3月19日)</td>
+                                <td>~$305</td>
+                                <td>~$297</td>
+                                <td>~$311</td>
+                                <td>~$231</td>
+                                <td class="negative-change">-2.6%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">
+                    注：数据来源于多个来源，为近似值，可能与具体交易日数据略有差异。2022年初开盘价和年末收盘价为近似值，以反映整体趋势。2025年数据截至2025年3月19日。
+                </p>
+            </div>
+            
+            <!-- Key events timeline -->
+            <div class="bitcoin-box">
+                <h3 class="text-xl font-bold mb-4 flex items-center">
+                    <i class="fab fa-bitcoin mr-2 bitcoin-icon"></i>影响微策略股价的关键因素
+                </h3>
+                <ul class="list-disc pl-6 space-y-2">
+                    <li class="serif">
+                        <span class="font-semibold">比特币价格走势：</span>由于微策略将比特币作为其主要储备资产，市场对比特币价值的看法直接影响了对微策略的估值。
+                    </li>
+                    <li class="serif">
+                        <span class="font-semibold">公司重大公告：</span>特别是关于比特币收购和资本运作的消息，也会引起股价的显著波动。
+                    </li>
+                    <li class="serif">
+                        <span class="font-semibold">市场状况：</span>包括对科技股和加密货币的整体投资者情绪，也会对微策略的股价产生影响。
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Capital Strategy -->
+        <section id="资本策略" class="mb-16">
+            <span class="section-anchor" id="资本策略"></span>
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 pb-2 border-b-2" style="border-color: var(--primary-color);">
+                <i class="fas fa-coins mr-2" style="color: var(--primary-color);"></i>资本策略与融资活动
+            </h2>
+            
+            <div class="mb-8">
+                <p class="serif text-lg leading-relaxed mb-4">
+                    微策略的资本策略的核心是持续积累比特币，并将其定位为<span class="annotation">全球首家比特币开发公司<span class="annotation-content">微策略在其公司文件和投资者沟通中，常将自己描述为全球首家比特币开发公司和最大的比特币储备公司。</span></span>和最大的比特币储备公司。为了实现这一目标，公司采取了积极的融资策略，主要包括股权发行、可转换债券发行以及利用运营产生的现金流。公司的创始人迈克尔·塞勒（Michael Saylor）是这一比特币战略的主要推动者。
+                </p>
+            </div>
+            
+            <!-- Timeline of major financing activities -->
+            <div class="timeline mb-8">
+                <div class="timeline-item">
+                    <div class="timeline-date">2024年11月</div>
+                    <div class="timeline-content">
+                        <h4 class="font-bold mb-2">30亿美元零息可转换优先票据</h4>
+                        <p>微策略发行了30亿美元的零息可转换优先票据，到期日为2029年。这些资金主要用于购买更多的比特币。</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">2024年第三季度</div>
+                    <div class="timeline-content">
+                        <h4 class="font-bold mb-2">"21/21计划"公布</h4>
+                        <p>公司宣布了一项雄心勃勃的"21/21计划"，目标在未来三年内筹集420亿美元的资金，其中210亿美元来自股权融资，210亿美元来自固定收益证券。</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">2025年2月</div>
+                    <div class="timeline-content">
+                        <h4 class="font-bold mb-2">20亿美元零息可转换优先票据</h4>
+                        <p>公司完成了20亿美元的零息可转换优先票据发行，到期日为2030年。融资所得继续用于增加比特币持有量。</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">2024年底</div>
+                    <div class="timeline-content">
+                        <h4 class="font-bold mb-2">ATM股权融资成果</h4>
+                        <p>截至2024年底，公司已通过ATM股权发行计划筹集了约151亿美元。这些股权融资活动导致公司流通股数量显著增加，可能会对现有股东造成一定的股权稀释。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mermaid diagram for capital strategy -->
+            <div class="card p-6 mb-8">
+                <h3 class="text-xl font-bold mb-4">微策略资本策略概述</h3>
+                <div class="mermaid">
+flowchart TD
+    A[微策略资本策略] --> B[资金来源]
+    A --> C[资金用途]
+    
+    B --> D[股权融资]
+    B --> E[债务融资]
+    B --> F[运营现金流]
+    
+    D --> G[ATM股权发行计划]
+    E --> H[零息可转换优先票据]
+    E --> I[其他债务工具]
+    
+    C --> J[比特币收购]
+    C --> K[债务管理]
+    C --> L[软件业务投资]
+    
+    J --> M[持续积累比特币储备]
+    K --> N[赎回现有债务]
+    K --> O[优化资本结构]
+                </div>
+            </div>
+            
+            <div class="bitcoin-box">
+                <h3 class="text-xl font-bold mb-4 flex items-center">
+                    <i class="fas fa-exclamation-triangle mr-2 text-yellow-500"></i>潜在风险因素
+                </h3>
+                <ul class="list-disc pl-6 space-y-2">
+                    <li class="serif">
+                        <span class="font-semibold">融资依赖性：</span>微策略能够以相对优惠的条件持续从资本市场获得融资，这在很大程度上取决于市场对比特币未来价格的乐观预期。
+                    </li>
+                    <li class="serif">
+                        <span class="font-semibold">债务负担：</span>公司激进的比特币收购策略导致其债务负担不断增加，虽然部分债务的利率较低，但仍然存在潜在的财务风险。
+                    </li>
+                    <li class="serif">
+                        <span class="font-semibold">股权稀释：</span>通过股权融资筹集资金可能导致现有股东的股权被稀释，影响每股收益。
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Bitcoin Strategy Impact -->
+        <section id="比特币影响" class="mb-16">
+            <span class="section-anchor" id="比特币影响"></span>
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 pb-2 border-b-2" style="border-color: var(--primary-color);">
+                <i class="fab fa-bitcoin mr-2 bitcoin-icon"></i>比特币策略对股价表现的影响
+            </h2>
+            
+            <div class="mb-8">
+                <p class="serif text-lg leading-relaxed mb-4">
+                    微策略的股价表现与比特币的价格波动之间存在着显著的正相关关系。通过比较微策略的股价走势图和比特币的价格走势图，可以清晰地观察到两者在趋势上的高度一致性。当比特币价格上涨时，微策略的股价通常也会随之上涨；反之，当比特币价格下跌时，微策略的股价也往往会下跌。
+                </p>
+                <p class="serif text-lg leading-relaxed mb-4">
+                    市场通常将微策略的股票视为一种投资比特币的替代方式，尤其是在比特币现货ETF获得批准之前。由于微策略持有大量的比特币，其股票的价格波动在一定程度上反映了市场对比特币价值的预期。然而，值得注意的是，微策略的股价波动性通常高于比特币本身，这可能是因为公司通过杠杆（例如债务融资）来增加其比特币持有量，从而放大了比特币价格变动对公司价值的影响。
+                </p>
+            </div>
+            
+            <!-- Correlation visualization -->
+            <div class="card p-6 mb-8">
+                <h3 class="text-xl font-bold mb-4">微策略股价与比特币价格相关性</h3>
+                <div class="flex flex-col md:flex-row items-center justify-center gap-6 mb-6">
+                    <div class="w-full md:w-1/2">
+                        <div class="relative pt-1">
+                            <div class="flex mb-2 items-center justify-between">
+                                <div>
+                                    <span class="text-sm font-semibold inline-block py-1 px-2 uppercase rounded-full" style="background-color: var(--primary-color); color: white;">
+                                        MSTR股价波动性
+                                    </span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-sm font-semibold inline-block" style="color: var(--primary-color);">
+                                        较高
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar" style="width: 85%;"></div>
+                            </div>
+                        </div>
+                        <div class="relative pt-1 mt-4">
+                            <div class="flex mb-2 items-center justify-between">
+                                <div>
+                                    <span class="text-sm font-semibold inline-block py-1 px-2 uppercase rounded-full" style="background-color: var(--bitcoin-color); color: white;">
+                                        比特币价格波动性
+                                    </span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-sm font-semibold inline-block" style="color: var(--bitcoin-color);">
+                                        中等
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar" style="width: 65%; background-color: var(--bitcoin-color);"></div>
+                            </div>
+                        </div>
+                        <div class="relative pt-1 mt-4">
+                            <div class="flex mb-2 items-center justify-between">
+                                <div>
+                                    <span class="text-sm font-semibold inline-block py-1 px-2 uppercase rounded-full" style="background-color: var(--secondary-color); color: white;">
+                                        MSTR与BTC价格相关性
+                                    </span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-sm font-semibold inline-block" style="color: var(--secondary-color);">
+                                        极高
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar" style="width: 95%; background-color: var(--secondary-color);"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-1/2 flex flex-col">
+                        <div class="mermaid mb-4">
+pie title 微策略市值构成分析
+    "比特币" : 80
+    "软件业务" : 15
+    "溢价" : 5
+                        </div>
+                        <!-- 在饼图下方添加解释说明 -->
+                        <div class="text-sm">
+                            <ul class="list-disc pl-4 space-y-1">
+                                <li><span class="font-semibold">比特币持有价值 (80%):</span> 公司持有的比特币资产市值</li>
+                                <li><span class="font-semibold">核心软件业务价值 (15%):</span> 企业分析软件业务估值</li>
+                                <li><span class="font-semibold">市场溢价 (5%):</span> 投资者对公司战略的额外估值</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bitcoin-box">
+                <h3 class="text-xl font-bold mb-4 flex items-center">
+                    <i class="fas fa-lightbulb mr-2 text-yellow-400"></i>市场溢价与风险
+                </h3>
+                <p class="serif mb-4">
+                    市场对微策略持有的比特币的估值存在一定的溢价。一些分析认为，微策略的股票交易价格高于其持有的比特币的市值加上其核心软件业务的价值。这种溢价可能反映了投资者对微策略管理团队在比特币投资方面的信心，以及公司作为首家公开交易的比特币储备公司的独特地位。
+                </p>
+                <p class="serif">
+                    然而，微策略对比特币的高度依赖也带来了一定的风险。如果比特币价格大幅下跌，可能会导致微策略的资产价值缩水，并可能引发追加保证金的风险。此外，随着比特币现货ETF的推出和普及，市场可能会重新评估微策略作为比特币投资代理的价值。
+                </p>
+            </div>
+        </section>
+
+        <!-- Financial Performance -->
+        <section id="财务业绩" class="mb-16">
+            <span class="section-anchor" id="财务业绩"></span>
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 pb-2 border-b-2" style="border-color: var(--primary-color);">
+                <i class="fas fa-file-invoice-dollar mr-2" style="color: var(--primary-color);"></i>财务业绩回顾
+            </h2>
+            
+            <div class="mb-8">
+                <p class="serif text-lg leading-relaxed mb-4">
+                    对微策略过去三个财年（2022年、2023年、2024年）的关键财务业绩进行回顾可以发现，公司的财务表现受到了其比特币投资策略的显著影响。在2022年，由于比特币价格的大幅下跌，微策略录得了显著的数字资产减值损失，导致全年净亏损高达14.69亿美元。尽管如此，公司的总收入为4.993亿美元，与2021年的5.108亿美元相比略有下降。
+                </p>
+                <p class="serif text-lg leading-relaxed mb-4">
+                    2023年，随着比特币价格的回升，微策略的财务状况有所改善。公司全年总收入为4.963亿美元，略低于2022年的4.993亿美元。然而，由于数字资产减值损失大幅减少至1.159亿美元（2022年为12.87亿美元），公司实现了4.291亿美元的净利润。
+                </p>
+                <p class="serif text-lg leading-relaxed mb-4">
+                    2024年，微策略继续积极投资比特币，其持有量大幅增加。截至2024年底，公司持有约447,470枚比特币，账面价值为239.09亿美元。然而，由于比特币价格的波动以及会计准则的变化，公司在2024年录得了17.9亿美元的数字资产减值损失，导致全年净亏损为11.67亿美元。公司的总收入为4.635亿美元，较2023年的4.963亿美元下降了7%。
+                </p>
+                <p class="serif text-lg leading-relaxed">
+                    值得注意的是，公司的订阅服务收入同比增长了48.4%，达到3190万美元，表明其核心软件业务正在向云服务转型。从2025年第一季度开始，微策略将采用新的公允价值会计准则来计量其比特币持有量，这将导致比特币价值的变动直接反映在公司的净利润中，可能会增加未来财务报告的波动性。
+                </p>
+            </div>
+            
+            <!-- Financial performance table -->
+            <div class="card p-6 mb-8">
+                <h3 class="text-xl font-bold mb-4">表 2：关键财务业绩指标（财年2022-2024）</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>指标</th>
+                                <th>2022年 (百万美元)</th>
+                                <th>2023年 (百万美元)</th>
+                                <th>2024年 (百万美元)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>总收入</td>
+                                <td>499.3</td>
+                                <td>496.3</td>
+                                <td>463.5</td>
+                            </tr>
+                            <tr>
+                                <td>毛利润</td>
+                                <td>396.3</td>
+                                <td>380.4</td>
+                                <td>334.0</td>
+                            </tr>
+                            <tr>
+                                <td>运营费用</td>
+                                <td>1672.0</td>
+                                <td>495.4</td>
+                                <td>2186.8</td>
+                            </tr>
+                            <tr>
+                                <td>其中：数字资产减值损失</td>
+                                <td>1286.0</td>
+                                <td>115.9</td>
+                                <td>1790.0</td>
+                            </tr>
+                            <tr>
+                                <td>净利润（亏损）</td>
+                                <td class="negative-change">(1469.0)</td>
+                                <td class="positive-change">429.1</td>
+                                <td class="negative-change">(1167.0)</td>
+                            </tr>
+                            <tr>
+                                <td>年末比特币持有量（枚）</td>
+                                <td>~132,500</td>
+                                <td>~189,150</td>
+                                <td>~447,470</td>
+                            </tr>
+                            <tr>
+                                <td>年末比特币持有量账面价值（百万美元）</td>
+                                <td>1840.0</td>
+                                <td>3626.0</td>
+                                <td>23909.0</td>
+                            </tr>
+                            <tr>
+                                <td>年末现金及现金等价物（百万美元）</td>
+                                <td>43.8</td>
+                                <td>46.8</td>
+                                <td>38.1</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">
+                    注：数据来源于公司年度报告及相关新闻稿。
+                </p>
+            </div>
+            
+            <!-- Core business vs Bitcoin investment -->
+            <div class="bitcoin-box">
+                <h3 class="text-xl font-bold mb-4 flex items-center">
+                    <i class="fas fa-balance-scale mr-2"></i>核心软件业务与比特币投资
+                </h3>
+                <p class="serif">
+                    微策略的核心软件业务在为公司贡献稳定收入的同时，也为比特币的收购提供了一部分资金。然而，从目前的财务数据来看，公司对比特币的投资策略在很大程度上主导了其财务表现。未来，软件业务的增长以及比特币价格的走势将共同决定微策略的财务状况。
+                </p>
+            </div>
+        </section>
+
+        <!-- Analyst Ratings -->
+        <section id="分析师评级" class="mb-16">
+            <span class="section-anchor" id="分析师评级"></span>
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 pb-2 border-b-2" style="border-color: var(--primary-color);">
+                <i class="fas fa-star mr-2" style="color: var(--primary-color);"></i>分析师评级与未来展望
+            </h2>
+            
+            <div class="mb-8">
+                <p class="serif text-lg leading-relaxed mb-4">
+                    对微策略的分析师评级普遍偏向乐观，反映了分析师对其比特币策略和潜在上涨空间的信心。根据截至2025年3月15日的数据，21位分析师对微策略给出了"买入"的平均评级，其中48%建议"强力买入"，33%建议"买入"。分析师给出的平均目标价为368.57美元，但目标价的范围从最低的409美元到最高的650美元不等，显示出分析师之间对公司未来表现的看法存在一定的分歧。
+                </p>
+                <p class="serif text-lg leading-relaxed mb-4">
+                    看好微策略的分析师认为，公司订阅服务收入的显著增长（同比增长48.4%）以及即将到来的比特币价值重估（预计将为留存收益增加超过120亿美元）将增强公司的财务实力。此外，他们认为比特币价格的长期上涨趋势将持续利好微策略。
+                </p>
+                <p class="serif text-lg leading-relaxed">
+                    然而，也有分析师对微策略的未来表示担忧。他们指出，公司总收入同比下降了3%，调整后的运营收入利润率也有所下降。此外，公司面临着与加密货币监管、竞争以及高额债务相关的风险。现金储备的减少以及分析软件需求方面的一些担忧也给公司的盈利能力和偿债能力带来了不确定性。
+                </p>
+            </div>
+            
+            <!-- Analyst ratings visualization -->
+            <div class="card p-6 mb-8">
+                <h3 class="text-xl font-bold mb-4">分析师评级分布</h3>
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="w-full md:w-1/2">
+                        <div class="flex items-center mb-4">
+                            <div class="w-1/4 text-right pr-4">强力买入</div>
+                            <div class="w-3/4">
+                                <div class="progress-container">
+                                    <div class="progress-bar" style="width: 48%; background-color: #10b981;"></div>
+                                </div>
+                                <div class="text-right mt-1 text-sm">48%</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center mb-4">
+                            <div class="w-1/4 text-right pr-4">买入</div>
+                            <div class="w-3/4">
+                                <div class="progress-container">
+                                    <div class="progress-bar" style="width: 33%; background-color: #3b82f6;"></div>
+                                </div>
+                                <div class="text-right mt-1 text-sm">33%</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center mb-4">
+                            <div class="w-1/4 text-right pr-4">持有</div>
+                            <div class="w-3/4">
+                                <div class="progress-container">
+                                    <div class="progress-bar" style="width: 14%; background-color: #f59e0b;"></div>
+                                </div>
+                                <div class="text-right mt-1 text-sm">14%</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center mb-4">
+                            <div class="w-1/4 text-right pr-4">卖出</div>
+                            <div class="w-3/4">
+                                <div class="progress-container">
+                                    <div class="progress-bar" style="width: 5%; background-color: #ef4444;"></div>
+                                </div>
+                                <div class="text-right mt-1 text-sm">5%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-1/2">
+                        <div class="p-4 border rounded-lg" style="border-color: var(--border-color);">
+                            <h4 class="font-bold mb-2">分析师目标价</h4>
+                            <div class="flex items-center justify-between mb-4">
+                                <span>当前价格</span>
+                                <span class="font-bold">$297</span>
+                            </div>
+                            <div class="relative h-8 mb-4">
+                                <div class="absolute top-0 left-0 w-full h-2 mt-3 bg-gray-200 rounded"></div>
+                                <div class="absolute top-0 left-0 h-2 mt-3 rounded" style="width: 45.7%; background-color: var(--primary-color);"></div>
+                                <div class="absolute top-0 left-0 w-2 h-8 mt-0 bg-black rounded transform -translate-x-1/2" style="left: 45.7%;"></div>
+                                
+                                <div class="absolute bottom-0 left-0 text-xs">$250</div>
+                                <div class="absolute bottom-0 left-1/4 text-xs transform -translate-x-1/2">$350</div>
+                                <div class="absolute bottom-0 left-1/2 text-xs transform -translate-x-1/2">$450</div>
+                                <div class="absolute bottom-0 left-3/4 text-xs transform -translate-x-1/2">$550</div>
+                                <div class="absolute bottom-0 right-0 text-xs">$650</div>
+                            </div>
+                            <div class="flex items-center justify-between mt-6">
+                                <span>平均目标价</span>
+                                <span class="font-bold text-primary-600">$368.57</span>
+                            </div>
+                            <div class="flex items-center justify-between mt-2">
+                                <span>上涨空间</span>
+                                <span class="font-bold positive-change">+24%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Future outlook -->
+            <div class="bitcoin-box">
+                <h3 class="text-xl font-bold mb-4 flex items-center">
+                    <i class="fas fa-binoculars mr-2"></i>未来展望
+                </h3>
+                <p class="serif mb-4">
+                    市场对微策略未来表现的预期很大程度上取决于比特币的价格走势以及公司执行其"21/21计划"的能力。该计划旨在通过股权和固定收益融资筹集420亿美元，主要用于购买更多的比特币。这项计划的成功实施将需要持续有利的市场条件和投资者对微策略证券的强劲需求。
+                </p>
+                <p class="serif">
+                    分析师预计微策略下一季度的收入将达到1.1708亿美元，每股收益为-0.11美元。这些预测可能会随着市场状况和公司业绩的更新而发生变化。
+                </p>
+            </div>
+        </section>
+
+        <!-- Conclusion -->
+        <section id="结论" class="mb-16">
+            <span class="section-anchor" id="结论"></span>
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 pb-2 border-b-2" style="border-color: var(--primary-color);">
+                <i class="fas fa-check-circle mr-2" style="color: var(--primary-color);"></i>结论
+            </h2>
+            
+            <div class="card p-6">
+                <p class="serif text-lg leading-relaxed mb-4">
+                    微策略在过去三年中展现出其作为一家将企业分析软件业务与积极的比特币投资策略相结合的独特公司的特点。其股价经历了显著的波动，且与比特币的价格走势高度相关。公司采取了积极的资本策略，主要通过发行股权和债务来筹集资金，以持续增加其比特币持有量。尽管其核心软件业务表现出一定的增长，但公司的整体财务表现和市场估值仍然很大程度上受到比特币价格波动的影响。
+                </p>
+                <p class="serif text-lg leading-relaxed">
+                    投资者在考虑投资微策略时，需要充分认识到其与比特币价格的高度相关性以及公司积极的杠杆策略所带来的风险。虽然分析师普遍看好微策略的未来前景，但其股价的波动性以及对比特币市场的依赖性仍然是需要重点关注的因素。公司能否成功执行其雄心勃勃的"21/21计划"以及比特币价格的未来走势将是决定微策略未来财务表现和股价的关键。
+                </p>
+            </div>
+        </section>
+
+        <!-- References -->
+        <section id="参考文献" class="mb-16">
+            <span class="section-anchor" id="参考文献"></span>
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 pb-2 border-b-2" style="border-color: var(--primary-color);">
+                <i class="fas fa-book mr-2" style="color: var(--primary-color);"></i>参考文献
+            </h2>
+            
+            <div class="card p-6">
+                <ol class="list-decimal pl-6 space-y-2">
+                    <li class="serif">MicroStrategy Incorporated Common Stock Class A (MSTR ..., accessed March 20, 2025, <a href="https://www.nasdaq.com/market-activity/stocks/mstr/historical" target="_blank" class="text-primary-600 hover:underline">https://www.nasdaq.com/market-activity/stocks/mstr/historical</a></li>
+                    <li class="serif">MSTR Stock Price and Chart \- MicroStrategy \- TradingView, accessed March 20, 2025, <a href="https://www.tradingview.com/symbols/NASDAQ-MSTR/" target="_blank" class="text-primary-600 hover:underline">https://www.tradingview.com/symbols/NASDAQ-MSTR/</a></li>
+                    <li class="serif">MicroStrategy Stock Price History \- Investing.com, accessed March 20, 2025, <a href="https://www.investing.com/equities/microstrategy-inc-historical-data" target="_blank" class="text-primary-600 hover:underline">https://www.investing.com/equities/microstrategy-inc-historical-data</a></li>
+                    <li class="serif">How Much Bitcoin Do Michael Saylor and MicroStrategy Own ... \- Pintu, accessed March 20, 2025, <a href="https://pintu.co.id/en/news/140681-how-much-bitcoin-do-michael-saylor-and-microstrategy-own" target="_blank" class="text-primary-600 hover:underline">https://pintu.co.id/en/news/140681-how-much-bitcoin-do-michael-saylor-and-microstrategy-own</a></li>
+                    <li class="serif">Strategy (MicroStrategy): Buy, Sell, or Hold? | The Motley Fool, accessed March 20, 2025, <a href="https://www.fool.com/investing/2025/03/18/strategy-microstrategy-buy-sell-or-hold/" target="_blank" class="text-primary-600 hover:underline">https://www.fool.com/investing/2025/03/18/strategy-microstrategy-buy-sell-or-hold/</a></li>
+                    <!-- 显示前5项，其余可点击展开 -->
+                </ol>
+                <div class="mt-4">
+                    <button id="showMoreReferences" class="btn">
+                        <i class="fas fa-plus-circle"></i>显示更多参考文献
+                    </button>
+                </div>
+                <div id="moreReferences" class="hidden mt-4">
+                    <ol start="6" class="list-decimal pl-6 space-y-2">
+                        <li class="serif">MicroStrategy \- 27 Year Stock Price History | MSTR | MacroTrends, accessed March 20, 2025, <a href="https://www.macrotrends.net/stocks/charts/MSTR/microstrategy/stock-price-history" target="_blank" class="text-primary-600 hover:underline">https://www.macrotrends.net/stocks/charts/MSTR/microstrategy/stock-price-history</a></li>
+                        <li class="serif">Strategy Announces Fourth Quarter 2024 Financial Results \- Business Wire, accessed March 20, 2025, <a href="https://www.businesswire.com/news/home/20250205209141/en/Strategy-Announces-Fourth-Quarter-2024-Financial-Results-Holds-471107-BTC" target="_blank" class="text-primary-600 hover:underline">https://www.businesswire.com/news/home/20250205209141/en/Strategy-Announces-Fourth-Quarter-2024-Financial-Results-Holds-471107-BTC</a></li>
+                        <li class="serif">MicroStrategy Announces Second Quarter 2024 Financial Results ..., accessed March 20, 2025, <a href="https://www.strategy.com/press/microstrategy-announces-second-quarter-2024-financial-results-now-holds-226-500-btc_08-01-2024" target="_blank" class="text-primary-600 hover:underline">https://www.strategy.com/press/microstrategy-announces-second-quarter-2024-financial-results-now-holds-226-500-btc_08-01-2024</a></li>
+                        <!-- 在这里添加更多参考文献 -->
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- Further Reading -->
+        <section id="延伸阅读" class="mb-16">
+            <span class="section-anchor" id="延伸阅读"></span>
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 pb-2 border-b-2" style="border-color: var(--primary-color);">
+                <i class="fas fa-book-reader mr-2" style="color: var(--primary-color);"></i>延伸阅读
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="card p-6 hover:shadow-lg transition-shadow duration-300">
+                    <h3 class="font-bold text-lg mb-2">《The Bitcoin Standard》</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">作者: Saifedean Ammous</p>
+                    <p class="serif">这本书深入探讨了比特币的货币属性和经济意义。对于理解微策略的比特币储备策略背后的经济理论基础非常有帮助。</p>
+                </div>
+                <div class="card p-6 hover:shadow-lg transition-shadow duration-300">
+                    <h3 class="font-bold text-lg mb-2">《Corporate Treasury Management and Cryptocurrency》</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">作者: Michael Saylor</p>
+                    <p class="serif">微策略的创始人Michael Saylor撰写的这本书详细介绍了为什么企业应该考虑将比特币作为资产负债表上的储备资产。</p>
+                </div>
+                <div class="card p-6 hover:shadow-lg transition-shadow duration-300">
+                    <h3 class="font-bold text-lg mb-2">《Capital Markets: Institutions, Instruments, and Risk Management》</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">作者: Frank J. Fabozzi</p>
+                    <p class="serif">这本书提供了对资本市场运作的深入理解，有助于评估微策略的融资策略和资本结构管理。</p>
+                </div>
+                <div class="card p-6 hover:shadow-lg transition-shadow duration-300">
+                    <h3 class="font-bold text-lg mb-2">《Corporate Finance and Investment: Decisions & Strategies》</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">作者: Richard Pike</p>
+                    <p class="serif">这本书探讨了公司融资和投资决策的各个方面，对于理解微策略的融资活动和资本配置策略非常有价值。</p>
+                </div>
+                <div class="card p-6 hover:shadow-lg transition-shadow duration-300">
+                    <h3 class="font-bold text-lg mb-2">《The Age of Cryptocurrency》</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">作者: Paul Vigna & Michael J. Casey</p>
+                    <p class="serif">这本书提供了加密货币行业发展的全面视角，有助于理解微策略比特币策略所处的更广泛市场环境。</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-8" style="background-color: var(--card-bg);">
+        <div class="container">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                        © 2025 财务分析报告 | 更新日期: 2025年3月20日
+                    </p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="#" class="text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Floating TOC -->
+    <div class="floating-toc">
+        <div class="floating-toc-title">目录</div>
+        <ul>
+            <li><a href="#执行摘要">执行摘要</a></li>
+            <li><a href="#股价波动">股价波动分析</a></li>
+            <li><a href="#资本策略">资本策略与融资活动</a></li>
+            <li><a href="#比特币影响">比特币策略影响</a></li>
+            <li><a href="#财务业绩">财务业绩回顾</a></li>
+            <li><a href="#分析师评级">分析师评级与展望</a></li>
+            <li><a href="#结论">结论</a></li>
+            <li><a href="#参考文献">参考文献</a></li>
+            <li><a href="#延伸阅读">延伸阅读</a></li>
+        </ul>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
+            securityLevel: 'loose',
+            startOnLoad: true
+        });
+
+        // Theme toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            const showMoreBtn = document.getElementById('showMoreReferences');
+            const moreReferences = document.getElementById('moreReferences');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+            
+            // Set initial theme based on system preference
+            if (prefersDarkScheme.matches) {
+                document.body.classList.add('dark');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            } else {
+                document.body.classList.remove('dark');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            }
+            
+            // Theme toggle click handler
+            themeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('dark');
+                
+                if (document.body.classList.contains('dark')) {
+                    themeIcon.classList.remove('fa-moon');
+                    themeIcon.classList.add('fa-sun');
+                    mermaid.initialize({
+                        theme: 'dark',
+                        securityLevel: 'loose',
+                        startOnLoad: true
+                    });
+                } else {
+                    themeIcon.classList.remove('fa-sun');
+                    themeIcon.classList.add('fa-moon');
+                    mermaid.initialize({
+                        theme: 'default',
+                        securityLevel: 'loose',
+                        startOnLoad: true
+                    });
+                }
+                
+                // Re-render mermaid diagrams
+                mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+            });
+            
+            // Show more references
+            if (showMoreBtn) {
+                showMoreBtn.addEventListener('click', function() {
+                    moreReferences.classList.toggle('hidden');
+                    if (moreReferences.classList.contains('hidden')) {
+                        showMoreBtn.innerHTML = '<i class="fas fa-plus-circle"></i>显示更多参考文献';
+                    } else {
+                        showMoreBtn.innerHTML = '<i class="fas fa-minus-circle"></i>隐藏额外参考文献';
+                    }
+                });
+            }
+            
+            // Reading progress bar
+            const progressBar = document.getElementById('readingProgressBar');
+            const content = document.querySelector('main');
+            
+            function updateProgressBar() {
+                const scrollTop = window.scrollY;
+                const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+                const scrollPercentage = (scrollTop / scrollHeight) * 100;
+                progressBar.style.width = scrollPercentage + '%';
+            }
+            
+            document.addEventListener('scroll', updateProgressBar);
+            
+            // Navigation highlighting
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('nav a, .floating-toc a');
+            
+            function highlightNavigation() {
+                const scrollY = window.scrollY;
+                
+                sections.forEach(section => {
+                    const sectionHeight = section.offsetHeight;
+                    const sectionTop = section.offsetTop - 100;
+                    const sectionId = section.getAttribute('id');
+                    
+                    if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
+                        navLinks.forEach(link => {
+                            link.style.color = '';
+                            if (link.getAttribute('href') === '#' + sectionId) {
+                                link.style.color = 'var(--primary-color)';
+                            }
+                        });
+                    }
+                });
+            }
+            
+            document.addEventListener('scroll', highlightNavigation);
+            
+            // Smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                });
+            });
+            
+            // Initialize
+            updateProgressBar();
+            highlightNavigation();
+        });
+    </script>
+</body>
+</html>
