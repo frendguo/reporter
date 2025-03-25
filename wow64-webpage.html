@@ -1426,7 +1426,119 @@ ljmp 0x33:0x7FFE0300     ; 远跳转，切换到64位模式
                     </div>
                 </div>
 
-                <p>这些资源将帮助您更深入地理解 Windows 的系统架构，特别是 WOW64 兼容层的设计思想和技术细节。对于专业 Windows 开发者而言，掌握这些知识对于构建高兼容性、高性能的应用程序至关重要。</p>
+                <h3 class="mt-8 mb-4">官方技术文档与资源</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+                    <div class="feature-card hover-lift">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4" style="background-color: var(--bg-tertiary);">
+                                <i class="fa-solid fa-code text-xl" style="color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold mb-1" style="color: var(--text-primary);">
+                                    <a href="https://learn.microsoft.com/en-us/windows/win32/winprog64/wow64-implementation-details" target="_blank" class="hover:underline">WOW64 实现细节</a>
+                                </h4>
+                                <p style="color: var(--text-secondary);">Microsoft Learn 官方详解 WOW64 系统组件与工作原理，包括核心DLL（Wow64.dll、Wow64win.dll、Wow64cpu.dll）的功能以及系统调用处理机制。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-card hover-lift">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4" style="background-color: var(--bg-tertiary);">
+                                <i class="fa-solid fa-database text-xl" style="color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold mb-1" style="color: var(--text-primary);">
+                                    <a href="https://learn.microsoft.com/zh-cn/windows/win32/winprog64/registry-redirector" target="_blank" class="hover:underline">注册表重定向与反射</a>
+                                </h4>
+                                <p style="color: var(--text-secondary);">微软官方文档关于注册表重定向机制的技术解析，说明了如何隔离32位和64位应用的注册表数据访问，以及Windows 7开始废弃的注册表反射功能。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-card hover-lift">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4" style="background-color: var(--bg-tertiary);">
+                                <i class="fa-solid fa-folder-tree text-xl" style="color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold mb-1" style="color: var(--text-primary);">
+                                    <a href="https://learn.microsoft.com/en-us/windows/win32/winprog64/file-system-redirector" target="_blank" class="hover:underline">文件系统重定向</a>
+                                </h4>
+                                <p style="color: var(--text-secondary);">详细讲解 WOW64 如何管理32位应用访问文件系统，包括 System32 到 SysWOW64 的重定向机制，以及 Sysnative 虚拟目录的特殊用途。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-card hover-lift">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4" style="background-color: var(--bg-tertiary);">
+                                <i class="fa-solid fa-gauge-high text-xl" style="color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold mb-1" style="color: var(--text-primary);">
+                                    <a href="https://learn.microsoft.com/en-us/windows/win32/winprog64/performance-and-memory-consumption" target="_blank" class="hover:underline">WOW64 性能与内存消耗</a>
+                                </h4>
+                                <p style="color: var(--text-secondary);">Microsoft 对 WOW64 环境下应用性能表现的官方说明，包括 x64 和 ARM64 处理器上32位代码执行效率的分析，以及 LARGEADDRESSAWARE 标志对内存分配的影响。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="mt-8 mb-4">技术博客与社区资源</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+                    <div class="feature-card hover-lift">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4" style="background-color: var(--bg-tertiary);">
+                                <i class="fa-solid fa-laptop-code text-xl" style="color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold mb-1" style="color: var(--text-primary);">
+                                    <a href="https://wbenny.github.io/2018/11/04/wow64-internals.html" target="_blank" class="hover:underline">WoW64 internals 深度剖析</a>
+                                </h4>
+                                <p style="color: var(--text-secondary);">技术博客对 WOW64 内部机制的探究，包括系统调用处理、x86 程序在 ARM64 上运行的技术细节，以及安全研究者视角下的 WOW64 实现分析。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-card hover-lift">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4" style="background-color: var(--bg-tertiary);">
+                                <i class="fa-solid fa-shield-halved text-xl" style="color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold mb-1" style="color: var(--text-primary);">
+                                    <a href="https://cloud.google.com/blog/topics/threat-intelligence/wow64-subsystem-internals-and-hooking-techniques" target="_blank" class="hover:underline">WOW64 子系统内部机制</a>
+                                </h4>
+                                <p style="color: var(--text-secondary);">Mandiant 安全团队关于 WOW64 内部工作原理的技术研究，详解了 KiFastSystemCall 如何通过段选择子 0x33 实现从32位到64位模式的切换（Heaven's Gate），以及这一机制的安全影响。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-card hover-lift">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4" style="background-color: var(--bg-tertiary);">
+                                <i class="fa-brands fa-wikipedia-w text-xl" style="color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold mb-1" style="color: var(--text-primary);">
+                                    <a href="https://en.wikipedia.org/wiki/WoW64" target="_blank" class="hover:underline">Wikipedia: WoW64 条目</a>
+                                </h4>
+                                <p style="color: var(--text-secondary);">维基百科关于 WOW64 的综合介绍，包括不同处理器架构（x86-64、IA-64、ARM64）上的实现差异，以及文件系统、注册表等各种兼容性处理技术的概述。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-card hover-lift">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4" style="background-color: var(--bg-tertiary);">
+                                <i class="fa-brands fa-stack-overflow text-xl" style="color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold mb-1" style="color: var(--text-primary);">
+                                    <a href="https://stackoverflow.com/questions/74260342/thread-environment-block-and-process-environment-block" target="_blank" class="hover:underline">TEB/PEB 在 WOW64 下的差异</a>
+                                </h4>
+                                <p style="color: var(--text-secondary);">Stack Overflow 上关于 WOW64 进程中线程环境块和进程环境块实现的讨论，解释了32位进程在64位环境下如何维护两套 TEB/PEB 结构以及访问方式的区别。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p>以上资源将帮助您更深入地理解 Windows 的系统架构，特别是 WOW64 兼容层的设计思想和技术细节。对于专业 Windows 开发者而言，掌握这些知识对于构建高兼容性、高性能的应用程序至关重要。</p>
             </section>
         </main>
     </div>
