@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 错误报告 (WER) 系统：十年实现与经验</title>
+    <link rel="stylesheet" href="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-100-M/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/tailwindcss/2.2.19/tailwind.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+    <script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/mermaid/8.14.0/mermaid.min.js"></script>
+    <style>
+        :root {
+            --primary: #2C5282;
+            --primary-light: #4299E1;
+            --accent: #DD6B20;
+            --accent-light: #ED8936;
+            --text-primary: #2D3748;
+            --text-secondary: #4A5568;
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F7FAFC;
+            --bg-tertiary: #EDF2F7;
+            --border: #E2E8F0;
+        }
+
+        .dark {
+            --primary: #63B3ED;
+            --primary-light: #90CDF4;
+            --accent: #ED8936;
+            --accent-light: #F6AD55;
+            --text-primary: #F7FAFC;
+            --text-secondary: #E2E8F0;
+            --bg-primary: #1A202C;
+            --bg-secondary: #2D3748;
+            --bg-tertiary: #4A5568;
+            --border: #4A5568;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: "Noto Sans SC", Tahoma, Arial, Roboto, "Droid Sans", "Helvetica Neue", "Droid Sans Fallback", "Heiti SC", "Hiragino Sans GB", Simsun, sans-serif;
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
+            transition: all 0.3s ease;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: "Noto Serif SC", serif;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .first-letter::first-letter {
+            font-size: 3.5rem;
+            font-weight: 700;
+            float: left;
+            line-height: 0.8;
+            margin-right: 0.2em;
+            color: var(--accent);
+        }
+
+        .highlight {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .card {
+            background-color: var(--bg-primary);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 2rem;
+            padding-bottom: 2rem;
+            border-left: 2px solid var(--primary-light);
+        }
+
+        .timeline-item::before {
+            content: "";
+            position: absolute;
+            left: -0.5rem;
+            top: 0;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            background-color: var(--primary);
+        }
+
+        .timeline-item:last-child {
+            border-left-color: transparent;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .glossary-item {
+            padding: 1rem;
+            border-left: 4px solid var(--accent);
+            background-color: var(--bg-tertiary);
+            margin-bottom: 1rem;
+            border-radius: 0 0.25rem 0.25rem 0;
+        }
+
+        .glossary-term {
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background-color: var(--primary-light);
+            color: white;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .quote {
+            position: relative;
+            font-style: italic;
+            padding: 1rem 2rem;
+            margin: 1.5rem 0;
+            background-color: var(--bg-tertiary);
+            border-radius: 0.25rem;
+        }
+
+        .quote::before {
+            content: "\201C";
+            position: absolute;
+            top: -0.5rem;
+            left: 0.5rem;
+            font-size: 4rem;
+            color: var(--primary-light);
+            opacity: 0.3;
+            font-family: serif;
+        }
+
+        /* 导航栏动画效果 */
+        .nav-link {
+            position: relative;
+            padding: 0.5rem 0;
+        }
+
+        .nav-link::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* 滚动显示动画 */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-light);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        /* 响应式设计调整 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .first-letter::first-letter {
+                font-size: 2.5rem;
+            }
+
+            .mobile-menu {
+                display: flex;
+                flex-direction: column;
+                position: fixed;
+                top: 4rem;
+                left: 0;
+                width: 100%;
+                background-color: var(--bg-primary);
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                z-index: 20;
+                transform: translateY(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .mobile-menu.open {
+                transform: translateY(0);
+            }
+        }
+
+        /* 打印样式 */
+        @media print {
+            body {
+                color: #000;
+                background-color: #fff;
+            }
+
+            .no-print {
+                display: none;
+            }
+
+            .container {
+                max-width: 100%;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <header class="sticky top-0 z-10 bg-opacity-95 backdrop-filter backdrop-blur-sm" style="background-color: var(--bg-primary);">
+        <div class="container mx-auto py-4">
+            <nav class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="mr-2 text-2xl">
+                        <i class="fas fa-bug" style="color: var(--accent);"></i>
+                    </div>
+                    <h1 class="text-xl font-bold">WER <span class="text-sm font-normal hidden md:inline">Windows 错误报告系统</span></h1>
+                </div>
+                
+                <div class="hidden md:flex space-x-6 items-center">
+                    <a href="#overview" class="nav-link" style="color: var(--text-primary);">概述</a>
+                    <a href="#features" class="nav-link" style="color: var(--text-primary);">特性</a>
+                    <a href="#architecture" class="nav-link" style="color: var(--text-primary);">架构</a>
+                    <a href="#timeline" class="nav-link" style="color: var(--text-primary);">发展历程</a>
+                    <a href="#impact" class="nav-link" style="color: var(--text-primary);">影响</a>
+                    <button id="theme-toggle" class="flex items-center justify-center w-10 h-10 rounded-full focus:outline-none" style="background-color: var(--bg-tertiary);">
+                        <i id="theme-icon" class="fas fa-moon"></i>
+                    </button>
+                </div>
+                
+                <div class="md:hidden flex items-center">
+                    <button id="theme-toggle-mobile" class="mr-4 flex items-center justify-center w-8 h-8 rounded-full focus:outline-none" style="background-color: var(--bg-tertiary);">
+                        <i id="theme-icon-mobile" class="fas fa-moon text-sm"></i>
+                    </button>
+                    <button id="mobile-menu-toggle" class="flex items-center justify-center w-8 h-8 rounded focus:outline-none" style="background-color: var(--bg-tertiary);">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </nav>
+        </div>
+        
+        <div id="mobile-menu" class="mobile-menu py-2 px-4 hidden">
+            <a href="#overview" class="py-2 px-4" style="color: var(--text-primary);">概述</a>
+            <a href="#features" class="py-2 px-4" style="color: var(--text-primary);">特性</a>
+            <a href="#architecture" class="py-2 px-4" style="color: var(--text-primary);">架构</a>
+            <a href="#timeline" class="py-2 px-4" style="color: var(--text-primary);">发展历程</a>
+            <a href="#impact" class="py-2 px-4" style="color: var(--text-primary);">影响</a>
+        </div>
+    </header>
+
+    <!-- Hero 部分 -->
+    <section class="py-12 md:py-20" style="background-color: var(--bg-secondary);">
+        <div class="container mx-auto">
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-8 md:mb-0">
+                    <span class="tag mb-4">微软技术</span>
+                    <h1 class="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+                        大规模<span class="highlight">调试</span>
+                        <br>十年实现与经验
+                    </h1>
+                    <p class="text-lg mb-6" style="color: var(--text-secondary);">
+                        Windows 错误报告 (WER) 系统是一个分布式系统，自动化处理来自十亿台机器的错误报告，十年来已收集数十亿份错误报告。
+                    </p>
+                    <div class="flex flex-wrap gap-4">
+                        <a href="#overview" class="btn">了解详情</a>
+                        <a href="#architecture" class="btn btn-outline">系统架构</a>
+                    </div>
+                </div>
+                <div class="md:w-1/2 flex justify-center">
+                    <div class="relative" style="width: 320px; height: 320px;">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                                <path fill="var(--primary-light)" d="M48.8,-64.2C63.5,-53.8,76.2,-39.7,81.6,-23.1C87,-6.5,85.2,12.5,77.3,28.3C69.5,44,55.6,56.4,40.1,64.2C24.6,72,7.4,75.3,-9.5,73.9C-26.4,72.5,-43,66.5,-56.6,55.3C-70.3,44.1,-81,27.6,-83.3,9.9C-85.6,-7.8,-79.5,-26.7,-68.5,-41.2C-57.5,-55.8,-41.6,-65.9,-25.8,-67.1C-10,-68.3,5.7,-60.5,21.7,-56.3C37.8,-52.1,54.1,-51.3,66.3,-43.7Z" transform="translate(100 100)" class="animate-blob">
+                                </path>
+                            </svg>
+                        </div>
+                        <div class="absolute inset-0 flex items-center justify-center z-10">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-bug text-6xl mb-4" style="color: white;"></i>
+                                <div class="text-white text-center">
+                                    <div class="text-xl font-bold">Windows 错误报告</div>
+                                    <div>调试革命性工具</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 作者信息部分 -->
+    <section class="py-8 border-b" style="border-color: var(--border);">
+        <div class="container mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <p class="text-sm" style="color: var(--text-secondary);">作者: <span style="color: var(--primary);">Kirk Glerum, Kinshuman Kinshumann, Steve Greenberg 等</span></p>
+                    <p class="text-sm" style="color: var(--text-secondary);">机构: Microsoft Corporation</p>
+                </div>
+                <div class="flex space-x-4">
+                    <div class="text-center">
+                        <div class="text-xl font-bold" style="color: var(--primary);">10+</div>
+                        <div class="text-sm" style="color: var(--text-secondary);">运行年限</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xl font-bold" style="color: var(--primary);">10亿+</div>
+                        <div class="text-sm" style="color: var(--text-secondary);">设备覆盖</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xl font-bold" style="color: var(--primary);">数十亿</div>
+                        <div class="text-sm" style="color: var(--text-secondary);">错误报告</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 概述部分 -->
+    <section id="overview" class="py-12 fade-in">
+        <div class="container mx-auto">
+            <h2 class="text-3xl font-bold mb-8">系统概述</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <p class="first-letter mb-6">
+                        Windows 错误报告 (WER) 是一个分布式系统，用于自动化处理来自十亿台计算机的错误报告。它收集错误数据并将错误分类到"桶"中，以帮助开发人员优先处理最重要的问题。WER 使用渐进式数据收集策略，最小化大多数报告的开销，但在需要时允许开发人员收集详细信息。
+                    </p>
+                    <p class="mb-6">
+                        WER 通过"自动错误诊断"、"渐进式数据收集"和"基于统计的调试"三个关键原则赢得了广泛采用。这些原则使大规模错误处理成为可能，并帮助程序员更有效地提高系统质量。
+                    </p>
+                    <div class="quote">
+                        <p>"数据，而非分贝。"</p>
+                        <p class="text-right mt-2 text-sm" style="color: var(--text-secondary);">— WER 团队早期格言</p>
+                    </div>
+                </div>
+                
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold mb-4">WER 系统四大独特优势</h3>
+                    <ul class="space-y-4">
+                        <li class="flex">
+                            <div class="mr-4 text-xl"><i class="fas fa-chart-network" style="color: var(--accent);"></i></div>
+                            <div>
+                                <h4 class="font-bold">规模最大的错误报告系统</h4>
+                                <p class="text-sm" style="color: var(--text-secondary);">约十亿台计算机运行 WER 客户端代码，涵盖自 Windows XP 以来的所有 Windows 系统</p>
+                            </div>
+                        </li>
+                        <li class="flex">
+                            <div class="mr-4 text-xl"><i class="fas fa-layer-group" style="color: var(--accent);"></i></div>
+                            <div>
+                                <h4 class="font-bold">自动化额外数据收集</h4>
+                                <p class="text-sm" style="color: var(--text-secondary);">当初始错误报告提供的数据不足以调试问题时，WER 可以自动收集额外的客户端数据</p>
+                            </div>
+                        </li>
+                        <li class="flex">
+                            <div class="mr-4 text-xl"><i class="fas fa-route" style="color: var(--accent);"></i></div>
+                            <div>
+                                <h4 class="font-bold">自动引导用户解决方案</h4>
+                                <p class="text-sm" style="color: var(--text-secondary);">WER 自动引导用户获取已修正错误的解决方案，有效解决用户常常运行过时程序的问题</p>
+                            </div>
+                        </li>
+                        <li class="flex">
+                            <div class="mr-4 text-xl"><i class="fas fa-puzzle-piece" style="color: var(--accent);"></i></div>
+                            <div>
+                                <h4 class="font-bold">通用性</h4>
+                                <p class="text-sm" style="color: var(--text-secondary);">WER 被用于操作系统和应用程序，支持各类错误报告：崩溃、非致命断言失败、挂起、安装失败、异常执行和设备失败</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 主要特性部分 -->
+    <section id="features" class="py-12" style="background-color: var(--bg-secondary);">
+        <div class="container mx-auto">
+            <h2 class="text-3xl font-bold mb-8 fade-in">关键特性与原则</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="card p-6 fade-in">
+                    <div class="feature-icon">
+                        <i class="fas fa-boxes-stacked"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">错误桶分类</h3>
+                    <p class="mb-4" style="color: var(--text-secondary);">
+                        WER 将可能源自同一 bug 的错误报告聚合到称为"桶"的集合中。理想的桶分类算法应严格维持正交性：每个桶一个 bug，每个 bug 一个桶。
+                    </p>
+                    <p style="color: var(--text-secondary);">
+                        通过两阶段桶分类实现：首先在客户端进行<span class="highlight">标记</span>，然后在 WER 服务中进行<span class="highlight">分类</span>，随着收集到更多数据，错误报告可能会被重新分类。
+                    </p>
+                </div>
+                
+                <div class="card p-6 fade-in" style="transition-delay: 0.1s;">
+                    <div class="feature-icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">渐进式数据收集</h3>
+                    <p class="mb-4" style="color: var(--text-secondary);">
+                        WER 采用渐进式数据收集策略，减少错误报告的成本，使系统能够扩展到高容量，同时提供足够的调试详细信息。
+                    </p>
+                    <p style="color: var(--text-secondary);">
+                        大多数错误报告仅包含简单的桶标识符。如果需要更多数据，WER 会收集<span class="highlight">迷你转储</span>，进一步需要时，可收集完整内存转储和其他相关数据。
+                    </p>
+                </div>
+                
+                <div class="card p-6 fade-in" style="transition-delay: 0.2s;">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">最小化人工交互</h3>
+                    <p class="mb-4" style="color: var(--text-secondary);">
+                        WER 通过自动化错误诊断，将用户从错误报告的所有步骤中移除，只保留授权步骤。
+                    </p>
+                    <p style="color: var(--text-secondary);">
+                        用户交互在大多数情况下减少为简单的是/否授权。用户可以永久选择加入或退出未来的授权请求，管理员可以应用组织策略。
+                    </p>
+                </div>
+                
+                <div class="card p-6 fade-in" style="transition-delay: 0.3s;">
+                    <div class="feature-icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">保护用户隐私</h3>
+                    <p class="mb-4" style="color: var(--text-secondary);">
+                        WER 非常注重避免收集个人身份信息，减少监管负担并鼓励用户参与。
+                    </p>
+                    <p style="color: var(--text-secondary);">
+                        WER 客户端代码会清零序列号和其他已知的唯一标识符，错误报告仅在用户同意的情况下发送，所有同意请求默认为否定，要求用户明确选择加入。
+                    </p>
+                </div>
+                
+                <div class="card p-6 fade-in" style="transition-delay: 0.4s;">
+                    <div class="feature-icon">
+                        <i class="fas fa-handshake-angle"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">为用户提供解决方案</h3>
+                    <p class="mb-4" style="color: var(--text-secondary);">
+                        许多错误有已知的修正方法。WER 服务维护从桶到解决方案的映射关系。
+                    </p>
+                    <p style="color: var(--text-secondary);">
+                        解决方案是网页 URL，描述用户应采取的步骤以防止错误再次发生。解决方案 URL 可以将用户链接到特定问题的补丁页面、最新版本的更新站点或描述解决方法的文档。
+                    </p>
+                </div>
+                
+                <div class="card p-6 fade-in" style="transition-delay: 0.5s;">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">基于统计的调试</h3>
+                    <p class="mb-4" style="color: var(--text-secondary);">
+                        WER 将所有错误报告记录到一个中央数据库中，程序员可以挖掘 WER 数据库，比单一的、非结构化的错误报告流更有效地改进调试过程。
+                    </p>
+                    <p style="color: var(--text-secondary);">
+                        WER 数据可用于优先排序调试工作、发现隐藏的根本原因、测试根本原因假设、测量解决方案部署情况以及监控回归。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 系统架构部分 -->
+    <section id="architecture" class="py-12 fade-in">
+        <div class="container mx-auto">
+            <h2 class="text-3xl font-bold mb-8">系统架构</h2>
+            <p class="mb-8">
+                WER 是一个分布式系统。客户端软件检测错误情况，生成错误报告，标记桶，并将错误报告给 WER 服务。WER 服务记录错误发生情况，然后根据特定错误的已知信息，可能会要求客户端提供额外数据，或引导客户端获取解决方案。
+            </p>
+            
+            <div class="mb-12">
+                <h3 class="text-xl font-bold mb-4">WER 系统架构图</h3>
+                <div class="card p-4">
+                    <div class="mermaid">
+                        graph TB
+                          A[Windows 客户端] -->|1. 错误发生| B[WER 客户端]
+                          B -->|2. 收集错误数据| B
+                          B -->|3. 桶标记| B
+                          B -->|4. 错误报告| C[前端 IIS 服务器]
+                          C -->|5. 保存桶参数| D[主 SQL 服务器]
+                          C -->|6. 保存 CAB 文件| E[SAN 存储]
+                          D -->|7. 数据复制| F[分发 SQL 服务器]
+                          F -->|8. 数据复制| G[查询 SQL 服务器]
+                          C -->|9. 处理错误| H[在线作业服务器]
+                          C -->|10. 处理错误| I[离线作业服务器]
+                          H -->|11. 访问符号| J[符号服务器]
+                          I -->|12. 访问符号| J
+                          G -->|13. 访问| K[门户网站]
+                          
+                          style A fill:#f9f9f9,stroke:#333,stroke-width:1px
+                          style B fill:#f9f9f9,stroke:#333,stroke-width:1px
+                          style C fill:#dbeafe,stroke:#2563eb,stroke-width:2px
+                          style D fill:#dbeafe,stroke:#2563eb,stroke-width:2px
+                          style E fill:#dbeafe,stroke:#2563eb,stroke-width:2px
+                          style F fill:#dbeafe,stroke:#2563eb,stroke-width:2px
+                          style G fill:#dbeafe,stroke:#2563eb,stroke-width:2px
+                          style H fill:#dbeafe,stroke:#2563eb,stroke-width:2px
+                          style I fill:#dbeafe,stroke:#2563eb,stroke-width:2px
+                          style J fill:#dbeafe,stroke:#2563eb,stroke-width:2px
+                          style K fill:#dbeafe,stroke:#2563eb,stroke-width:2px
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">错误报告生成</h3>
+                    <p class="mb-4">
+                        错误报告是响应操作系统可见事件(如崩溃、挂起和安装失败)创建的，或由应用程序直接调用一组用于创建和提交错误报告的 API 创建的。
+                    </p>
+                    <p>
+                        一旦触发报告，werfault.exe 服务负责获取用户授权并将错误报告提交给 WER 服务器。如果计算机未连接到互联网，报告会立即提交或排队等待提交。
+                    </p>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-bold mb-4">通信协议</h3>
+                    <p class="mb-4">
+                        WER 客户端通过四阶段协议与 WER 服务通信，该协议最小化 WER 服务器的负载和提交完整错误报告的客户端数量：
+                    </p>
+                    <ol class="list-decimal pl-5 space-y-2">
+                        <li>客户端发出未加密的 HTTP/GET 请求，报告桶标签并确定 WER 服务是否需要额外数据</li>
+                        <li>客户端发出加密的 HTTPS/GET 请求，确定 WER 服务所需的数据</li>
+                        <li>客户端通过加密的 HTTPS/PUT 请求将请求的数据（压缩的 CAB 文件）推送到服务</li>
+                        <li>客户端发出加密的 HTTPS/GET 请求，表示完成并请求任何已知的错误解决方案</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="mb-12">
+                <h3 class="text-xl font-bold mb-4">WER 服务</h3>
+                <p class="mb-4">
+                    WER 服务由大约 60 台服务器组成，连接到一个 65TB 的存储区域网络（用于存储错误报告数据库）和一个 120TB 的存储区域网络（用于存储长达 6 个月的原始 CAB 文件）。
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="card p-4 text-center">
+                        <div class="text-3xl font-bold mb-2" style="color: var(--primary);">20+</div>
+                        <div class="text-sm" style="color: var(--text-secondary);">前端 IIS 服务器</div>
+                    </div>
+                    <div class="card p-4 text-center">
+                        <div class="text-3xl font-bold mb-2" style="color: var(--primary);">23</div>
+                        <div class="text-sm" style="color: var(--text-secondary);">作业服务器</div>
+                    </div>
+                    <div class="card p-4 text-center">
+                        <div class="text-3xl font-bold mb-2" style="color: var(--primary);">1亿+</div>
+                        <div class="text-sm" style="color: var(--text-secondary);">每日处理能力</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h3 class="text-xl font-bold mb-4">获取额外数据</h3>
+                <p class="mb-4">
+                    虽然许多错误可以通过简单的内存转储进行调试，但有些错误无法通过这种方式调试。使用 WER 门户，程序员可以创建"数据需求"请求。
+                </p>
+                <p>
+                    数据请求记录在主 SQL 服务器中，静态页面被删除。在随后的错误报告中，WER 服务将要求客户端收集所需的数据并提交。程序员可以请求的额外数据包括完整的进程内存转储、与进程相关的内核内存的实时转储、等待链中其他进程的转储、命名文件、命名注册表键和 WMI 查询输出。
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 桶分类算法部分 -->
+    <section class="py-12" style="background-color: var(--bg-secondary);">
+        <div class="container mx-auto fade-in">
+            <h2 class="text-3xl font-bold mb-8">桶分类算法</h2>
+            <p class="mb-6">
+                WER 最重要的元素之一是其将错误报告分配到桶的机制。这是通过一组启发式方法实现的。概念上，WER 桶分类启发式可以沿两个轴划分。
+            </p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold mb-4">客户端桶分类（标记）</h3>
+                    <p class="mb-4">
+                        当生成错误报告时，第一个桶分类启发式在客户端运行。这些标记启发式的主要目标是基于本地信息产生一个独特的桶标签，该标签可能与同一 bug 导致的其他报告对齐。
+                    </p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr style="background-color: var(--bg-tertiary);">
+                                    <th class="p-2 text-left">启发式</th>
+                                    <th class="p-2 text-left">影响</th>
+                                    <th class="p-2 text-left">描述</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td class="p-2">program_name</td>
+                                    <td class="p-2">扩展</td>
+                                    <td class="p-2">在桶标签中包含程序名称</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td class="p-2">module_name</td>
+                                    <td class="p-2">扩展</td>
+                                    <td class="p-2">在标签中包含故障模块名称</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td class="p-2">module_offset</td>
+                                    <td class="p-2">扩展</td>
+                                    <td class="p-2">包含崩溃指令在故障模块中的偏移量</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td class="p-2">exception_code</td>
+                                    <td class="p-2">扩展</td>
+                                    <td class="p-2">未处理异常的原因</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td class="p-2">pc_on_stack</td>
+                                    <td class="p-2">压缩</td>
+                                    <td class="p-2">代码在堆栈上运行，移除模块偏移量</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2">assert_tags</td>
+                                    <td class="p-2">压缩</td>
+                                    <td class="p-2">用唯一的代码内断言 ID 替换模块信息</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold mb-4">服务器端桶分类（分类）</h3>
+                    <p class="mb-4">
+                        服务器端桶分类的启发式方法尝试分类错误报告，以最大化程序员的效率。它们被编入 !analyze（"bang analyze"），这是 Windows 调试器的扩展。
+                    </p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr style="background-color: var(--bg-tertiary);">
+                                    <th class="p-2 text-left">启发式</th>
+                                    <th class="p-2 text-left">影响</th>
+                                    <th class="p-2 text-left">描述</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td class="p-2">find_correct_stack</td>
+                                    <td class="p-2">扩展</td>
+                                    <td class="p-2">遍历数据结构查找陷阱帧等结构到堆栈</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td class="p-2">skip_core_modules</td>
+                                    <td class="p-2">扩展</td>
+                                    <td class="p-2">降低内核代码或核心 OS 用户模式代码的优先级</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td class="p-2">function_name</td>
+                                    <td class="p-2">压缩</td>
+                                    <td class="p-2">用函数名替换模块偏移量</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td class="p-2">one_bit_corrupt</td>
+                                    <td class="p-2">压缩</td>
+                                    <td class="p-2">转储中的代码与存档副本相比有单比特错误</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td class="p-2">malware_identified</td>
+                                    <td class="p-2">压缩</td>
+                                    <td class="p-2">包含已知恶意软件</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2">heap_corruption</td>
+                                    <td class="p-2">压缩</td>
+                                    <td class="p-2">堆函数失败，堆已损坏</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <p>
+                扩展和压缩启发式应该是互补的，而不是相互冲突的。扩展启发式不应该为同一 bug 引入新桶。压缩启发式不应该将两个 bug 放入一个桶。正确配合工作时，扩展和压缩启发式应该使 WER 向着每个 bug 一个桶的理想目标迈进。
+            </p>
+        </div>
+    </section>
+
+    <!-- 发展历程部分 -->
+    <section id="timeline" class="py-12 fade-in">
+        <div class="container mx-auto">
+            <h2 class="text-3xl font-bold mb-8">十年发展历程</h2>
+            <div class="relative">
+                <div class="timeline-item">
+                    <h3 class="text-xl font-bold mb-2">1999年：WER 诞生</h3>
+                    <p class="mb-4">
+                        Windows 团队和 Office 团队合作创建了 Windows 错误报告系统。Windows 团队开发了一个可以自动诊断系统崩溃核心转储的工具，而 Office 团队开发了在未处理异常时自动收集堆栈跟踪的工具。
+                    </p>
+                    <p>
+                        这两个团队意识到可以将 Windows 团队的自动诊断工具与 Office 团队的自动收集工具结合起来，创建一个新服务——Windows 错误报告 (WER)。
+                    </p>
+                </div>
+                
+                <div class="timeline-item">
+                    <h3 class="text-xl font-bold mb-2">2001年：首个百万错误报告</h3>
+                    <p>
+                        WER 在部署 8 个月内收集了第一百万份错误报告，标志着系统开始得到广泛使用。团队采用"数据，而非分贝"的格言，强调使用来自 WER 的数据来优先处理调试工作，修复影响最多用户的 bug，而不仅仅是来自最大声客户的 bug。
+                    </p>
+                </div>
+                
+                <div class="timeline-item">
+                    <h3 class="text-xl font-bold mb-2">2004年：Windows XP SP2</h3>
+                    <p>
+                        Windows XP Service Pack 2 引入了几项改进：
+                    </p>
+                    <ul class="list-disc pl-5 space-y-2 mb-4">
+                        <li>修改了迷你转储生成代码，明确添加池损坏页面</li>
+                        <li>在迷你转储中添加了系统管理 BIOS 表的大部分内容，包括 OEM 型号名称和 BIOS 版本</li>
+                        <li>添加了信息以帮助识别报告是否来自超频 CPU</li>
+                    </ul>
+                    <p>
+                        微软团队决定禁用帧指针省略 (FPO)，尽管最初颇具争议，但广泛的内部测试表明 FPO 没有提供统计上可证明的好处，但显著阻碍了非预期调用堆栈的事后调试。
+                    </p>
+                </div>
+                
+                <div class="timeline-item">
+                    <h3 class="text-xl font-bold mb-2">2006年：Windows Vista</h3>
+                    <p>
+                        Vista 对内核崩溃报告进行了两项增强：
+                    </p>
+                    <ul class="list-disc pl-5 space-y-2 mb-4">
+                        <li>Vista 在崩溃时创建完整的内核转储，在重启后从内核转储中提取并报告迷你转储</li>
+                        <li>增加了次要数据的大小限制，从 XP 的 32KB 增加到 Vista 的 128KB，在 SP2 中进一步增加到 1MB</li>
+                    </ul>
+                    <p>
+                        Windows Vista 程序员使用 WER 在 Vista 测试版本中发现并修复了 5,000 多个 bug。这些 bug 是在程序员使用静态分析和模型检查工具找到并修复了 10 万多个 bug 之后，但在 Vista 正式发布之前发现的。
+                    </p>
+                </div>
+                
+                <div class="timeline-item">
+                    <h3 class="text-xl font-bold mb-2">2007年：处理 Renos 恶意软件</h3>
+                    <p>
+                        2007 年 2 月，Windows Vista 用户受到 Renos 恶意软件的攻击。安装在客户端后，Renos 导致 Windows GUI shell（explorer.exe）在尝试绘制桌面时崩溃。
+                    </p>
+                    <p class="mb-4">
+                        用户遇到的 Renos 感染是一个连续循环：shell 启动、崩溃和重启。虽然 Renos 感染的系统对用户来说毫无用处，但系统启动得足够远，可以向 WER 报告错误并从 Windows Update 接收更新。
+                    </p>
+                    <p>
+                        2 月 27 日，Microsoft 通过 Windows Update 发布了针对 Renos 感染的 Windows Defender 签名。三天内，足够多的系统接收到新签名，使报告数量降至每天 10 万以下。到 3 月底，原始 Renos 变种的报告变得微不足道。
+                    </p>
+                </div>
+                
+                <div class="timeline-item">
+                    <h3 class="text-xl font-bold mb-2">2009年：扩展至第三方开发者</h3>
+                    <p>
+                        到 2009 年，超过 700 家第三方公司开始使用 WER，注册了近 7,000 个程序和近 30 万个模块。175 家提供商注册了解决方案，以指导用户找到 bug 修复。
+                    </p>
+                    <p>
+                        一些软件提供商开始更主动地使用 WER。例如，2007 年 5 月，一家内核模式提供商首次开始使用 WER。30 天内，该提供商解决了其代码的前 20 个报告问题。5 个月内，随着 WER 引导用户获取修复程序，归因于该提供商的所有内核崩溃百分比从 7.6% 降至 3.8%。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 影响和统计部分 -->
+    <section id="impact" class="py-12" style="background-color: var(--bg-secondary);">
+        <div class="container mx-auto fade-in">
+            <h2 class="text-3xl font-bold mb-8">影响与效果</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">基于统计的调试</h3>
+                    <p class="mb-4">
+                        WER 最重要的特性可能是基于统计的调试。WER 将所有错误报告的数据记录到一个单一数据库中。程序员可以挖掘 WER 数据库，比单纯的、非结构化的错误报告流更有效地改进调试。
+                    </p>
+                    <p>
+                        基于统计的调试策略可分为五类：优先排序调试工作、发现隐藏的原因、测试根本原因假设、测量解决方案部署情况和监控回归。
+                    </p>
+                </div>
+                
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold mb-4">错误报告分布</h3>
+                    <p class="mb-4">
+                        我们在许多应用程序和操作系统发布版本中的经验表明，错误报告遵循帕累托分布，少数 bug 占据了大多数错误报告。
+                    </p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr style="background-color: var(--bg-tertiary);">
+                                    <th class="p-2 text-left">程序</th>
+                                    <th class="p-2 text-right">第一四分位</th>
+                                    <th class="p-2 text-right">第二四分位</th>
+                                    <th class="p-2 text-right">第三四分位</th>
+                                    <th class="p-2 text-right">第四四分位</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td class="p-2">Excel</td>
+                                    <td class="p-2 text-right">0.227%</td>
+                                    <td class="p-2 text-right">1.690%</td>
+                                    <td class="p-2 text-right">9.80%</td>
+                                    <td class="p-2 text-right">88.4%</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td class="p-2">Outlook</td>
+                                    <td class="p-2 text-right">0.058%</td>
+                                    <td class="p-2 text-right">0.519%</td>
+                                    <td class="p-2 text-right">6.31%</td>
+                                    <td class="p-2 text-right">93.1%</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td class="p-2">PowerPoint</td>
+                                    <td class="p-2 text-right">0.106%</td>
+                                    <td class="p-2 text-right">0.493%</td>
+                                    <td class="p-2 text-right">7.99%</td>
+                                    <td class="p-2 text-right">91.4%</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2">Word</td>
+                                    <td class="p-2 text-right">0.057%</td>
+                                    <td class="p-2 text-right">0.268%</td>
+                                    <td class="p-2 text-right">7.95%</td>
+                                    <td class="p-2 text-right">91.7%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="mt-4 text-sm" style="color: var(--text-secondary);">
+                        表格展示了按错误报告四分位数的桶百分比。一小部分桶收到了大多数错误报告。
+                    </p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold mb-4">桶分类效率</h3>
+                    <p class="mb-4">
+                        理想的桶分类算法应将所有由一个 bug 引起的错误报告映射到一个唯一的桶中，不包含其他 bug。我们知道 WER 的桶分类启发式中存在两种形式的弱点：
+                    </p>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li>压缩启发式中的弱点，导致将来自一个 bug 的报告映射到太多桶中</li>
+                        <li>扩展启发式中的弱点，导致将多个 bug 映射到同一个桶中</li>
+                    </ul>
+                </div>
+                
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold mb-4">找到隐藏原因</h3>
+                    <p>
+                        WER 数据库可用于查找在内存转储中不是立即明显的根本原因。例如，当桶分类将责任指向信誉良好的代码时，我们会搜索错误报告以寻找替代解释。
+                    </p>
+                    <p>
+                        一种有效的策略是寻找错误与看似无辜的第三方之间的相关性。在许多情况下，我们发现第三方设备驱动程序或其他插件在错误报告中出现的频率高于一般群体。
+                    </p>
+                </div>
+                
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold mb-4">测量解决方案部署</h3>
+                    <p>
+                        WER 数据库的一个最近用途是确定软件更新的部署范围。部署可以通过缺失来测量，即测量软件更新修复的错误报告的减少情况。
+                    </p>
+                    <p>
+                        部署也可以通过其他问题的错误报告中新程序或模块版本的增加存在来测量。通过传递解决方案，WER 帮助提高了软件质量并改善了用户体验。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 术语表部分 -->
+    <section class="py-12">
+        <div class="container mx-auto fade-in">
+            <h2 class="text-3xl font-bold mb-8">关键术语表</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="glossary-item">
+                    <div class="glossary-term">错误 (Error)</div>
+                    <p>程序行为与程序员预期不同的单一事件。</p>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">Bug</div>
+                    <p>程序代码中导致一个或多个错误的根本原因。</p>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">桶 (Bucket)</div>
+                    <p>可能由同一 bug 引起的错误报告的集合。</p>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">桶分类 (Bucketing)</div>
+                    <p>将错误报告分类到桶中的过程。</p>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">迷你转储 (Minidump)</div>
+                    <p>一种缩写的堆栈和内存转储，包含故障系统的配置信息。</p>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">数据需求 (Data Wanted)</div>
+                    <p>程序员通过 WER 门户创建的请求，用于获取特定错误的额外信息。</p>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">解决方案 (Solution)</div>
+                    <p>描述用户应采取的步骤以防止错误再次发生的网页 URL。</p>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">!analyze</div>
+                    <p>Windows 调试器的扩展，编纂了用于桶分类的启发式方法。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 延伸阅读部分 -->
+    <section class="py-12" style="background-color: var(--bg-secondary);">
+        <div class="container mx-auto fade-in">
+            <h2 class="text-3xl font-bold mb-8">延伸阅读</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card p-6">
+                    <div class="flex mb-4">
+                        <div class="mr-4 text-4xl flex items-center justify-center" style="color: var(--primary);">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Why Programs Fail: A Guide to Systematic Debugging</h3>
+                            <p class="text-sm" style="color: var(--text-secondary);">Andreas Zeller</p>
+                        </div>
+                    </div>
+                    <p class="mb-4">
+                        这本书详细介绍了系统化调试的原则和技术，包括如何自动分析程序失败，如何通过实验找到故障原因，以及如何应用科学方法构建调试工具。与 WER 系统的设计理念高度一致。
+                    </p>
+                    <a href="#" class="text-sm font-semibold" style="color: var(--primary);">查看更多 <i class="fas fa-arrow-right ml-1"></i></a>
+                </div>
+                
+                <div class="card p-6">
+                    <div class="flex mb-4">
+                        <div class="mr-4 text-4xl flex items-center justify-center" style="color: var(--primary);">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Automating Software Failure Reporting</h3>
+                            <p class="text-sm" style="color: var(--text-secondary);">Brendan Murphy, ACM Queue</p>
+                        </div>
+                    </div>
+                    <p class="mb-4">
+                        这篇文章总结了自动化错误报告系统的历史和动机，以 WER 为例。它解释了为什么这些系统对于现代软件开发如此重要，以及它们如何改变了软件质量管理的方式。
+                    </p>
+                    <a href="#" class="text-sm font-semibold" style="color: var(--primary);">查看更多 <i class="fas fa-arrow-right ml-1"></i></a>
+                </div>
+                
+                <div class="card p-6">
+                    <div class="flex mb-4">
+                        <div class="mr-4 text-4xl flex items-center justify-center" style="color: var(--primary);">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Better Bug Reporting With Better Privacy</h3>
+                            <p class="text-sm" style="color: var(--text-secondary);">Miguel Castro, Manuel Costa, Jean-Philippe Martin</p>
+                        </div>
+                    </div>
+                    <p class="mb-4">
+                        这篇论文探讨了如何在自动错误报告系统中改进隐私保护。作者提出使用符号执行系统地用触发错误的条件变量替换内存转储，以减小错误报告的大小并提高匿名性。
+                    </p>
+                    <a href="#" class="text-sm font-semibold" style="color: var(--primary);">查看更多 <i class="fas fa-arrow-right ml-1"></i></a>
+                </div>
+                
+                <div class="card p-6">
+                    <div class="flex mb-4">
+                        <div class="mr-4 text-4xl flex items-center justify-center" style="color: var(--primary);">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Systems Performance: Enterprise and the Cloud</h3>
+                            <p class="text-sm" style="color: var(--text-secondary);">Brendan Gregg</p>
+                        </div>
+                    </div>
+                    <p class="mb-4">
+                        这本书介绍了系统性能分析和调优的方法论，包括如何收集和分析系统行为数据。书中的许多概念与 WER 用于大规模调试的统计方法相关，特别是关于如何从大量数据中提取有意义的见解。
+                    </p>
+                    <a href="#" class="text-sm font-semibold" style="color: var(--primary);">查看更多 <i class="fas fa-arrow-right ml-1"></i></a>
+                </div>
+                
+                <div class="card p-6">
+                    <div class="flex mb-4">
+                        <div class="mr-4 text-4xl flex items-center justify-center" style="color: var(--primary);">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Bug Isolation via Remote Program Sampling</h3>
+                            <p class="text-sm" style="color: var(--text-secondary);">Ben Liblit, Alex Aiken, Alice X. Zheng, Michael I. Jordan</p>
+                        </div>
+                    </div>
+                    <p class="mb-4">
+                        这篇论文讨论了通过远程收集程序所有执行的数据来解决错误诊断问题的方法。作者展示了如何使用逻辑回归结合样本找到错误的根本原因，以及如何通过统计采样以较小的运行时开销收集样本。
+                    </p>
+                    <a href="#" class="text-sm font-semibold" style="color: var(--primary);">查看更多 <i class="fas fa-arrow-right ml-1"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚部分 -->
+    <footer class="py-8" style="background-color: var(--bg-tertiary);">
+        <div class="container mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <h2 class="text-xl font-bold mb-2">Windows 错误报告 (WER) 系统</h2>
+                    <p class="text-sm" style="color: var(--text-secondary);">十年实现与经验</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="w-10 h-10 rounded-full flex items-center justify-center" style="background-color: var(--primary); color: white;">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 rounded-full flex items-center justify-center" style="background-color: var(--primary); color: white;">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 rounded-full flex items-center justify-center" style="background-color: var(--primary); color: white;">
+                        <i class="fab fa-github"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="mt-8 pt-8 border-t text-center" style="border-color: var(--border); color: var(--text-secondary);">
+                <p class="text-sm">
+                    基于 Kirk Glerum 等人的论文《Debugging in the (Very) Large: Ten Years of Implementation and Experience》设计
+                </p>
+                <p class="text-sm mt-2">
+                    © 2025 Microsoft Corporation. 保留所有权利。
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 回到顶部按钮 -->
+    <button id="back-to-top" class="fixed bottom-6 right-6 w-12 h-12 rounded-full flex items-center justify-center opacity-0 invisible transition-all duration-300 z-20" style="background-color: var(--primary); color: white;">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({ 
+            theme: document.documentElement.classList.contains('dark') ? 'dark' : 'default',
+            securityLevel: 'loose',
+            flowchart: { useMaxWidth: true }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 主题管理
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeToggleMobile = document.getElementById('theme-toggle-mobile');
+            const htmlElement = document.documentElement;
+            
+            // 从localStorage获取保存的主题，如果没有则使用系统主题
+            function getThemePreference() {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) {
+                    return savedTheme;
+                }
+                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+
+            // 设置主题
+            function setTheme(theme) {
+                if (theme === 'dark') {
+                    htmlElement.classList.remove('light');
+                    htmlElement.classList.add('dark');
+                    document.getElementById('theme-icon').classList.remove('fa-moon');
+                    document.getElementById('theme-icon').classList.add('fa-sun');
+                    document.getElementById('theme-icon-mobile').classList.remove('fa-moon');
+                    document.getElementById('theme-icon-mobile').classList.add('fa-sun');
+                    // 更新 Mermaid 主题
+                    mermaid.initialize({ theme: 'dark' });
+                } else {
+                    htmlElement.classList.remove('dark');
+                    htmlElement.classList.add('light');
+                    document.getElementById('theme-icon').classList.remove('fa-sun');
+                    document.getElementById('theme-icon').classList.add('fa-moon');
+                    document.getElementById('theme-icon-mobile').classList.remove('fa-sun');
+                    document.getElementById('theme-icon-mobile').classList.add('fa-moon');
+                    // 更新 Mermaid 主题
+                    mermaid.initialize({ theme: 'default' });
+                }
+                
+                localStorage.setItem('theme', theme);
+                // 重新渲染图表
+                mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+            }
+
+            // 初始化主题
+            setTheme(getThemePreference());
+            
+            // 切换主题
+            function toggleTheme() {
+                const currentTheme = htmlElement.classList.contains('dark') ? 'dark' : 'light';
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                setTheme(newTheme);
+            }
+
+            themeToggle.addEventListener('click', toggleTheme);
+            themeToggleMobile.addEventListener('click', toggleTheme);
+
+            // 监听系统主题变化
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                if (!localStorage.getItem('theme')) {
+                    setTheme(e.matches ? 'dark' : 'light');
+                }
+            });
+
+            // 移动菜单切换
+            document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
+                document.getElementById('mobile-menu').classList.toggle('open');
+                document.getElementById('mobile-menu').classList.toggle('hidden');
+            });
+
+            // 关闭移动菜单当点击链接
+            document.querySelectorAll('#mobile-menu a').forEach(function(link) {
+                link.addEventListener('click', function() {
+                    document.getElementById('mobile-menu').classList.remove('open');
+                    document.getElementById('mobile-menu').classList.add('hidden');
+                });
+            });
+
+            // 滚动动画显示
+            const fadeElements = document.querySelectorAll('.fade-in');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            fadeElements.forEach(element => {
+                observer.observe(element);
+            });
+
+            // 回到顶部按钮
+            const backToTopButton = document.getElementById('back-to-top');
+            
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    backToTopButton.classList.remove('opacity-0', 'invisible');
+                    backToTopButton.classList.add('opacity-100', 'visible');
+                } else {
+                    backToTopButton.classList.remove('opacity-100', 'visible');
+                    backToTopButton.classList.add('opacity-0', 'invisible');
+                }
+            });
+            
+            backToTopButton.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            // 添加流动的背景动画
+            const blob = document.querySelector('.animate-blob');
+            let angle = 0;
+            
+            function animateBlob() {
+                angle += 0.01;
+                const scaleX = 1 + 0.1 * Math.sin(angle);
+                const scaleY = 1 + 0.1 * Math.cos(angle);
+                const translateX = 2 * Math.sin(angle * 0.7);
+                const translateY = 2 * Math.cos(angle * 0.5);
+                
+                blob.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
+                
+                requestAnimationFrame(animateBlob);
+            }
+            
+            animateBlob();
+        });
+    </script>
+</body>
+</html>
