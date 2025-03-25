@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深入研究 Windows WOW64 兼容层的原理与应用</title>
+    <link href="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-100-M/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/mermaid/8.14.0/mermaid.min.js"></script>
+    <style>
+        /* 系统字体设置 */
+        :root {
+            --primary-color: #3B82F6;
+            --secondary-color: #10B981;
+            --highlight-color: #6366F1;
+            --text-primary: #1F2937;
+            --text-secondary: #4B5563;
+            --text-tertiary: #6B7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #F9FAFB;
+            --bg-tertiary: #F3F4F6;
+            --fs-border: #E5E7EB;
+            --fs-shadow: rgba(0, 0, 0, 0.1);
+            --fs-shadow-lg: rgba(0, 0, 0, 0.08);
+            --code-bg: #F1F5F9;
+            --code-text: #334155;
+            --code-border: #E2E8F0;
+            --fs-font-family: 'Noto Sans SC', 'Noto Serif SC', Tahoma, Arial, Roboto, "Droid Sans", "Helvetica Neue", "Droid Sans Fallback", "Heiti SC", "Hiragino Sans GB", Simsun, sans-serif;
+            --fs-heading-font: 'Noto Serif SC', serif;
+            --fs-body-font: 'Noto Sans SC', sans-serif;
+        }
+
+        .dark {
+            --primary-color: #60A5FA;
+            --secondary-color: #34D399;
+            --highlight-color: #818CF8;
+            --text-primary: #F9FAFB;
+            --text-secondary: #E5E7EB;
+            --text-tertiary: #D1D5DB;
+            --bg-primary: #111827;
+            --bg-secondary: #1F2937;
+            --bg-tertiary: #374151;
+            --fs-border: #4B5563;
+            --fs-shadow: rgba(0, 0, 0, 0.25);
+            --fs-shadow-lg: rgba(0, 0, 0, 0.2);
+            --code-bg: #1E293B;
+            --code-text: #E2E8F0;
+            --code-border: #334155;
+        }
+
+        body {
+            font-family: var(--fs-body-font);
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--fs-heading-font);
+            font-weight: 700;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            line-height: 1.3;
+            color: var(--text-primary);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            border-bottom: 3px solid var(--primary-color);
+            display: inline-block;
+            padding-bottom: 0.2em;
+            margin-bottom: 0.5em;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            position: relative;
+            padding-left: 1rem;
+        }
+
+        h2::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0.15em;
+            height: 0.8em;
+            width: 0.25rem;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin-top: 1.8em;
+            position: relative;
+        }
+
+        h3::after {
+            content: "";
+            position: absolute;
+            bottom: -0.3em;
+            left: 0;
+            width: 2.5rem;
+            height: 0.15rem;
+            background: var(--secondary-color);
+            border-radius: 2px;
+        }
+
+        p {
+            margin-bottom: 1.25rem;
+            line-height: 1.8;
+        }
+
+        .dropcap::first-letter {
+            float: left;
+            font-family: var(--fs-heading-font);
+            font-size: 3.5em;
+            line-height: 0.8;
+            padding-right: 0.1em;
+            padding-top: 0.1em;
+            color: var(--primary-color);
+        }
+
+        /* 导航样式 */
+        .nav-item {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            margin-bottom: 0.375rem;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-item:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--primary-color);
+        }
+
+        .nav-item.active {
+            background-color: var(--bg-tertiary);
+            color: var(--primary-color);
+            font-weight: 600;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .nav-item i {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-tertiary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* 卡片样式 */
+        .feature-card {
+            background-color: var(--bg-secondary);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px var(--fs-shadow);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            border: 1px solid var(--fs-border);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px var(--fs-shadow-lg);
+            border-color: var(--primary-color);
+        }
+
+        .feature-card i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        /* 代码块样式 */
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+            border: 1px solid var(--code-border);
+        }
+
+        code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.9em;
+        }
+
+        /* 导航标签栏样式 */
+        .tab {
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.375rem 0.375rem 0 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid var(--fs-border);
+            border-bottom: none;
+            background-color: var(--bg-tertiary);
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .tab.active {
+            background-color: var(--bg-primary);
+            color: var(--primary-color);
+            font-weight: 600;
+            border-top: 3px solid var(--primary-color);
+            position: relative;
+            top: 1px;
+        }
+
+        .tab:hover:not(.active) {
+            background-color: var(--bg-secondary);
+        }
+
+        /* 表格样式 */
+        .tech-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        .tech-table th,
+        .tech-table td {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--fs-border);
+        }
+
+        .tech-table th {
+            background-color: var(--bg-secondary);
+            font-weight: 600;
+            text-align: left;
+        }
+
+        .tech-table tr:nth-child(even) {
+            background-color: var(--bg-tertiary);
+        }
+
+        /* 引用块样式 */
+        blockquote {
+            border-left: 4px solid var(--secondary-color);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            background-color: var(--bg-secondary);
+            border-radius: 0 0.5rem 0.5rem 0;
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+
+        /* 自定义样式 */
+        .section-divider {
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 2px;
+            margin: 3rem 0;
+        }
+
+        .info-tooltip {
+            position: relative;
+            display: inline-block;
+            color: var(--primary-color);
+            cursor: help;
+        }
+
+        .info-tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.875rem;
+            box-shadow: 0 4px 6px var(--fs-shadow);
+            border: 1px solid var(--fs-border);
+        }
+
+        .info-tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .keyword {
+            color: var(--highlight-color);
+            font-weight: 600;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.5rem; }
+            h3 { font-size: 1.25rem; }
+            .nav-sidebar {
+                position: fixed;
+                top: 0;
+                left: -280px;
+                width: 280px;
+                height: 100vh;
+                background-color: var(--bg-primary);
+                transition: left 0.3s ease;
+                z-index: 50;
+                padding: 1rem;
+                overflow-y: auto;
+                border-right: 1px solid var(--fs-border);
+            }
+            .nav-sidebar.open {
+                left: 0;
+            }
+            .mobile-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 40;
+            }
+            .mobile-overlay.open {
+                display: block;
+            }
+        }
+
+        /* 动画效果 */
+        .hover-lift {
+            transition: transform 0.3s ease;
+        }
+        .hover-lift:hover {
+            transform: translateY(-4px);
+        }
+
+        /* 打印样式 */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                font-size: 12pt;
+                color: black;
+                background-color: white;
+            }
+            a {
+                text-decoration: underline;
+                color: #0000EE;
+            }
+            .container {
+                max-width: 100%;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="relative">
+    <!-- 顶部导航 -->
+    <header class="sticky top-0 bg-opacity-95 z-40 shadow-sm border-b border-solid" style="background-color: var(--bg-primary); border-color: var(--fs-border);">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <button id="sidebar-toggle" class="md:hidden mr-4 text-2xl" style="color: var(--text-primary);">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <a href="#" class="flex items-center">
+                        <svg class="w-8 h-8 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="var(--primary-color)" />
+                            <path d="M2 17L12 22L22 17M2 12L12 17L22 12" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <span class="hidden sm:inline-block text-xl font-bold" style="color: var(--text-primary);">WOW64 兼容层研究</span>
+                    </a>
+                </div>
+
+                <div class="flex items-center">
+                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-opacity-10 hover:bg-gray-700 transition-all focus:outline-none" aria-label="切换主题">
+                        <i class="fa-solid fa-sun text-xl dark:hidden" style="color: var(--text-primary);"></i>
+                        <i class="fa-solid fa-moon text-xl hidden dark:block" style="color: var(--text-primary);"></i>
+                    </button>
+                    <a href="#recommended-reading" class="hidden sm:flex items-center ml-4 px-3 py-1 rounded-full text-sm font-medium" style="background-color: var(--bg-tertiary); color: var(--primary-color);">
+                        <i class="fa-solid fa-book mr-1"></i>
+                        延伸阅读
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 移动侧边栏遮罩 -->
+    <div id="mobile-overlay" class="mobile-overlay"></div>
+
+    <div class="container mx-auto px-4 flex flex-col md:flex-row">
+        <!-- 侧边导航 -->
+        <aside id="nav-sidebar" class="nav-sidebar md:relative md:left-0 md:w-64 md:block md:h-auto md:sticky md:top-20" style="height: calc(100vh - 5rem);">
+            <div class="py-6 md:pr-4">
+                <div class="mb-6">
+                    <h4 class="text-sm font-bold uppercase mb-3" style="color: var(--text-tertiary);">目录导航</h4>
+                    <div class="space-y-1">
+                        <a href="#introduction" class="nav-item active">
+                            <i class="fa-solid fa-circle-info"></i>
+                            引言
+                        </a>
+                        <a href="#os-processing" class="nav-item">
+                            <i class="fa-solid fa-microchip"></i>
+                            操作系统处理部分
+                        </a>
+                        <a href="#history-goals" class="nav-item ml-4">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            历史沿革与设计目标
+                        </a>
+                        <a href="#registry-redirect" class="nav-item ml-4">
+                            <i class="fa-solid fa-database"></i>
+                            注册表访问重定向
+                        </a>
+                        <a href="#filesystem-redirect" class="nav-item ml-4">
+                            <i class="fa-solid fa-folder-tree"></i>
+                            文件系统访问管理
+                        </a>
+                        <a href="#memory-management" class="nav-item ml-4">
+                            <i class="fa-solid fa-memory"></i>
+                            内存管理细节
+                        </a>
+                        <a href="#compatibility" class="nav-item ml-4">
+                            <i class="fa-solid fa-puzzle-piece"></i>
+                            应用兼容性支持
+                        </a>
+                        <a href="#components" class="nav-item ml-4">
+                            <i class="fa-solid fa-cubes"></i>
+                            关键系统组件
+                        </a>
+                        <a href="#processor-execution" class="nav-item">
+                            <i class="fa-solid fa-gears"></i>
+                            处理器执行部分
+                        </a>
+                        <a href="#x64-execution" class="nav-item ml-4">
+                            <i class="fa-solid fa-microchip"></i>
+                            x64平台执行策略
+                        </a>
+                        <a href="#other-arch" class="nav-item ml-4">
+                            <i class="fa-solid fa-sitemap"></i>
+                            其他架构机制
+                        </a>
+                        <a href="#conclusion" class="nav-item">
+                            <i class="fa-solid fa-flag-checkered"></i>
+                            结语
+                        </a>
+                        <a href="#recommended-reading" class="nav-item">
+                            <i class="fa-solid fa-book"></i>
+                            延伸阅读
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主要内容区 -->
+        <main class="flex-1 py-8 md:py-12">
+            <!-- 文章标题区 -->
+            <div class="mb-12">
+                <div class="flex items-center space-x-2 text-sm mb-2" style="color: var(--text-tertiary);">
+                    <span>Windows 开发技术</span>
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                    <span>系统架构</span>
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                    <span style="color: var(--primary-color);">兼容性技术</span>
+                </div>
+                
+                <h1 class="text-4xl md:text-5xl font-bold mb-6">深入研究 Windows WOW64<br/>兼容层的原理与应用</h1>
+                
+                <div class="flex items-center space-x-6 mb-8">
+                    <div class="flex items-center" style="color: var(--text-tertiary);">
+                        <i class="fa-solid fa-calendar-days mr-2"></i>
+                        <span>2023-11-25</span>
+                    </div>
+                    <div class="flex items-center" style="color: var(--text-tertiary);">
+                        <i class="fa-solid fa-clock mr-2"></i>
+                        <span>阅读时间: 30 分钟</span>
+                    </div>
+                    <div class="flex items-center" style="color: var(--text-tertiary);">
+                        <i class="fa-solid fa-tag mr-2"></i>
+                        <span>技术解析</span>
+                    </div>
+                </div>
+                
+                <div class="rounded-xl overflow-hidden shadow-lg" style="background-color: var(--bg-secondary);">
+                    <div class="p-6 md:p-8">
+                        <div class="flex items-start">
+                            <div class="mt-1 mr-4 text-3xl" style="color: var(--primary-color);">
+                                <i class="fa-solid fa-quote-left"></i>
+                            </div>
+                            <p class="italic text-lg" style="color: var(--text-secondary);">
+                                WOW64 技术作为 Windows 平台向后兼容的重要支柱，通过巧妙的设计与工程实现，使庞大的 32 位应用生态得以在 64 位 Windows 系统上无缝运行，为操作系统架构过渡提供了关键保障。本文深入解析这一兼容层的内部原理，展现其跨越不同处理器架构的技术演进历程。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 概览卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div class="feature-card hover-lift">
+                    <i class="fa-solid fa-microchip"></i>
+                    <h3 class="text-xl font-bold mb-2" style="color: var(--text-primary);">兼容层架构</h3>
+                    <p style="color: var(--text-secondary);">探索 WOW64 如何在用户态提供系统调用转换与资源访问隔离，平衡兼容性与性能需求。</p>
+                </div>
+                
+                <div class="feature-card hover-lift">
+                    <i class="fa-solid fa-code-branch"></i>
+                    <h3 class="text-xl font-bold mb-2" style="color: var(--text-primary);">处理器执行策略</h3>
+                    <p style="color: var(--text-secondary);">对比 x64、Itanium、ARM64 等架构上 WOW64 的实现差异，从硬件兼容到软件模拟的多种路径。</p>
+                </div>
+                
+                <div class="feature-card hover-lift">
+                    <i class="fa-solid fa-puzzle-piece"></i>
+                    <h3 class="text-xl font-bold mb-2" style="color: var(--text-primary);">系统组件协作</h3>
+                    <p style="color: var(--text-secondary);">剖析 Wow64.dll、Wow64win.dll、Wow64cpu.dll 等核心组件如何协同，支撑 32 位应用在 64 位环境下运行。</p>
+                </div>
+            </div>
+
+            <!-- 内容目录区 -->
+            <div class="mb-12 p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                <h2 class="text-xl font-bold mb-4 pl-0 before:content-none">
+                    <i class="fa-solid fa-list-ul mr-2" style="color: var(--primary-color);"></i>
+                    内容概览
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <div class="flex items-center mb-2">
+                            <div class="w-6 h-6 rounded-full flex items-center justify-center mr-2" style="background-color: var(--primary-color); color: white;">
+                                <span class="text-sm">1</span>
+                            </div>
+                            <a href="#introduction" class="font-medium hover:underline" style="color: var(--text-primary);">引言</a>
+                        </div>
+                        <div class="flex items-center mb-2">
+                            <div class="w-6 h-6 rounded-full flex items-center justify-center mr-2" style="background-color: var(--primary-color); color: white;">
+                                <span class="text-sm">2</span>
+                            </div>
+                            <a href="#os-processing" class="font-medium hover:underline" style="color: var(--text-primary);">操作系统处理部分</a>
+                        </div>
+                        <div class="ml-8 text-sm space-y-1 mb-2" style="color: var(--text-secondary);">
+                            <div><a href="#history-goals" class="hover:underline">- 历史沿革与设计目标</a></div>
+                            <div><a href="#registry-redirect" class="hover:underline">- 注册表访问重定向与反射</a></div>
+                            <div><a href="#filesystem-redirect" class="hover:underline">- 文件系统访问管理</a></div>
+                            <div><a href="#memory-management" class="hover:underline">- 内存管理细节</a></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex items-center mb-2">
+                            <div class="w-6 h-6 rounded-full flex items-center justify-center mr-2" style="background-color: var(--primary-color); color: white;">
+                                <span class="text-sm">3</span>
+                            </div>
+                            <a href="#processor-execution" class="font-medium hover:underline" style="color: var(--text-primary);">处理器执行部分</a>
+                        </div>
+                        <div class="ml-8 text-sm space-y-1 mb-2" style="color: var(--text-secondary);">
+                            <div><a href="#x64-execution" class="hover:underline">- x64 平台上32位指令的执行策略</a></div>
+                            <div><a href="#other-arch" class="hover:underline">- 其他架构上的 WOW64 执行机制</a></div>
+                        </div>
+                        <div class="flex items-center mb-2">
+                            <div class="w-6 h-6 rounded-full flex items-center justify-center mr-2" style="background-color: var(--primary-color); color: white;">
+                                <span class="text-sm">4</span>
+                            </div>
+                            <a href="#conclusion" class="font-medium hover:underline" style="color: var(--text-primary);">结语</a>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-6 h-6 rounded-full flex items-center justify-center mr-2" style="background-color: var(--primary-color); color: white;">
+                                <span class="text-sm">5</span>
+                            </div>
+                            <a href="#recommended-reading" class="font-medium hover:underline" style="color: var(--text-primary);">延伸阅读</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 引言 -->
+            <section id="introduction" class="mb-12">
+                <h2>引言</h2>
+                <p class="dropcap">随着计算机体系结构从32位迈向64位，Windows操作系统面临着如何在新的64位环境下继续支持海量现存的32位应用程序的问题。微软早在推出第一版64位Windows（2001年 Itanium 架构的 Windows XP 64-bit Edition）时，就引入了"Windows on Windows 64"（即 WOW64）兼容层。WOW64 的设计目标是在64位系统上创建一个虚拟的32位运行环境，使现有的32位 Windows 应用无需修改即可平稳运行。它作为 Windows 操作系统的一个轻量级兼容子系统，被包含在所有64位版本的 Windows 中（在某些无图形界面的 Server Core 环境可选装）。</p>
+
+                <div class="my-8 p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4" style="background-color: var(--bg-tertiary);">
+                            <i class="fa-solid fa-lightbulb text-xl" style="color: var(--highlight-color);"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-bold mb-2" style="color: var(--text-primary);">WOW64 核心设计目标</h4>
+                            <ul class="list-disc pl-5 space-y-1" style="color: var(--text-secondary);">
+                                <li><span class="keyword">无缝性</span> - 32位应用在64位系统上应当像在原生32位系统上一样运行</li>
+                                <li><span class="keyword">兼容性</span> - 支持绝大多数现有32位应用，包括用户界面、文件操作、注册表访问等各方面</li>
+                                <li><span class="keyword">性能</span> - 利用处理器的硬件特性尽量减少指令翻译开销</li>
+                                <li><span class="keyword">隔离和稳定</span> - WOW64 运行完全于用户态，不对64位内核做不必要的修改</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <p>历史上，Windows 也曾在32位系统上通过"Windows on Windows (WOW)"技术支持过16位应用程序的运行。类似地，WOW64 承袭了这种兼容理念，但实现对象变为<strong>32位应用于64位 Windows</strong>。WOW64 的实现需要同时考虑处理器层面的指令集支持与操作系统层面的环境差异。具体而言，在处理器层面，不同架构对32位代码的支持程度不同：例如 x86-64 (AMD64) 处理器本身向下兼容x86指令集，而早期的 Itanium (IA-64) 处理器则需要通过软件来模拟x86指令。</p>
+
+                <p>在操作系统层面，64位 Windows 在诸如内存地址空间、寄存器/文件系统布局、系统调用接口等方面与32位 Windows 存在结构性差异，需要WOW64进行协调处理。围绕这些设计目标，WOW64 构建了独特的分层架构：一方面在用户态拦截并转换32位应用的系统调用与资源访问，另一方面与处理器协作，以适当方式执行32位指令。</p>
+
+                <div class="my-8">
+                    <div class="mermaid" style="background-color: var(--bg-secondary); padding: 1rem; border-radius: 0.5rem;">
+                        graph TB
+                            A[32位应用程序] --> B[32位 API 层<br>user32.dll, kernel32.dll等]
+                            B --> C[32位 NTDLL.dll]
+                            C --> D{WOW64<br>兼容层}
+                            D --> E[64位 NTDLL.dll]
+                            E --> F[64位 Windows<br>内核]
+                            
+                            style A fill:#60A5FA,stroke:#3B82F6,color:#FFFFFF
+                            style B fill:#60A5FA,stroke:#3B82F6,color:#FFFFFF
+                            style C fill:#60A5FA,stroke:#3B82F6,color:#FFFFFF
+                            style D fill:#10B981,stroke:#047857,color:#FFFFFF
+                            style E fill:#6366F1,stroke:#4F46E5,color:#FFFFFF
+                            style F fill:#6366F1,stroke:#4F46E5,color:#FFFFFF
+                    </div>
+                    <p class="text-center text-sm mt-2" style="color: var(--text-tertiary);">图1: WOW64 在系统架构中的位置与调用流程</p>
+                </div>
+
+                <p>下文将分别从"<strong>操作系统处理部分</strong>"和"<strong>处理器执行部分</strong>"两大方面，对 WOW64 的内部原理和实现机制进行深入分析。</p>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- 操作系统处理部分 -->
+            <section id="os-processing" class="mb-12">
+                <h2>操作系统处理部分</h2>
+                <p>操作系统处理部分主要讨论 WOW64 如何在操作系统层面为32位应用提供兼容支持，包括注册表和文件系统的重定向、内存管理的差异、应用兼容性策略以及WOW64关键组件的协作等。WOW64 通过一系列用户态的机制，使得32位进程在64位系统上拥有独立的"视图"和运行环境，避免直接与64位系统内部实现发生冲突。下面我们分几个方面详细阐述。</p>
+
+                <!-- 历史沿革与设计目标 -->
+                <section id="history-goals" class="mt-8">
+                    <h3>WOW64 的历史沿革与设计目标</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-6">
+                        <div class="md:col-span-2">
+                            <p>在Windows迈向64位的过程中，微软逐步完善了WOW64子系统。2001年发布的 Itanium 架构 Windows XP 是 WOW64 的首秀，主要通过软件模拟来运行x86代码。随后，2003年AMD64架构出现，Windows XP/Server 2003 x64 Edition 开始利用x64处理器的硬件兼容模式，实现了更高效的WOW64。</p>
+                            <p>随着 ARM64 平台上 Windows 10 的推出，WOW64 的概念被进一步延伸，用于在 ARM64 上模拟运行 x86 和 ARM32 应用。可以说，WOW64 贯穿于 Windows 64位平台的发展历程，不断适应新的硬件架构。</p>
+                        </div>
+                        <div>
+                            <div class="feature-card h-full">
+                                <h4 class="text-lg font-bold mb-3" style="color: var(--text-primary);">WOW64 发展里程碑</h4>
+                                <ul class="space-y-2 text-sm" style="color: var(--text-secondary);">
+                                    <li><strong>2001年</strong> - 首次在 Itanium 架构 Windows XP 上引入</li>
+                                    <li><strong>2003年</strong> - 在 AMD64 架构上实现硬件加速</li>
+                                    <li><strong>2005年</strong> - Windows XP x64 正式发布</li>
+                                    <li><strong>2017年</strong> - Windows 10 on ARM 扩展 WOW64 至 ARM64 架构</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p>WOW64 的设计初衷在于<strong>兼容</strong>与<strong>平滑过渡</strong>。面对海量的32位软件生态，完全要求用户迁移到64位版本并不现实，因而需要一种机制承载旧有应用。WOW64 通过在64位 Windows 上提供一个32位的接口层，承担起翻译32位应用调用、隔离运行环境差异的职责，使32位应用"误认为"自己仍运行在32位系统上。</p>
+
+                    <div class="my-6">
+                        <blockquote>
+                            WOW64 的实现严格限制在用户模式，不对内核做侵入式修改——它劫持了32位应用对内核的调用，将之在用户态转换为等价的64位调用，再交由64位内核处理，从而既保证了安全稳定，又减少了进入内核的次数，提高效率。
+                        </blockquote>
+                    </div>
+
+                    <p>总的来说，WOW64 的历史演进体现了 Windows 对向后兼容的高度重视。其设计目标始终围绕着让32位应用"零修改"运行在新平台上，同时充分利用新硬件能力保证性能不至于大幅退化。</p>
+                </section>
+
+                <!-- 注册表访问的重定向与反射机制 -->
+                <section id="registry-redirect" class="mt-8">
+                    <h3>注册表访问的重定向与反射机制</h3>
+                    
+                    <div class="my-6 p-5 rounded-xl" style="background-color: var(--bg-secondary);">
+                        <div class="flex items-center mb-3">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center mr-3" style="background-color: var(--primary-color); color: white;">
+                                <i class="fa-solid fa-database"></i>
+                            </div>
+                            <h4 class="text-lg font-bold" style="color: var(--text-primary);">注册表重定向的动机与原理</h4>
+                        </div>
+                        <p style="color: var(--text-secondary);">在64位 Windows 中，操作系统为32位和64位应用提供了各自独立的注册表视图。这是因为很多应用程序会访问注册表的固定路径，如果不加区分地让32位应用访问64位注册表，可能会造成冲突或误操作。</p>
+                    </div>
+
+                    <p>WOW64 的"注册表重定向器"负责将32位应用对某些注册表节点的访问自动指向一个平行的32位视图下。具体而言，Windows 在注册表中引入了 <code>HKLM\Software\Wow6432Node</code> 分支，作为32位应用看到的 <code>HKLM\Software</code> 的映射。</p>
+
+                    <div class="my-6">
+                        <pre><code>// 当32位应用尝试访问：
+HKEY_LOCAL_MACHINE\Software\SomeKey
+
+// WOW64 会将请求重定向到：
+HKEY_LOCAL_MACHINE\Software\Wow6432Node\SomeKey</code></pre>
+                    </div>
+
+                    <p>对于应用来说，并不知道这个重定向的存在，它仍以为访问的是正常的路径，但实际数据被隔离存储在Wow6432Node子树中。这种机制保证了32位应用读取/修改注册表不会影响64位应用的配置，双方各有各的"视图"。</p>
+
+                    <div class="my-6">
+                        <div class="mermaid" style="background-color: var(--bg-secondary); padding: 1rem; border-radius: 0.5rem;">
+                            graph TD
+                                A[32位应用] -->|访问 HKLM\Software| B{WOW64<br>注册表重定向}
+                                B -->|重定向| C[HKLM\Software\Wow6432Node]
+                                D[64位应用] -->|访问 HKLM\Software| E[HKLM\Software]
+                                
+                                style A fill:#60A5FA,stroke:#3B82F6,color:#FFFFFF
+                                style B fill:#10B981,stroke:#047857,color:#FFFFFF
+                                style C fill:#6366F1,stroke:#4F46E5,color:#FFFFFF
+                                style D fill:#6366F1,stroke:#4F46E5,color:#FFFFFF
+                                style E fill:#6366F1,stroke:#4F46E5,color:#FFFFFF
+                        </div>
+                        <p class="text-center text-sm mt-2" style="color: var(--text-tertiary);">图2: 注册表重定向机制示意图</p>
+                    </div>
+
+                    <p>需要注意的是，并非注册表的所有部分都实施了重定向，Windows 针对哪些键需重定向、哪些键对齐共享做了策略区分。例如，一些与系统密切相关的键或用于跨位交互的键可能标记为共享，从而不做隔离。</p>
+
+                    <div class="my-6 p-5 rounded-xl" style="background-color: var(--bg-secondary);">
+                        <div class="flex items-center mb-3">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center mr-3" style="background-color: var(--secondary-color); color: white;">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            </div>
+                            <h4 class="text-lg font-bold" style="color: var(--text-primary);">注册表反射（镜像）机制及其废弃</h4>
+                        </div>
+                        <p style="color: var(--text-secondary);">在早期的WOW64实现中（Windows XP x64、Windows Server 2003 以及 Vista/2008 初期版本），除了重定向外，还存在"注册表反射"机制。反射用于处理某些需要在32位和64位间同步的注册表项。</p>
+                        <p style="color: var(--text-secondary);">从 Windows 7 和 Windows Server 2008 R2 开始，微软移除了注册表反射机制，将原先反射的那些键改为共享访问模式，以简化行为。</p>
+                    </div>
+
+                    <p>对于开发人员而言，一般无需关心WOW64的注册表重定向发生了什么，因为这一过程对应用是透明的。但在特定情况下，可能需要访问另一视图的注册表数据。Windows 提供了特定的注册表访问标志（如 <code>KEY_WOW64_64KEY</code> 和 <code>KEY_WOW64_32KEY</code>）允许一个应用显式指定访问64位或32位视图的键值。</p>
+                </section>
+
+                <!-- 文件系统访问管理与路径重定向 -->
+                <section id="filesystem-redirect" class="mt-8">
+                    <h3>文件系统访问管理与路径重定向</h3>
+                    
+                    <p>类似于注册表，文件系统方面WOW64也采取了<strong>路径重定向</strong>策略，以保证32位应用访问系统目录时得到正确的文件。最典型的例子就是 <code>System32</code> 目录的重定向。</p>
+
+                    <div class="my-6 overflow-x-auto">
+                        <table class="tech-table">
+                            <thead>
+                                <tr>
+                                    <th>原始路径</th>
+                                    <th>32位应用看到的实际路径</th>
+                                    <th>说明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>%windir%\System32\</td>
+                                    <td>%windir%\SysWOW64\</td>
+                                    <td>主系统目录重定向，32位应用看到的是32位DLL所在目录</td>
+                                </tr>
+                                <tr>
+                                    <td>%windir%\SysWOW64\</td>
+                                    <td>%windir%\SysWOW64\</td>
+                                    <td>不重定向，直接访问</td>
+                                </tr>
+                                <tr>
+                                    <td>%windir%\Sysnative\</td>
+                                    <td>%windir%\System32\</td>
+                                    <td>特殊虚拟目录，允许32位应用访问真正的64位系统目录</td>
+                                </tr>
+                                <tr>
+                                    <td>C:\Program Files\</td>
+                                    <td>C:\Program Files (x86)\</td>
+                                    <td>程序文件目录的重定向</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p>在64位Windows中，<code>%SystemRoot%\System32</code> 实际上存放的是64位版本的系统DLL和可执行文件。然而，历史上许多应用默认认为 System32 下是系统组件所在位置，并直接构建该路径访问。例如，一个32位应用调用系统API尝试加载 <code>C:\Windows\System32\kernel32.dll</code>。如果不加干预，它将会错误地加载到64位的kernel32，从而无法运行。</p>
+
+                    <div class="my-6 p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                        <p class="mb-4"><i class="fa-solid fa-circle-info mr-2" style="color: var(--highlight-color);"></i><span class="font-medium" style="color: var(--text-primary);">有趣的细节:</span> <span style="color: var(--text-secondary);">"SysWOW64"这个名字听起来像"64位的System32"，但实际正相反，它存放的是32位组件（WOW64这个名称暗示了其用途）。这种命名容易让人混淆，但它反映了早期系统设计决策中的历史沿革。</span></p>
+                    </div>
+
+                    <p>因此，WOW64 针对系统目录引入了透明的文件系统重定向：当32位应用访问 <code>%Windir%\System32\...</code> 时，操作系统会自动将路径替换为 <code>%Windir%\SysWOW64\...</code>（对32位ARM应用则是 <code>%Windir%\SysArm32\...</code>）。例如，32位应用请求打开 <code>C:\Windows\System32\notepad.exe</code>，实际上被重定向去打开 <code>C:\Windows\SysWOW64\notepad.exe</code> —— 后者是32位版本的记事本程序。</p>
+
+                    <div class="my-6">
+                        <div class="mermaid" style="background-color: var(--bg-secondary); padding: 1rem; border-radius: 0.5rem;">
+                            flowchart TD
+                                A[32位应用] -->|"请求访问:\nC:\Windows\System32\notepad.exe"| B{WOW64\n文件系统重定向}
+                                B -->|"重定向到:\nC:\Windows\SysWOW64\notepad.exe"| C[加载32位notepad.exe]
+                                D[32位应用] -->|"请求访问:\nC:\Windows\Sysnative\notepad.exe"| B
+                                B -->|"特殊路径'Sysnative'\n指向真实64位目录"| E[加载64位notepad.exe]
+                                
+                                style A fill:#60A5FA,stroke:#3B82F6,color:#FFFFFF
+                                style B fill:#10B981,stroke:#047857,color:#FFFFFF
+                                style C fill:#60A5FA,stroke:#3B82F6,color:#FFFFFF
+                                style D fill:#60A5FA,stroke:#3B82F6,color:#FFFFFF
+                                style E fill:#6366F1,stroke:#4F46E5,color:#FFFFFF
+                        </div>
+                        <p class="text-center text-sm mt-2" style="color: var(--text-tertiary);">图3: 文件系统重定向与Sysnative路径机制</p>
+                    </div>
+
+                    <p>文件系统重定向也有一些特殊情况和例外：</p>
+                    <ul class="list-disc pl-8 space-y-1 mb-6" style="color: var(--text-secondary);">
+                        <li>某些特殊子目录是豁免的，例如系统的驱动程序存储 (<code>System32\DriverStore</code>)、日志 (<code>System32\logfiles</code>)、驱动配置 (<code>System32\drivers\etc</code>) 等目录，Windows 不对其进行重定向。</li>
+                        <li>当某些操作触发UAC（用户帐户控制）的权限提升提示时，如果一个32位应用试图启动系统管理工具，如 <code>regedit.exe</code>，Windows会考虑管理员意图，可能直接运行64位版本而跳过重定向。</li>
+                    </ul>
+
+                    <p>在极少数情况下，应用可能需要访问真实的64位系统目录（对于32位进程而言默认被重定向了）。Windows 提供了两种方式：</p>
+
+                    <div class="my-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="feature-card">
+                            <h4 class="text-lg font-bold mb-3" style="color: var(--text-primary);">
+                                <i class="fa-solid fa-folder-tree mr-2" style="color: var(--primary-color);"></i>
+                                使用 "Sysnative" 虚拟目录
+                            </h4>
+                            <p style="color: var(--text-secondary);">32位进程访问路径 <code>C:\Windows\Sysnative\...</code> 时，WOW64 不会将其重定向，而是改为访问64位的 System32 实体。需要强调，Sysnative 并不是实际存在的物理文件夹，而仅在32位进程的视图中作为别名出现。</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4 class="text-lg font-bold mb-3" style="color: var(--text-primary);">
+                                <i class="fa-solid fa-code mr-2" style="color: var(--primary-color);"></i>
+                                使用 API 禁用重定向
+                            </h4>
+                            <p style="color: var(--text-secondary);">使用编程接口临时关闭重定向，如 <code>Wow64DisableWow64FsRedirection</code> 和 <code>Wow64RevertWow64FsRedirection</code> 等API。调用这些函数可以在当前线程上禁用文件重定向，从而直接访问真实路径。</p>
+                        </div>
+                    </div>
+
+                    <p>通过文件系统路径重定向，WOW64 最大程度保障了32位应用对系统文件的访问兼容性。大多数情况下，开发者编写32位应用无需为64位环境特地修改文件路径。但是也要避免硬编码某些路径假设，比如<strong>不要假定 System32 下一定是与你进程同位宽的DLL</strong>。</p>
+                </section>
+
+                <!-- 内存管理细节：地址空间布局与数据结构差异 -->
+                <section id="memory-management" class="mt-8">
+                    <h3>内存管理细节：地址空间布局与数据结构差异</h3>
+                    
+                    <p>WOW64 在内存管理方面也体现出与纯64位或纯32位环境的不同之处。这里包括32位进程在64位系统上的地址空间划分、关键数据结构（PEB/TEB 等）的差异，以及内存地址和句柄在32/64位之间的映射处理等。</p>
+
+                    <div class="my-6 p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                        <h4 class="text-lg font-bold mb-3" style="color: var(--text-primary);">地址空间布局</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h5 class="font-medium mb-2" style="color: var(--text-primary);">32位 Windows 上的进程地址空间</h5>
+                                <ul class="list-disc pl-5 space-y-1" style="color: var(--text-secondary);">
+                                    <li>总地址空间：4GB (2<sup>32</sup>)</li>
+                                    <li>默认用户态：2GB</li>
+                                    <li>默认内核态：2GB</li>
+                                    <li>使用 /3GB 开关：用户态可达3GB</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h5 class="font-medium mb-2" style="color: var(--text-primary);">WOW64 下的进程地址空间</h5>
+                                <ul class="list-disc pl-5 space-y-1" style="color: var(--text-secondary);">
+                                    <li>最大可用：4GB</li>
+                                    <li>默认用户态：<br>
+                                        - 非LARGEADDRESSAWARE应用：2GB<br>
+                                        - LARGEADDRESSAWARE应用：4GB</li>
+                                    <li>WOW64预留部分地址空间给自身使用</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p>在32位 Windows 上，每个进程的虚拟地址空间上限通常为 4GB（其中用户态2GB，内核态2GB；若开启/3GB开关则用户态可达3GB）。而在64位 Windows 上，地址空间理论上极其巨大，但32位应用并不能利用超过4GB的空间，因为它的指针仍是32位的。</p>
+
+                    <p>对于在WOW64下运行的32位进程，Windows 默认仍给予其最多4GB的用户态地址空间，以保持与32位环境相符。如果该应用未标记为"大地址感知"（LARGEADDRESSAWARE），则操作系统依然按照传统限制其可用地址空间为2GB（其余部分保留不使用），从而模拟32位Windows的典型环境；而如果应用启用了 LARGEADDRESSAWARE 标志，则WOW64 会为其提供完整4GB的用户空间。</p>
+
+                    <div class="my-6">
+                        <div class="mermaid" style="background-color: var(--bg-secondary); padding: 1rem; border-radius: 0.5rem;">
+                            graph TD
+                                subgraph 32进程["32位进程内存布局"]
+                                    A1[线程栈<br>和私有数据] --> A2[32位代码<br>和堆]
+                                    A2 --> A3["0-2GB 或 0-4GB<br>取决于LARGEADDRESSAWARE"]
+                                    A3 --> A4[32位PEB/TEB]
+                                    A4 --> A5[WOW64支持组件<br>通常在高地址]
+                                end
+                                
+                                subgraph PEB["PEB/TEB结构"]
+                                    B1["32位PEB<br>(由WOW64维护)"] --> B2["64位PEB<br>(由系统维护)"]
+                                    B3["32位TEB<br>(通过FS段寄存器访问)"] --> B4["64位TEB<br>(通过GS段寄存器访问)"]
+                                end
+                        </div>
+                        <p class="text-center text-sm mt-2" style="color: var(--text-tertiary);">图4: WOW64 下的内存管理</p>
+                    </div>
+
+                    <div class="my-6 p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                        <h4 class="text-lg font-bold mb-3" style="color: var(--text-primary);">关键数据结构的差异 (PEB/TEB 等)</h4>
+                        <p style="color: var(--text-secondary);">在Windows中，每个进程都有一个<strong>进程环境块 (PEB)</strong>，每个线程有一个<strong>线程环境块 (TEB)</strong>，存储管理诸如加载模块列表、线程局部存储、异常处理链等运行时信息。在WOW64进程中，存在对应于32位视图和64位视图的两套PEB/TEB结构。</p>
+                    </div>
+
+                    <p>具体来说，操作系统为32位应用部分维护了"伪造"的32位 PEB/TEB，以便32位代码可以按照它熟悉的结构(offset和字段大小)来读取信息；同时，系统自身仍有实际的64位 PEB/TEB 用于内核和64位部分管理。实际上，在调试符号中可以看到存在 <code>_PEB32</code> 和 <code>_PEB64</code> 两种结构。两者字段大体相同，但64位版本的指针和大小是8字节，32位的是4字节，因而结构长度和字段偏移也不同。</p>
+
+                    <p>当WOW64创建一个进程时，会初始化64位 PEB，然后由WOW64层填充出一个对应的32位 PEB供32位代码使用。例如，32位应用调用 Windows API 获取PEB地址（通常通过 <code>FS</code>段寄存器定位）时，得到的是32位PEB的地址。在这块32位PEB中，包含着该进程的32位模块链表、环境变量指针等等（它从64位PEB转换而来，但在地址和格式上伪装成32位）。</p>
+
+                    <p>同样，每条线程也有一个32位 TEB（由 <code>FS:0x18</code> 引用）和对应的64位 TEB（由 <code>GS:0x30</code> 引用，在x64上）。WOW64利用处理器段寄存器的切换来让不同模式下的代码各自指向正确的TEB。</p>
+
+                    <div class="my-6 p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                        <h4 class="text-lg font-bold mb-3" style="color: var(--text-primary);">指针和句柄的转换</h4>
+                        <p style="color: var(--text-secondary);">由于32位应用使用的是32位指针和变量，因此当它调用系统服务，需要传递指针/长度给64位内核时，WOW64必须进行转换。Windows内核的系统调用接口在64位下期望的参数（例如内存地址、结构大小）都是64位/8字节对齐的。</p>
+                    </div>
+
+                    <p>WOW64 在用户态实现了一系列"thunk"（桩函数）来完成这些转换。例如，当32位应用调用 <code>CreateFile</code>，最终会调用到内核的NtCreateFile系统调用。WOW64拦截到这个调用后，读取32位调用栈上的各参数（比如一个结构指针、缓冲区长度等），将其中的指针从32位地址空间翻译为对应的64位指针值，将32位整数扩展为64位长整数。</p>
+
+                    <p>这种扩展有符号和无符号之分：对于无符号的数或指针，直接零扩展填充高32位；对于有符号的整数，需符号扩展以保持正负号。然后WOW64调用对应的64位NT接口，将扩展后的参数传给内核处理。内核执行后返回结果（例如一个句柄值或状态码）到64位WOW64层，WOW64再将结果缩小或转换回32位格式给应用。</p>
+
+                    <div class="my-6">
+                        <pre><code>// 32位结构体的指针参数
+HANDLE h = CreateFileW(L"C:\\file.txt", ...);
+
+// WOW64内部转换过程
+// 1. 捕获32位调用
+// 2. 将32位路径指针扩展为64位
+// 3. 调用64位版本的NtCreateFile
+// 4. 获取64位句柄返回值
+// 5. 返回给32位调用方(无需转换，句柄值在低32位范围内)</code></pre>
+                    </div>
+
+                    <p>由于WOW64运行在64位内核上，32位应用实际上可以利用64位内核的某些优势。例如，64位系统的内核对象（如句柄、窗口、GDI对象等）全局容量更大，因此32位应用在WOW64下理论上可以打开更多的把柄而不受32位系统内核限制。</p>
+
+                    <p>另一方面，WOW64在内存管理上做了多层透明化处理：从地址空间大小的模拟、双份关键结构的维护，到调用参数/返回值的按需扩展或截断，所有这些都保证了32位应用几乎感觉不到自己身处一个64位操作系统中。</p>
+                </section>
+
+                <!-- 应用兼容性支持策略与技术 -->
+                <section id="compatibility" class="mt-8">
+                    <h3>应用兼容性支持策略与技术</h3>
+                    
+                    <p>WOW64不仅在底层实现了重定向和转换，还包含一系列应用层面的兼容性策略，以确保32位应用可以在64位环境中顺畅运行。这部分涵盖API调用的转换机制、DLL 加载的映射规则，以及针对兼容性的特殊措施等。</p>
+
+                    <div class="my-6 p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                        <h4 class="text-lg font-bold mb-3" style="color: var(--text-primary);">系统调用拦截与 API 级别转换</h4>
+                        <p style="color: var(--text-secondary);">32位应用调用系统服务时，WOW64会在用户态截获这些调用并进行转换，然后再调用64位内核服务，从而实现32/64接口的桥接。这一过程通常被称为"<em>thunking</em>"（桩函数转换）。</p>
+                    </div>
+
+                    <p>在传统32位Windows中，应用程序调用 Windows API（例如 Kernel32.dll 中的函数）最终会触发软中断或SYSENTER指令进入内核执行服务。而在64位Windows上，进入内核的指令约定和参数都变了。如果让32位应用直接执行老的进入内核序列，将无法为64位内核识别。</p>
+
+                    <p>因此，微软对<strong>32位系统DLL（特别是 NTDLL.DLL）进行了重新编译</strong>，使其中不再使用直接触发内核的指令序列，而是改为调用WOW64提供的用户态入口。</p>
+
+                    <div class="my-6">
+                        <div class="mermaid" style="background-color: var(--bg-secondary); padding: 1rem; border-radius: 0.5rem;">
+                            sequenceDiagram
+                                participant App as 32位应用
+                                participant K32 as 32位 kernel32.dll
+                                participant NT32 as 32位 ntdll.dll
+                                participant WOW as WOW64 层
+                                participant NT64 as 64位 ntdll.dll
+                                participant Kern as 64位内核
+                                
+                                App->>K32: CreateFileW()
+                                K32->>NT32: NtCreateFile()
+                                NT32->>WOW: Wow64Transition()
+                                Note over NT32,WOW: 从32位代码切换到64位代码
+                                WOW->>WOW: 参数转换<br>(32位→64位)
+                                WOW->>NT64: NtCreateFile()
+                                NT64->>Kern: syscall
+                                Kern-->>NT64: 返回结果
+                                NT64-->>WOW: 
+                                WOW-->>NT32: 
+                                NT32-->>K32: 
+                                K32-->>App: 文件句柄
+                        </div>
+                        <p class="text-center text-sm mt-2" style="color: var(--text-tertiary);">图5: WOW64 系统调用转换流程</p>
+                    </div>
+
+                    <p>概括来说，Windows 将32位系统调用的路径改造成：<strong>32位应用 -> 32位 NTDLL (调用WOW64入口) -> 64位 WOW64 (转换参数) -> 64位 NTDLL (实际syscall) -> 内核</strong>。这种纯用户态的截获和转换机制极大地降低了开销和复杂性。</p>
+
+                    <div class="my-6 p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                        <h4 class="text-lg font-bold mb-3" style="color: var(--text-primary);">DLL 加载与映射机制</h4>
+                        <p style="color: var(--text-secondary);">Windows对不同体系架构的DLL实行严格区分，防止位宽不一致的模块混杂在同一进程中。对于32位进程，系统只会加载32位的DLL。</p>
+                    </div>
+
+                    <p>这一点通过几个途径实现：首先，操作系统维护了<strong>分别针对32位和64位的系统DLL搜索路径</strong>。例如，当一个32位进程调用 <code>LoadLibrary("kernel32.dll")</code> 时，系统会在SysWOW64目录下找到32位的Kernel32.dll加载，而64位Kernel32.dll则在System32目录下，仅对64位进程可见。</p>
+
+                    <p>此外，Windows 的<strong>KnownDlls</strong> 机制（管理系统常用DLL的全局映射）也区分了32位和64位版本。在注册表中 <code>HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\KnownDLLs</code> 列出64位系统DLL名单，而 <code>KnownDLLs32</code> 键下则列出32位DLL名单。</p>
+
+                    <p><strong>WOW64进程是个混合体</strong>：主要执行单元是32位的，但它本身也加载了一些64位模块（WOW64的一些实现DLL）。Windows 特殊地允许这少数几个64位DLL注入32位进程地址空间。除了这些特例，其他任何64位DLL都不会被加载到32位进程中，反之亦然。</p>
+
+                    <div class="my-6">
+                        <div class="mermaid" style="background-color: var(--bg-secondary); padding: 1rem; border-radius: 0.5rem;">
+                            graph TB
+                                subgraph 32位进程空间
+                                    A1[32位应用代码] --> A2[32位系统DLL<br>kernel32.dll, user32.dll等]
+                                    A2 --> A3[32位 ntdll.dll]
+                                    C1[WOW64专用<br>64位支持DLL]
+                                end
+                                
+                                subgraph 64位内核空间
+                                    B1[64位 ntdll.dll] --> B2[64位内核服务]
+                                end
+                                
+                                A3 --> C1
+                                C1 --> B1
+                                
+                                style A1 fill:#60A5FA,stroke:#3B82F6,color:#FFFFFF
+                                style A2 fill:#60A5FA,stroke:#3B82F6,color:#FFFFFF
+                                style A3 fill:#60A5FA,stroke:#3B82F6,color:#FFFFFF
+                                style B1 fill:#6366F1,stroke:#4F46E5,color:#FFFFFF
+                                style B2 fill:#6366F1,stroke:#4F46E5,color:#FFFFFF
+                                style C1 fill:#10B981,stroke:#047857,color:#FFFFFF
+                        </div>
+                        <p class="text-center text-sm mt-2" style="color: var(--text-tertiary);">图6: WOW64进程中的模块加载层次</p>
+                    </div>
+
+                    <p>对于开发者而言，如果需要在应用中显式加载不同位宽组件，可以考虑<strong>进程外组件</strong> 或<strong>独立进程桥接</strong>。例如，COM 组件可以设计为 Out-of-process（独立于主进程运行），这样32位应用也可与64位COM服务器通信（通过RPC机制），反之亦然。</p>
+
+                    <div class="my-6 p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                        <h4 class="text-lg font-bold mb-3" style="color: var(--text-primary);">其他兼容性措施</h4>
+                        <p style="color: var(--text-secondary);">Windows 为了应用兼容，历来会在各处加入特殊处理，WOW64环境也不例外。</p>
+                    </div>
+
+                    <p>例如，全局钩子（Windows Hooks）机制要求DLL注入其他进程来执行钩子代码。在WOW64场景下，微软规定32位DLL只能注入32位进程，64位DLL只能注入64位进程，不能跨位注入。因此，当一个32位应用安装了一个全局钩子，例如键盘钩子，系统只会将32位钩子DLL注入到所有32位进程中；对于64位进程，则需要单独有一个64位版本的钩子DLL才能注入。</p>
+
+                    <p>对于某些涉及进程间通信的场景，也需考虑WOW64。例如，一些应用通过窗口消息或内存映射文件与外部辅助进程通信，如果辅助进程是64位而主应用32位（或相反），通常仍可工作，因为Windows的很多IPC机制本身是位宽无关的（消息队列、管道、socket等都不区分位宽）。但如果涉及结构共享（比如WM_COPYDATA传递结构，或共享内存里放结构），则需要确保结构定义在两种位宽下二进制一致，否则就要分别处理。</p>
+
+                    <p>WOW64的存在使得大多数32位应用无需修改即可运行在64位系统上，这对于过渡时期的软件生态是至关重要的。然而，从长远看，64位应用才是趋势。如果开发者有机会，仍应将应用升级为原生64位，以充分利用64位系统优势并避免某些WOW64局限（例如上面提到的不能加载32位驱动的问题等）。</p>
+                </section>
+
+                <!-- WOW64关键系统组件及协同工作 -->
+                <section id="components" class="mt-8">
+                    <h3>WOW64关键系统组件及协同工作</h3>
+                    
+                    <p>WOW64 的功能由几大关键组件协作完成。它们主要以DLL形式存在于系统中，包括：<strong>Wow64.dll</strong>、<strong>Wow64win.dll</strong>、<strong>Wow64cpu.dll</strong>，另外在非x86_64平台还有其他对应组件。下面我们介绍这些组件的角色，以及它们如何协同实现WOW64的整体功能。</p>
+
+                    <div class="my-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="feature-card hover-lift">
+                            <div class="text-center mb-4">
+                                <div class="inline-block w-16 h-16 rounded-full flex items-center justify-center" style="background-color: var(--bg-tertiary);">
+                                    <i class="fa-solid fa-microchip text-2xl" style="color: var(--primary-color);"></i>
+                                </div>
+                            </div>
+                            <h4 class="text-lg font-bold mb-2 text-center" style="color: var(--text-primary);">
+                                Wow64.dll
+                            </h4>
+                            <p style="color: var(--text-secondary);">核心接口转换层。这是WOW64子系统的核心模块，提供了与Windows NT内核交互的主要接口。负责实现绝大多数NT系统调用的转换桩（thunk）。</p>
+                        </div>
+                        
+                        <div class="feature-card hover-lift">
+                            <div class="text-center mb-4">
+                                <div class="inline-block w-16 h-16 rounded-full flex items-center justify-center" style="background-color: var(--bg-tertiary);">
+                                    <i class="fa-solid fa-window-maximize text-2xl" style="color: var(--secondary-color);"></i>
+                                </div>
+                            </div>
+                            <h4 class="text-lg font-bold mb-2 text-center" style="color: var(--text-primary);">
+                                Wow64win.dll
+                            </h4>
+                            <p style="color: var(--text-secondary);">GUI 子系统转换层。64位Windows的图形用户界面内核部分主要由 win32k.sys 实现，Wow64win.dll 提供了NtUserXXX、NtGdiXXX等入口点的32->64位转换桩。</p>
+                        </div>
+                        
+                        <div class="feature-card hover-lift">
+                            <div class="text-center mb-4">
+                                <div class="inline-block w-16 h-16 rounded-full flex items-center justify-center" style="background-color: var(--bg-tertiary);">
+                                    <i class="fa-solid fa-gears text-2xl" style="color: var(--highlight-color);"></i>
+                                </div>
+                            </div>
+                            <h4 class="text-lg font-bold mb-2 text-center" style="color: var(--text-primary);">
+                                Wow64cpu.dll
+                            </h4>
+                            <p style="color: var(--text-secondary);">处理器仿真支持层。负责与CPU执行模式相关的工作。在x64平台上，它主要承担在32位和64位模式之间切换的任务。</p>
+                        </div>
+                    </div>
+
+                    <div class="my-6 p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                        <h4 class="text-lg font-bold mb-3" style="color: var(--text-primary);">其他相关组件</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h5 class="font-medium mb-2" style="color: var(--text-primary);">Itanium 平台组件</h5>
+                                <ul class="list-disc pl-5 space-y-1" style="color: var(--text-secondary);">
+                                    <li><strong>IA32Exec.bin</strong> - 针对 Itanium 平台的x86指令完整模拟器</li>
+                                    <li><strong>Wowia32x.dll</strong> - 作为接口桥梁，将x86代码翻译为Itanium指令执行</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h5 class="font-medium mb-2" style="color: var(--text-primary);">ARM64 平台组件</h5>
+                                <ul class="list-disc pl-5 space-y-1" style="color: var(--text-secondary);">
+                                    <li><strong>wowarmhw.dll</strong> - 提供支持运行 ARM32 应用的功能</li>
+                                    <li><strong>xtajit.dll</strong> - 用于在 ARM64 上模拟 x86 应用的即时(JIT)翻译器</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p>这些组件各司其职，又紧密合作，使WOW64子系统得以有条不紊地运行。当创建一个WOW64进程时，系统首先加载64位的 NTDLL.dll 和上述WOW64相关DLL（wow64.dll, wow64win.dll, wow64cpu.dll 等）进入新进程，并调用WOW64的初始化例程。</p>
+
+                    <p>Wow64.dll接管控制后，加载32位版本的NTDLL.dll和必要的用户态DLL（Kernel32.dll、User32.dll等）。当32位代码开始执行，它们就绪妥当，可以像往常一样运行。当应用进行系统调用或GUI调用时，WOW64相关DLL发挥作用，在幕后完成转接和沟通：</p>
+
+                    <ul class="list-disc pl-8 space-y-1 mb-6" style="color: var(--text-secondary);">
+                        <li>Wow64cpu.dll 执行模式切换</li>
+                        <li>Wow64.dll/Wow64win.dll 提取并转换参数、调用内核</li>
+                        <li>内核处理完返回再经由WOW64转换结果回32位世界</li>
+                    </ul>
+
+                    <p>需要强调的是，WOW64所有这些组件都运行在用户态，这保证了良好的隔离性和可控性。例如，如果WOW64的转换出现问题，最多导致该进程崩溃，而不会影响内核态的稳定。64位内核本身并不了解也不关心WOW64的存在，只是将32位进程标记为特殊，由用户态的WOW64组件来负责调用转换。</p>
+
+                    <div class="my-6">
+                        <div class="mermaid" style="background-color: var(--bg-secondary); padding: 1rem; border-radius: 0.5rem;">
+                            graph TD
+                                subgraph user["用户态"]
+                                    app[32位应用程序] --> libs[32位系统库<br>kernel32.dll etc]
+                                    libs --> ntdll32[32位 ntdll.dll]
+                                    ntdll32 --> wow[Wow64.dll]
+                                    gui[GUI调用] --> wow64win[Wow64win.dll]
+                                    wow64win --> wow
+                                    wow --> wow64cpu[Wow64cpu.dll]
+                                    wow64cpu --> mode["模式切换<br>(32位→64位)"]
+                                    mode --> ntdll64[64位 ntdll.dll]
+                                end
+                                
+                                subgraph kernel["内核态"]
+                                    ntdll64 --> syscall["系统调用<br>(64位)"]
+                                    syscall --> services[64位内核服务]
+                                end
+                                
+                                style app fill:#60A5FA,stroke:#3B82F6,color:#FFFFFF
+                                style libs fill:#60A5FA,stroke:#3B82F6,color:#FFFFFF
+                                style ntdll32 fill:#60A5FA,stroke:#3B82F6,color:#FFFFFF
+                                style wow fill:#10B981,stroke:#047857,color:#FFFFFF
+                                style wow64win fill:#10B981,stroke:#047857,color:#FFFFFF
+                                style wow64cpu fill:#10B981,stroke:#047857,color:#FFFFFF
+                                style mode fill:#10B981,stroke:#047857,color:#FFFFFF
+                                style ntdll64 fill:#6366F1,stroke:#4F46E5,color:#FFFFFF
+                                style syscall fill:#6366F1,stroke:#4F46E5,color:#FFFFFF
+                                style services fill:#6366F1,stroke:#4F46E5,color:#FFFFFF
+                                style gui fill:#60A5FA,stroke:#3B82F6,color:#FFFFFF
+                        </div>
+                        <p class="text-center text-sm mt-2" style="color: var(--text-tertiary);">图7: WOW64 组件协作流程</p>
+                    </div>
+
+                    <p>通过以上各组件的紧密协作，WOW64实现在处理器架构演进过程中对老应用程序环境的无缝延续。对于Windows平台的专业开发者而言，理解这些模块及其交互，可以帮助更好地调试跨位宽问题、优化应用兼容性，甚至在必要时利用这些机制（例如通过Wow64DisableFilesystemRedirection等函数）实现特定需求。</p>
+                </section>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- 处理器执行部分 -->
+            <section id="processor-execution" class="mb-12">
+                <h2>处理器执行部分</h2>
+                
+                <p>处理器执行部分关注WOW64在CPU层面的实现原理，包括32位指令在64位处理器上的执行策略、指令转换或模拟机制，以及硬件架构给予的支持等。不同硬件架构对32位兼容的支持程度不同，这直接决定了WOW64是主要依赖"硬件直接执行"还是"软件仿真"来运行32位代码。</p>
+
+                <p>本节将讨论在 x64、Itanium、ARM64 等架构上WOW64的处理器执行策略，并分析关键的模式切换和指令处理技术。</p>
+
+                <!-- x64 平台上32位指令的执行策略 -->
+                <section id="x64-execution" class="mt-8">
+                    <h3>x64 平台上32位指令的执行策略</h3>
+                    
+                    <div class="my-6 p-5 rounded-xl" style="background-color: var(--bg-secondary);">
+                        <div class="flex items-center mb-3">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center mr-3" style="background-color: var(--primary-color); color: white;">
+                                <i class="fa-solid fa-microchip"></i>
+                            </div>
+                            <h4 class="text-lg font-bold" style="color: var(--text-primary);">硬件兼容模式下的直接执行</h4>
+                        </div>
+                        <p style="color: var(--text-secondary);">对于目前主流的 x86-64 (AMD64 和 Intel 64) 架构处理器而言，向下兼容x86是其重要特性之一。x64处理器提供了一种<strong>兼容模式</strong>（Compatibility Mode），允许以32位（和16位）模式执行应用程序代码，同时运行在64位长模式的操作系统之上。</p>
+                    </div>
+
+                    <p>这意味着，当CPU处于兼容模式时，大部分x86指令集可以不加修改地直接在处理器上执行，其速度与在32位处理器上相当。因此，Windows在x64平台的WOW64实现策略就是<strong>尽量利用硬件的能力直接执行32位指令</strong>，而不做动态翻译。</p>
+
+                    <p>这一点使x64上的WOW64性能优势明显——微软指出，在x64处理器上运行32位程序的速度与在32位Windows上运行时几乎相同。只有在涉及系统调用切换模式时才会有额外开销，但那相对调用本身的成本而言是很小的开销。</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+                        <div>
+                            <div class="feature-card h-full">
+                                <h4 class="text-lg font-bold mb-3" style="color: var(--text-primary);">CPU兼容模式执行原理</h4>
+                                <p style="color: var(--text-secondary);">从64位内核的角度来看，32位应用的执行就好比一个循环在跑：处理器平时执行着x86指令流，一旦应用需要进入内核或调用系统服务，就暂时"跳出"这个x86指令循环，切换到64位模式处理服务，然后再切回来继续执行x86代码。</p>
+                                <p style="color: var(--text-tertiary);" class="text-sm mt-3">安全研究者描述："从64位内核的视角看，WOW64子系统的执行本质上像是一个大循环：循环中处理器在32位执行模式下跑着x86指令，偶尔跳出循环切换到64位模式去服务一个系统调用，再切回32位模式继续循环。"</p>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="p-4 rounded-xl h-full" style="background-color: var(--bg-secondary);">
+                                <div class="mermaid h-full" style="background-color: var(--bg-secondary);">
+                                    graph TB
+                                        A[启动32位应用] --> B[执行32位指令<br>兼容模式]
+                                        B --> C{系统调用?}
+                                        C -->|否| B
+                                        C -->|是| D[切换到64位长模式]
+                                        D --> E[执行64位系统服务]
+                                        E --> F[切换回32位兼容模式]
+                                        F --> B
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p>这个过程充分利用了x64处理器的<strong>硬件特性</strong>：相比软件模拟，硬件切换模式的成本非常低（大致类似一次函数调用跳转），在x86-64机器上执行32位代码被认为是"计算上廉价的"。因此AMD64平台上的WOW64没有采用例如动态二进制翻译（如WINE或虚拟机那样）的方法，完全没有必要。硬件已经提供了近乎原生的支持，我们只需在恰当时机切换模式即可。</p>
+
+                    <div class="my-6 p-5 rounded-xl" style="background-color: var(--bg-secondary);">
+                        <div class="flex items-center mb-3">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center mr-3" style="background-color: var(--secondary-color); color: white;">
+                                <i class="fa-solid fa-right-left"></i>
+                            </div>
+                            <h4 class="text-lg font-bold" style="color: var(--text-primary);">CPU模式切换机制（Heaven's Gate 技术）</h4>
+                        </div>
+                        <p style="color: var(--text-secondary);">WOW64究竟如何在处理器上实现从32位代码到64位代码的切换呢？这涉及到所谓"Heaven's Gate"（天堂之门）技术，这是安全研究领域对x86/x64模式切换的一种形象称呼。</p>
+                    </div>
+
+                    <p>具体而言，x64处理器的段寄存器（如CS代码段寄存器）含有决定模式的标志位。当CS寄存器加载一个特殊的选择子（Selector）指向64位代码段描述符时，CPU将跳转到64位长模式执行；反之，跳转到指向32位代码段的选择子则进入兼容模式执行32位代码。</p>
+
+                    <p>WOW64利用这一机制，在32位代码需要调用64位例程时执行了一次"远跳转"切换段寄存器，从而让CPU切换模式。例如，在Windows的实现中，Wow64cpu.dll 提供了一个名为KiFastSystemCall的例程，其中通过<code>ljmp</code>（远跳转）指令跳转到段选择子<code>0x33</code>，该选择子在GDT（全局描述符表）中对应一个64位代码段。</p>
+
+                    <div class="my-6">
+                        <pre><code>; 简化的KiFastSystemCall代码示例
+mov eax, ServiceNumber   ; 设置系统服务号
+mov edx, ArgumentPtr     ; 参数指针
+ljmp 0x33:0x7FFE0300     ; 远跳转，切换到64位模式
+; 执行后CPU进入64位模式，开始执行64位代码</code></pre>
+                    </div>
+
+                    <p>处理器执行这条指令后，就从兼容模式切换到了64位模式，并在跳转目标地址开始执行64位代码。这就是WOW64进入64位世界的大门。相应地，当需要从64位返回32位时，也有一条对称的远跳转回到32位段选择子的指令。整个切换过程对应用透明，而且非常快速，基本等同于一次普通的函数跳转。</p>
+
+                    <div class="my-6 p-5 rounded-xl" style="background-color: var(--bg-secondary);">
+                        <div class="flex items-center mb-3">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center mr-3" style="background-color: var(--highlight-color); color: white;">
+                                <i class="fa-solid fa-memory"></i>
+                            </div>
+                            <h4 class="text-lg font-bold" style="color: var(--text-primary);">CPU状态和寄存器处理</h4>
+                        </div>
+                        <p style="color: var(--text-secondary);">当CPU从32位模式切换到64位模式时，处理器寄存器也发生了改变。x86有8个通用寄存器(EAX,EBX,...,EBP,ESP,EIP等)，x64则扩展为16个通用寄存器(RAX,RCX,...R15)且宽度从32位扩展到64位。</p>
+                    </div>
+
+                    <p>WOW64在进行模式切换时，需要保存和恢复这些CPU状态。例如，当从32位转到64位时，要把32位应用的通用寄存器内容保存下来，以免64位代码执行破坏它们；当处理完再返回32位时，再把保存的32位寄存器值恢复。</p>
+
+                    <p>微软实现这一点的方式是利用一个结构体 <strong>WOW64_CONTEXT</strong>，其中能够存储所有32位CPU状态（寄存器、EFLAGS等）。在进入64位WOW64代码时，Wow64cpu.dll中的汇编会把当前32位寄存器值填入WOW64_CONTEXT中做保存，然后建立新的栈和环境用于64位执行。当稍后要切回32位时，再把这些值恢复到寄存器并返回32位模式。</p>
+
+                    <p>一个典型场景是异常处理：如果32位应用在兼容模式下发生异常（例如访问无效内存），处理器会转到64位内核，随后内核调度回用户态的WOW64异常处理机制。WOW64需要构造一个32位风格的异常信息并调用32位的处理程序。这其中就涉及保存/恢复和转换异常时的CPU上下文，以便32位应用的异常处理函数能获取正确的异常寄存器状态。</p>
+
+                    <div class="my-6 p-5 rounded-xl" style="background-color: var(--bg-secondary);">
+                        <div class="flex items-center mb-3">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center mr-3" style="background-color: var(--primary-color); color: white;">
+                                <i class="fa-solid fa-gauge-high"></i>
+                            </div>
+                            <h4 class="text-lg font-bold" style="color: var(--text-primary);">性能与限制</h4>
+                        </div>
+                        <p style="color: var(--text-secondary);">得益于硬件直接执行，x64平台上WOW64的性能表现非常好。除了系统调用路径稍有额外开销外，纯计算任务、内存操作在32位应用上几乎与64位应用无异。</p>
+                    </div>
+
+                    <p>这也是为什么在早期很多用户觉得32位程序在64位系统上跑并不比原生版慢多少。然而，需要认识到WOW64并非毫无代价：模式切换以及参数转换还是会增加一些开销。如果应用频繁调用系统API，大量进行内核对象操作，那么WOW64环境下这些调用每次都要多执行额外的指令去转换和切换模式，时间累积起来可能比直接在32位系统上稍慢。</p>
+
+                    <p>另一方面，WOW64在x64上基本没有功能性的限制，除了前述的不能调用64位插件/驱动等。32位应用甚至可以利用64位系统提供的新指令（如果通过特殊手段执行的话）。</p>
+
+                    <div class="mb-6 p-4 border-l-4 rounded-r-lg" style="border-color: var(--highlight-color); background-color: var(--bg-tertiary);">
+                        <p style="color: var(--text-secondary);"><i class="fa-solid fa-shield-halved mr-2" style="color: var(--highlight-color);"></i><span class="font-medium">安全注意：</span> 一些恶意代码会利用Heaven's Gate技术：在32位进程中手工切换到64位模式，以绕过32位环境下的某些安全检查或调用64位功能。这本质上是滥用WOW64机制，因为每个WOW64进程本就包含64位代码段，恶意代码可以通过汇编远跳转进入64位地址执行。</p>
+                    </div>
+                </section>
+
+                <!-- 其他架构上的WOW64执行机制 -->
+                <section id="other-arch" class="mt-8">
+                    <h3>其他架构上的WOW64执行机制</h3>
+                    
+                    <p>虽然x64平台是当前WOW64的主要战场，但为了完整性，我们也简要回顾WOW64在其他CPU架构（特别是Itanium和ARM64）上的执行机制，因为它们体现了与x64不同的技术取向。</p>
+
+                    <div class="my-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="feature-card">
+                            <h4 class="text-lg font-bold mb-3" style="color: var(--text-primary);">
+                                <i class="fa-solid fa-microchip mr-2" style="color: var(--primary-color);"></i>
+                                Itanium(IA-64)上的WOW64
+                            </h4>
+                            <p style="color: var(--text-secondary);">Itanium架构与x86截然不同，最初并未内置高效的x86兼容模式。在Windows的Itanium版中，WOW64 完全依赖<strong>软件模拟</strong>来运行32位x86应用。</p>
+                            <p style="color: var(--text-secondary);">Windows提供了 IA32Exec.bin 作为x86指令的模拟器二进制，由Wow64cpu.dll和Wowia32x.dll配合，将x86代码动态翻译为Itanium指令执行。</p>
+                            <p style="color: var(--text-tertiary);" class="text-sm mt-3">由于Itanium架构与x86差异巨大，这种翻译相当复杂，运行效率也远低于硬件直接执行。</p>
+                        </div>
+
+                        <div class="feature-card">
+                            <h4 class="text-lg font-bold mb-3" style="color: var(--text-primary);">
+                                <i class="fa-solid fa-microchip mr-2" style="color: var(--primary-color);"></i>
+                                ARM64上的WOW64
+                            </h4>
+                            <p style="color: var(--text-secondary);">ARM64是近年来Windows引入的新平台。Windows 10/11 on ARM64支持两种32位应用：<strong>ARM32应用</strong>和<strong>x86应用</strong>，对应两种不同的实现策略：</p>
+                            <ul class="list-disc pl-5 space-y-1 text-sm" style="color: var(--text-secondary);">
+                                <li><strong>ARM32应用</strong> - 利用ARMv8处理器的AArch32兼容模式直接执行</li>
+                                <li><strong>x86应用</strong> - 通过xtajit.dll提供的动态二进制翻译(JIT)执行</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="my-6">
+                        <div class="mermaid" style="background-color: var(--bg-secondary); padding: 1rem; border-radius: 0.5rem;">
+                            graph LR
+                                subgraph ARM64平台
+                                    A[ARM32应用] -->|硬件兼容模式| B[ARM64 CPU]
+                                    C[x86应用] -->|动态二进制翻译| D[xtajit.dll]
+                                    D --> B
+                                end
+                                
+                                subgraph Itanium平台
+                                    E[x86应用] -->|软件模拟| F[IA32Exec.bin]
+                                    F -->|软件翻译| G[Itanium CPU]
+                                end
+                                
+                                subgraph x64平台
+                                    H[x86应用] -->|硬件兼容模式| I[x64 CPU]
+                                end
+                                
+                                style A fill:#60A5FA,stroke:#3B82F6,color:#FFFFFF
+                                style B fill:#10B981,stroke:#047857,color:#FFFFFF
+                                style C fill:#60A5FA,stroke:#3B82F6,color:#FFFFFF
+                                style D fill:#10B981,stroke:#047857,color:#FFFFFF
+                                style E fill:#60A5FA,stroke:#3B82F6,color:#FFFFFF
+                                style F fill:#6366F1,stroke:#4F46E5,color:#FFFFFF
+                                style G fill:#6366F1,stroke:#4F46E5,color:#FFFFFF
+                                style H fill:#60A5FA,stroke:#3B82F6,color:#FFFFFF
+                                style I fill:#10B981,stroke:#047857,color:#FFFFFF
+                        </div>
+                        <p class="text-center text-sm mt-2" style="color: var(--text-tertiary);">图8: 不同架构上WOW64实现策略对比</p>
+                    </div>
+
+                    <p>通过比较可以发现，WOW64在x64、ARM64等平台上主要依靠硬件兼容模式（x64对x86，ARM64对ARM32）来运行相应的32位应用，而对于跨架构（x86在ARM64）则不得不采用软件模拟。无论哪种情况，WOW64都提供了统一的接口和行为，把这些底层差异屏蔽在翻译层之下。</p>
+
+                    <p>对应用而言，无论是在x64还是ARM64上跑，32位应用的接口行为应该是一致的。这体现了WOW64作为<strong>抽象层</strong>的价值。随着硬件技术的发展，我们也可能看到WOW64进一步演进。例如，如果将来主流CPU架构本身就具备多架构解码能力，WOW64的实现可能会更简单。</p>
+
+                    <p>然而，从长远看，WOW64终究是一个过渡方案。当64位应用全面普及时，对于某些平台（如Windows服务器核心版、Windows Nano、特定IoT版），WOW64组件可能被完全移除以节省资源。一旦没有32位应用的需求，WOW64的历史使命也就结束了。</p>
+                </section>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- 结语 -->
+            <section id="conclusion" class="mb-12">
+                <h2>结语</h2>
+                
+                <p>WOW64 兼容层作为 Windows 为数众多的黑科技之一，为操作系统的平滑过渡立下了汗马功劳。从最初在Itanium上艰难地模拟x86，到在AMD64上几乎零成本地运行32位应用，再到ARM64上结合翻译技术延续x86生态，WOW64的演进折射出软硬件协同设计的精妙。</p>
+
+                <div class="my-8 p-6 rounded-xl" style="background-color: var(--bg-secondary);">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center mr-4" style="background-color: var(--bg-tertiary);">
+                            <i class="fa-solid fa-lightbulb text-xl" style="color: var(--highlight-color);"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-bold mb-2" style="color: var(--text-primary);">WOW64 核心技术要点</h4>
+                            <ul class="list-disc pl-5 space-y-1" style="color: var(--text-secondary);">
+                                <li>用户态实现系统调用转换，避免内核复杂化风险</li>
+                                <li>文件系统和注册表重定向，隔离32/64位应用数据访问</li>
+                                <li>维护双份运行时结构（PEB/TEB），透明处理数据结构差异</li>
+                                <li>在x64平台利用硬件兼容模式，实现近乎原生的性能</li>
+                                <li>灵活适应不同架构（x64/ARM64/Itanium），为应用提供统一接口</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <p>对于Windows平台的专业开发者而言，深入理解WOW64的原理不仅有助于解决实际开发中遇到的兼容性问题，还能加深对Windows系统架构的认识。通过本文的讨论，我们详细分析了WOW64在注册表和文件系统上的重定向策略，阐明了其如何隔离32/64位应用的数据访问；我们探讨了WOW64的内存布局和数据结构处理，让读者明白32位进程在64位系统下看似如常运转实则暗藏"双环境"；我们也论述了应用兼容性技术，包括API转换、DLL映射、钩子限制等，理解这些有助于开发者编写出在两种位宽下均表现良好的程序。</p>
+
+                <p>可以预见的是，只要Windows需要兼容旧应用，WOW64就会继续存在和发展下去。尽管64位应用已成主流，但IT世界的复杂性决定了旧的软件不会在短时间内消亡，特别是在企业环境中，很多定制应用可能无法轻易重写为64位版本。这种情况下，WOW64所提供的二进制兼容层显得尤为珍贵。</p>
+
+                <p>总而言之，WOW64 展现了系统软件对兼容性的执着追求，以及在软硬件接口上精益求精的工程艺术。在Windows的平台上，WOW64既是过去与未来的衔接纽带，也是保障当前广大用户顺利过渡的幕后英雄。通过对WOW64深入而全面的研究，我们更能体会Windows在设计上的周到和成熟。这些知识将为我们开发高质量、跨平台兼容的应用提供坚实基础。</p>
+            </section>
+
+            <div class="section-divider"></div>
+
+            <!-- 延伸阅读 -->
+            <section id="recommended-reading" class="mb-12">
+                <h2>延伸阅读</h2>
+                <p>如果您希望更深入地了解 WOW64 以及相关的 Windows 系统架构和兼容性技术，以下书籍和资源将是很好的参考：</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+                    <div class="feature-card hover-lift">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-12 h-16 rounded bg-gray-300 flex items-center justify-center mr-4" style="background-color: var(--bg-tertiary);">
+                                <i class="fa-solid fa-book text-xl" style="color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold mb-1" style="color: var(--text-primary);">Windows Internals</h4>
+                                <p class="text-sm" style="color: var(--text-tertiary);">Pavel Yosifovich, Alex Ionescu, Mark E. Russinovich, David A. Solomon</p>
+                                <p style="color: var(--text-secondary);">微软官方认可的 Windows 内部架构深度解析书籍，包含对 WOW64 兼容层的详细讨论，以及 Windows 核心组件的实现原理。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-card hover-lift">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-12 h-16 rounded bg-gray-300 flex items-center justify-center mr-4" style="background-color: var(--bg-tertiary);">
+                                <i class="fa-solid fa-book text-xl" style="color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold mb-1" style="color: var(--text-primary);">Inside Windows Debugging</h4>
+                                <p class="text-sm" style="color: var(--text-tertiary);">Tarik Soulami</p>
+                                <p style="color: var(--text-secondary);">探讨 Windows 调试架构的权威著作，包含对 WOW64 进程调试特性的分析，以及在 32/64 位混合环境中的调试技术。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-card hover-lift">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-12 h-16 rounded bg-gray-300 flex items-center justify-center mr-4" style="background-color: var(--bg-tertiary);">
+                                <i class="fa-solid fa-flask text-xl" style="color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold mb-1" style="color: var(--text-primary);">Windows 10 System Programming</h4>
+                                <p class="text-sm" style="color: var(--text-tertiary);">Pavel Yosifovich</p>
+                                <p style="color: var(--text-secondary);">系统级 Windows 编程指南，探讨了面向现代 Windows 的应用开发，包含 WOW64 兼容性问题及其解决方案。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-card hover-lift">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-12 h-16 rounded bg-gray-300 flex items-center justify-center mr-4" style="background-color: var(--bg-tertiary);">
+                                <i class="fa-solid fa-file-lines text-xl" style="color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold mb-1" style="color: var(--text-primary);">Microsoft Windows 64-bit Compatibility</h4>
+                                <p class="text-sm" style="color: var(--text-tertiary);">微软官方文档</p>
+                                <p style="color: var(--text-secondary);">微软官方针对 64 位兼容性问题的技术文档集合，包含 WOW64 机制的详细说明、兼容性最佳实践和问题排查指南。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-card hover-lift md:col-span-2">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-12 h-16 rounded bg-gray-300 flex items-center justify-center mr-4" style="background-color: var(--bg-tertiary);">
+                                <i class="fa-solid fa-graduation-cap text-xl" style="color: var(--primary-color);"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold mb-1" style="color: var(--text-primary);">Intel® 64 and IA-32 Architectures Software Developer Manuals</h4>
+                                <p class="text-sm" style="color: var(--text-tertiary);">Intel Corporation</p>
+                                <p style="color: var(--text-secondary);">Intel 官方的处理器架构文档，详细说明了 x86-64 处理器的兼容模式工作原理，对理解 WOW64 的硬件基础非常有帮助。包含对处理器运行模式、指令集和系统级特性的全面介绍。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p>这些资源将帮助您更深入地理解 Windows 的系统架构，特别是 WOW64 兼容层的设计思想和技术细节。对于专业 Windows 开发者而言，掌握这些知识对于构建高兼容性、高性能的应用程序至关重要。</p>
+            </section>
+        </main>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="py-8 border-t" style="border-color: var(--fs-border); background-color: var(--bg-secondary);">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <div class="flex items-center">
+                        <svg class="w-8 h-8 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="var(--primary-color)" />
+                            <path d="M2 17L12 22L22 17M2 12L12 17L22 12" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <span class="text-xl font-bold" style="color: var(--text-primary);">WOW64 兼容层研究</span>
+                    </div>
+                    <p class="mt-2 text-sm" style="color: var(--text-tertiary);">© 2025 Windows开发技术解析团队</p>
+                </div>
+            </div>
+            <div class="mt-8 pt-6 border-t text-center text-sm" style="border-color: var(--fs-border); color: var(--text-tertiary);">
+                <p>本文档内容基于微软公开技术文档和研究资料，旨在帮助开发者深入理解Windows系统架构。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 返回顶部按钮 -->
+    <button id="back-to-top" class="fixed bottom-8 right-8 p-3 rounded-full shadow-lg opacity-0 transition-opacity duration-300" style="background-color: var(--primary-color); color: white; z-index: 30;">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
+
+    <!-- JavaScript -->
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.classList.contains('dark') ? 'dark' : 'neutral',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'cardinal',
+            },
+            securityLevel: 'loose',
+        });
+
+        // DOM加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 主题切换功能
+            const themeToggle = document.getElementById('theme-toggle');
+            const htmlElement = document.documentElement;
+            
+            // 初始化主题（从系统或本地存储获取）
+            if (localStorage.getItem('theme') === 'dark' || 
+                (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                htmlElement.classList.add('dark');
+            } else {
+                htmlElement.classList.remove('dark');
+            }
+            
+            // 切换主题事件处理
+            themeToggle.addEventListener('click', function() {
+                if (htmlElement.classList.contains('dark')) {
+                    htmlElement.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                    mermaid.initialize({ theme: 'neutral' });
+                } else {
+                    htmlElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                    mermaid.initialize({ theme: 'dark' });
+                }
+                // 刷新图表
+                mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+            });
+            
+            // 侧边栏导航功能
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const navSidebar = document.getElementById('nav-sidebar');
+            const mobileOverlay = document.getElementById('mobile-overlay');
+            
+            sidebarToggle.addEventListener('click', function() {
+                navSidebar.classList.toggle('open');
+                mobileOverlay.classList.toggle('open');
+            });
+            
+            mobileOverlay.addEventListener('click', function() {
+                navSidebar.classList.remove('open');
+                mobileOverlay.classList.remove('open');
+            });
+            
+            // 导航项目激活状态
+            const navItems = document.querySelectorAll('.nav-item');
+            const sections = document.querySelectorAll('section');
+            
+            function setActiveNavItem() {
+                let current = '';
+                
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.clientHeight;
+                    
+                    if (window.scrollY >= sectionTop - 150 && window.scrollY < sectionTop + sectionHeight - 150) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                
+                navItems.forEach(item => {
+                    item.classList.remove('active');
+                    if (item.getAttribute('href') === '#' + current) {
+                        item.classList.add('active');
+                    }
+                });
+            }
+            
+            // 平滑滚动到锚点
+            navItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 80,
+                            behavior: 'smooth'
+                        });
+                        
+                        navSidebar.classList.remove('open');
+                        mobileOverlay.classList.remove('open');
+                        
+                        // 更新URL但不刷新页面
+                        history.pushState(null, null, '#' + targetId);
+                    }
+                });
+            });
+            
+            // 返回顶部按钮
+            const backToTopButton = document.getElementById('back-to-top');
+            
+            backToTopButton.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+            
+            function toggleBackToTopButton() {
+                if (window.scrollY > 300) {
+                    backToTopButton.style.opacity = '1';
+                } else {
+                    backToTopButton.style.opacity = '0';
+                }
+            }
+            
+            // 监听滚动事件
+            window.addEventListener('scroll', function() {
+                setActiveNavItem();
+                toggleBackToTopButton();
+            });
+            
+            // 初始化时调用一次
+            setActiveNavItem();
+            toggleBackToTopButton();
+            
+            // 页面加载完成后重新初始化Mermaid（确保图表正确渲染）
+            window.addEventListener('load', function() {
+                mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+            });
+        });
+    </script>
+</body>
+</html>
