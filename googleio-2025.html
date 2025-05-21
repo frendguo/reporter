@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>谷歌 I/O 2025 互动摘要</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Application Structure Plan: 
+        SPA 采用顶部固定导航栏，引导用户浏览七大主题板块：概览、Gemini 生态、安卓与 XR、智能搜索、开发者工具、创新应用与硬件、以及未来展望。
+        选择此结构是为了将报告中庞杂的信息按逻辑清晰地组织，方便用户根据兴趣高效探索，而非简单复刻报告的线性叙事。
+        每个板块均以介绍性段落开篇，随后运用可展开卡片、列表及图表等形式呈现细节。
+        核心交互包括：点击导航链接平滑滚动至对应区域、点击卡片标题展开/折叠详细内容、图表鼠标悬浮提示。
+        新增 Gemini API 功能：1. NotebookLM 学习计划生成。 2. AI Mode 搜索模拟。这些功能通过按钮触发，用户输入后调用 Gemini API 展示结果。
+        此设计旨在优化信息的可发现性与易理解性，帮助用户快速消化 I/O 2025 的海量发布内容，并体验 AI 的实际应用。
+        关键信息点将突出显示，例如模型参数、发布日期、核心功能等。
+    -->
+    <!-- Visualization & Content Choices: 
+        - AI 增长数据 (Token 处理量、开发者数量增长): 目标: 直观展示AI发展势头。可视化: Chart.js 条形图和动态文本。交互: 图表悬停提示。理由: 视觉冲击力强，易于理解增长趋势。库: Chart.js, Vanilla JS。
+        - Gemini 模型 (2.5 Pro, Deep Think, Flash, Gemma 系列): 目标: 对比并介绍各模型特性。可视化: 可展开的 HTML 卡片。交互: 点击展开/折叠详情。理由: 提供简洁概览，支持按需深入了解。库: Vanilla JS。
+        - Android 16 及 XR 硬件 (Moohan, Aura, Google 眼镜): 目标: 介绍新系统特性和硬件规格。可视化: HTML 卡片和列表。交互: 主要为静态信息展示。理由: 清晰呈现产品细节。库: N/A。
+        - AI Mode 及搜索新功能: 目标: 阐述搜索智能化进展。可视化: 功能点列表和说明卡片。新增交互: “模拟 AI Mode 搜索”按钮，输入查询后调用 Gemini API 生成摘要。理由: 增强互动性，演示 AI 能力。库: Vanilla JS, Gemini API。
+        - 开发者工具 (Firebase Studio, Jules, Stitch 等): 目标: 概览新工具。可视化: HTML 卡片，将报告中的表格3内容转化为卡片组。交互: 点击展开/折叠。理由: 更灵活的工具信息展示。库: Vanilla JS。
+        - 创新应用与硬件 (Beam, Meet 翻译, AI 购物等): 目标: 展示各项创新。可视化: HTML 卡片和功能点列表。新增交互 (NotebookLM): “生成学习计划”按钮，输入主题后调用 Gemini API 生成计划。理由: 增强互动性，演示 AI 能力。库: Vanilla JS, Gemini API。
+        - 报告中的表格1 (AI模型总结) 和表格2 (XR硬件) 将转化为更易读的卡片列表或可交互的HTML元素，而非直接的表格复制，以提升移动端友好性和信息层级。
+        - 确认: 未使用SVG图形，未使用Mermaid JS。所有图表均通过Chart.js实现。
+    -->
+    <style>
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
+        .content-section { padding-top: 4rem; } /* Offset for fixed navbar */
+        .nav-link { transition: color 0.3s ease; }
+        .nav-link.active { color: #0284c7; font-weight: 600; border-bottom: 2px solid #0284c7;}
+        .card-title-button {
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+            font: inherit;
+            color: inherit;
+            cursor: pointer;
+            text-align: left;
+            width: 100%;
+        }
+        .chevron::before {
+            border-style: solid;
+            border-width: 0.15em 0.15em 0 0;
+            content: '';
+            display: inline-block;
+            height: 0.45em;
+            left: 0.15em;
+            position: relative;
+            top: 0.15em;
+            transform: rotate(-45deg);
+            vertical-align: top;
+            width: 0.45em;
+            transition: transform 0.3s ease-in-out;
+            margin-right: 0.5em;
+        }
+        .chevron.open::before {
+            transform: rotate(135deg);
+        }
+        .gemini-feature-input {
+            border: 1px solid #cbd5e1; /* slate-300 */
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem; /* rounded-md */
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        .gemini-feature-button {
+            background-color: #0ea5e9; /* sky-500 */
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem; /* rounded-md */
+            font-weight: 500; /* medium */
+            transition: background-color 0.3s ease;
+        }
+        .gemini-feature-button:hover {
+            background-color: #0284c7; /* sky-600 */
+        }
+        .gemini-result-area {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0; /* slate-200 */
+            border-radius: 0.375rem; /* rounded-md */
+            background-color: #f8fafc; /* slate-50 */
+            white-space: pre-wrap; /* To preserve line breaks from API response */
+            font-size: 0.875rem; /* text-sm */
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #0ea5e9; /* sky-500 */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 0.5rem auto;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-700">
+
+    <nav class="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="font-bold text-xl text-sky-600">谷歌 I/O 2025 摘要</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-sky-600">概览</a>
+                        <a href="#gemini-ecosystem" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-sky-600">Gemini 生态</a>
+                        <a href="#android-xr" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-sky-600">安卓与 XR</a>
+                        <a href="#search" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-sky-600">智能搜索</a>
+                        <a href="#developer-tools" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-sky-600">开发者工具</a>
+                        <a href="#innovations" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-sky-600">创新应用</a>
+                        <a href="#outlook" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-sky-600">未来展望</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-sky-600 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-sky-500">
+                        <span class="sr-only">打开主菜单</span>
+                        <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <svg class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="md:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#overview" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-sky-600 hover:bg-slate-50">概览</a>
+                <a href="#gemini-ecosystem" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-sky-600 hover:bg-slate-50">Gemini 生态</a>
+                <a href="#android-xr" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-sky-600 hover:bg-slate-50">安卓与 XR</a>
+                <a href="#search" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-sky-600 hover:bg-slate-50">智能搜索</a>
+                <a href="#developer-tools" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-sky-600 hover:bg-slate-50">开发者工具</a>
+                <a href="#innovations" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-sky-600 hover:bg-slate-50">创新应用</a>
+                <a href="#outlook" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-sky-600 hover:bg-slate-50">未来展望</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <section id="overview" class="content-section min-h-screen">
+            <h1 class="text-4xl font-bold text-sky-700 mb-6">谷歌 I/O 2025：AI 全面渗透，创新加速</h1>
+            <p class="text-lg text-slate-600 mb-8">
+                谷歌年度开发者大会 I/O 2025 的核心主题清晰地指向了人工智能（AI）从前沿研究向实际应用的全面转化。谷歌正致力于通过 AI 使其产品和服务变得更加实用和强大，一个显著的趋势是，AI 已经深度融入谷歌所触及的几乎所有业务领域。本互动摘要将带您快速了解大会的主要发布内容。
+            </p>
+            <div class="grid md:grid-cols-2 gap-8 mb-12">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-semibold text-sky-600 mb-4">AI 处理能力与生态增长</h2>
+                    <p class="text-slate-600 mb-2">谷歌产品及 API 每月处理的 token 数量：从 9.7 万亿 <span class="font-bold text-green-600">增长至 480 万亿+</span> (近50倍)。</p>
+                    <p class="text-slate-600 mb-2">Gemini 模型开发者数量：<span class="font-bold text-green-600">增长 5 倍</span>。</p>
+                    <p class="text-slate-600 mb-2">Vertex AI 上 Gemini 使用量：<span class="font-bold text-green-600">激增 40 倍</span>。</p>
+                    <p class="text-slate-600">Gemini 应用月活跃用户：<span class="font-bold text-green-600">突破 4 亿</span>。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                     <h3 class="text-xl font-semibold text-sky-600 mb-3">AI 生态增长可视化</h3>
+                    <div class="chart-container">
+                        <canvas id="aiGrowthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <p class="text-lg text-slate-600">
+                这些数据不仅展示了谷歌在 AI 技术上的投入和决心，也为后续一系列 AI 驱动的产品和功能更新奠定了坚实的基础。谷歌正积极构建一个以 AI 为核心的生态系统，旨在深度整合用户工作流和开发者平台。
+            </p>
+        </section>
+
+        <section id="gemini-ecosystem" class="content-section min-h-screen">
+            <h1 class="text-4xl font-bold text-sky-700 mb-6">Gemini AI 生态系统 – 全面进化与拓展</h1>
+            <p class="text-lg text-slate-600 mb-8">
+                谷歌的 Gemini AI 生态系统在本次 I/O 大会上迎来了全面的进化与拓展，从核心模型的增强到开发者工具的革新，再到开放模型的持续推进，展现了谷歌在 AI 领域的深度布局。本部分将详细介绍 Gemini 2.5 系列模型、Gemini Live 与 App、面向开发者的 Gemini 工具以及开放模型的新进展。
+            </p>
+
+            <div class="space-y-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <button class="card-title-button flex justify-between items-center" data-target="gemini-2-5-models-content">
+                        <h2 class="text-2xl font-semibold text-sky-600">1.1 Gemini 2.5 系列模型详解</h2>
+                        <span class="chevron text-sky-600"></span>
+                    </button>
+                    <div id="gemini-2-5-models-content" class="mt-4 space-y-4 hidden">
+                        <div class="p-4 border border-slate-200 rounded-md">
+                            <h3 class="text-xl font-medium text-slate-800">Gemini 2.5 Pro</h3>
+                            <p class="text-sm text-slate-500 mb-1">定位：谷歌当前最智能 AI 模型，复杂编码与深度学习。</p>
+                            <ul class="list-disc list-inside text-slate-600 text-sm space-y-1">
+                                <li>上下文窗口：100万 token (Vertex AI 上可达 200万 token)。</li>
+                                <li>新功能：原生音频输出，高级安全，集成 Project Mariner 计算机使用能力，融合 LearnLM (领先的学习模型)。</li>
+                                <li>知识库更新至：2025年1月。</li>
+                                <li>可用性：Google AI Studio, Gemini Advanced, 即将登陆 Vertex AI。</li>
+                            </ul>
+                        </div>
+                        <div class="p-4 border border-slate-200 rounded-md">
+                            <h3 class="text-xl font-medium text-slate-800">Gemini 2.5 Pro Deep Think</h3>
+                            <p class="text-sm text-slate-500 mb-1">定位：实验性增强推理模式，应对高度复杂数学和编码挑战。</p>
+                            <ul class="list-disc list-inside text-slate-600 text-sm space-y-1">
+                                <li>核心技术：响应前深入思考并权衡多种假设路径。</li>
+                                <li>表现：在 USAMO 2025, LiveCodeBench, MMMU (84.0%) 等基准测试中表现优异。</li>
+                                <li>潜力：接近 AGI 的潜力，有望在科研、复杂系统设计等领域开辟新可能。</li>
+                                <li>可用性：早期阶段，通过 Gemini API 向受信任测试者提供。</li>
+                            </ul>
+                        </div>
+                        <div class="p-4 border border-slate-200 rounded-md">
+                            <h3 class="text-xl font-medium text-slate-800">Gemini 2.5 Flash</h3>
+                            <p class="text-sm text-slate-500 mb-1">定位：速度和效率极致优化，编码和复杂推理性能强劲。</p>
+                            <ul class="list-disc list-inside text-slate-600 text-sm space-y-1">
+                                <li>改进：推理、多模态、代码、长上下文全面提升，效率提升 22%。</li>
+                                <li>亮点：原生音频输出与实时 API (主动视频/音频，情感对话)，增强 TTS 能力。</li>
+                                <li>可用性：Gemini 应用中已提供，6月初 GA 于 Google AI Studio 和 Vertex AI。</li>
+                            </ul>
+                        </div>
+                         <div class="p-4 border border-slate-200 rounded-md">
+                            <h3 class="text-xl font-medium text-slate-800">模型透明度与控制</h3>
+                            <ul class="list-disc list-inside text-slate-600 text-sm space-y-1">
+                                <li>思维总结 (Thought summaries)：已在整个 2.5 系列模型中提供。</li>
+                                <li>思维预算 (Thinking budgets)：即将登陆 Gemini 2.5 Pro Preview，允许管理计算成本和“思考”深度。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                     <button class="card-title-button flex justify-between items-center" data-target="gemini-live-app-content">
+                        <h2 class="text-2xl font-semibold text-sky-600">1.2 Gemini Live 与 Gemini App</h2>
+                        <span class="chevron text-sky-600"></span>
+                    </button>
+                    <div id="gemini-live-app-content" class="mt-4 space-y-4 hidden">
+                        <div class="p-4 border border-slate-200 rounded-md">
+                            <h3 class="text-xl font-medium text-slate-800">Gemini Live</h3>
+                            <p class="text-sm text-slate-500 mb-1">交互功能，结合摄像头视觉、语音指令和 AI 代理能力。</p>
+                            <ul class="list-disc list-inside text-slate-600 text-sm space-y-1">
+                                <li>技术整合：Project Astra 的摄像头和屏幕共享技术。</li>
+                                <li>示例：对准文字创建日历事件，调用 Keep 笔记。</li>
+                                <li>可用性：Android 和 iOS 设备 Gemini 应用中免费开放，未来几周连接 Google Keep, Calendar 等。</li>
+                            </ul>
+                        </div>
+                        <div class="p-4 border border-slate-200 rounded-md">
+                            <h3 class="text-xl font-medium text-slate-800">Gemini App</h3>
+                            <p class="text-sm text-slate-500 mb-1">月活跃用户超4亿，Gemini 2.5 Pro 使用量增长45%。</p>
+                            <ul class="list-disc list-inside text-slate-600 text-sm space-y-1">
+                                <li>更新：集成 Veo 3 和 Imagen 4 生成式媒体模型。</li>
+                                <li>新功能：Deep Research (深入信息探索)，Canvas (交互式共同创作空间)，Agent Mode (代理模式)。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <button class="card-title-button flex justify-between items-center" data-target="gemini-dev-content">
+                        <h2 class="text-2xl font-semibold text-sky-600">1.3 面向开发者的 Gemini</h2>
+                        <span class="chevron text-sky-600"></span>
+                    </button>
+                    <div id="gemini-dev-content" class="mt-4 space-y-4 hidden">
+                        <p class="text-slate-600 text-sm">谷歌为开发者推出一系列 Gemini 新工具和特性，旨在降低开发门槛、提升效率。</p>
+                        <ul class="list-disc list-inside text-slate-600 text-sm space-y-2">
+                            <li><strong>Gemini SDKs:</strong> 更新支持模型上下文协议 (MCP)，简化集成开源工具。</li>
+                            <li><strong>Gemini Code Assist:</strong> 个人版 (免费) 和 GitHub 版 (代码审查代理) 已发布，由 Gemini 2.5 驱动。标准/企业版在 Vertex AI 上将支持 200万 token 上下文。</li>
+                            <li><strong>Google AI Studio:</strong> 集成 Gemini 2.5 Pro 到原生代码编辑器，与 GenAI SDK 优化，支持从提示生成 Web 应用骨架，支持 Imagen 和 Veo。</li>
+                            <li><strong>Vertex AI:</strong> Gemini 模型使用量增长40倍，Gemini 2.5 Flash/Pro 将陆续提供。</li>
+                            <li><strong>异步函数调用:</strong> Gemini API 新增，允许后台执行耗时函数不阻塞主流程。</li>
+                            <li><strong>计算机使用 API (实验性):</strong> 允许应用在用户指导下浏览网页或调用本地软件。2025年晚些时候更广泛开放。</li>
+                            <li><strong>URL 上下文 (实验性):</strong> 从 URL 提取完整页面上下文，可与 Google Search 等结合。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <button class="card-title-button flex justify-between items-center" data-target="gemma-models-content">
+                        <h2 class="text-2xl font-semibold text-sky-600">1.4 开放模型新进展：Gemma 系列</h2>
+                        <span class="chevron text-sky-600"></span>
+                    </button>
+                    <div id="gemma-models-content" class="mt-4 space-y-4 hidden">
+                        <p class="text-slate-600 text-sm">Gemma 系列迎来新成员和更新，推动 AI 能力普及。</p>
+                        <div class="p-4 border border-slate-200 rounded-md">
+                            <h3 class="text-xl font-medium text-slate-800">Gemma 3n</h3>
+                            <p class="text-sm text-slate-500 mb-1">基于全新移动优先架构，未来支持下一代 Gemini Nano。</p>
+                            <ul class="list-disc list-inside text-slate-600 text-sm space-y-1">
+                                <li>效率：2GB RAM 可运行 (5B/8B 参数有效内存占用2GB/3GB)，得益于 Per-Layer Embeddings, KVC 共享, 先进激活量化。</li>
+                                <li>性能：移动设备响应速度比 Gemma 3 4B 快约1.5倍，输出质量提升。</li>
+                                <li>多模态：音、文、图、视频理解增强，高质量 ASR 和语音翻译。</li>
+                                <li>可用性：早期预览版 (Google AI Studio, Google AI Edge)。</li>
+                            </ul>
+                        </div>
+                        <div class="p-4 border border-slate-200 rounded-md">
+                            <h3 class="text-xl font-medium text-slate-800">SignGemma</h3>
+                            <p class="text-sm text-slate-600">专注手语理解 (尤其 ASL 转英语)，计划2025年晚些时候加入 Gemma 系列。</p>
+                        </div>
+                        <div class="p-4 border border-slate-200 rounded-md">
+                            <h3 class="text-xl font-medium text-slate-800">MedGemma</h3>
+                            <p class="text-sm text-slate-600">Gemma 3 变体，多模态医学文本和图像理解开放模型，用于二次微调，Health AI Developer Foundations 一部分。</p>
+                        </div>
+                         <div class="p-4 border border-slate-200 rounded-md">
+                            <h3 class="text-xl font-medium text-slate-800">DolphinGemma</h3>
+                            <p class="text-sm text-slate-600">首个针对海豚交流的大型语言模型，与佐治亚理工学院等合作开发。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-semibold text-sky-600 mb-4">主要 AI 模型发布概览 (表1内容)</h2>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <h3 class="font-semibold text-lg text-sky-700">Gemini 2.5 Pro</h3>
+                            <p class="text-xs text-slate-500 mb-2">最智能模型，1M (Vertex AI 2M) token 上下文，原生音频输出，高级安全，Project Mariner 能力，LearnLM 融入。</p>
+                            <p class="text-xs text-slate-600"><span class="font-medium">应用场景:</span> 编码，学习，复杂信息处理，多模态任务。</p>
+                            <p class="text-xs text-slate-600"><span class="font-medium">状态:</span> Google AI Studio, Gemini Advanced 可用，即将登陆 Vertex AI。</p>
+                        </div>
+                        <div class="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <h3 class="font-semibold text-lg text-sky-700">Gemini 2.5 Pro Deep Think</h3>
+                            <p class="text-xs text-slate-500 mb-2">实验性增强推理模式，处理高度复杂数学和编码，响应前考虑多种假设。</p>
+                            <p class="text-xs text-slate-600"><span class="font-medium">应用场景:</span> 高难度数学、科学研究、竞赛级编程。</p>
+                            <p class="text-xs text-slate-600"><span class="font-medium">状态:</span> 受信任测试者通过 Gemini API 测试。</p>
+                        </div>
+                        <div class="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <h3 class="font-semibold text-lg text-sky-700">Gemini 2.5 Flash</h3>
+                            <p class="text-xs text-slate-500 mb-2">速度和效率优化，推理、多模态、代码、长上下文改进，效率提升 22%，原生音频输出与实时 API。</p>
+                            <p class="text-xs text-slate-600"><span class="font-medium">应用场景:</span> 高效 AI 应用，自然语言交互，快速响应场景。</p>
+                            <p class="text-xs text-slate-600"><span class="font-medium">状态:</span> Gemini 应用中已提供，6月初 GA 于 Google AI Studio 和 Vertex AI。</p>
+                        </div>
+                        <div class="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <h3 class="font-semibold text-lg text-sky-700">Gemma 3n</h3>
+                            <p class="text-xs text-slate-500 mb-2">移动优先架构，2GB RAM 可运行 (5B/8B)，响应速度快1.5倍，多模态 (音、文、图、视频)。</p>
+                            <p class="text-xs text-slate-600"><span class="font-medium">应用场景:</span> 设备端 AI，移动应用，低延迟和隐私保护。</p>
+                            <p class="text-xs text-slate-600"><span class="font-medium">状态:</span> 早期预览版 (Google AI Studio, Google AI Edge)。</p>
+                        </div>
+                        <div class="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <h3 class="font-semibold text-lg text-sky-700">SignGemma</h3>
+                            <p class="text-xs text-slate-500 mb-2">手语理解模型 (尤其 ASL 转英语)。</p>
+                            <p class="text-xs text-slate-600"><span class="font-medium">应用场景:</span> 为失聪及听障人士开发辅助技术。</p>
+                            <p class="text-xs text-slate-600"><span class="font-medium">状态:</span> 2025年晚些时候加入 Gemma 系列。</p>
+                        </div>
+                        <div class="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <h3 class="font-semibold text-lg text-sky-700">MedGemma</h3>
+                            <p class="text-xs text-slate-500 mb-2">多模态医学文本和图像理解开放模型。</p>
+                            <p class="text-xs text-slate-600"><span class="font-medium">应用场景:</span> 医疗保健 AI 应用，医学影像分析。</p>
+                            <p class="text-xs text-slate-600"><span class="font-medium">状态:</span> Health AI Developer Foundations 一部分提供。</p>
+                        </div>
+                         <div class="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <h3 class="font-semibold text-lg text-sky-700">Gemini Diffusion</h3>
+                            <p class="text-xs text-slate-500 mb-2">实验性文本到图像扩散模型，生成速度快5倍。</p>
+                            <p class="text-xs text-slate-600"><span class="font-medium">应用场景:</span> 高速高质量图像生成，创意设计。</p>
+                            <p class="text-xs text-slate-600"><span class="font-medium">状态:</span> 开发者可注册等候名单。</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="android-xr" class="content-section min-h-screen">
+            <h1 class="text-4xl font-bold text-sky-700 mb-6">安卓生态与扩展现实（XR）的新篇章</h1>
+            <p class="text-lg text-slate-600 mb-8">
+                谷歌在 I/O 2025 上不仅带来了备受期待的 Android 操作系统更新，更以全新的姿态和战略宣告了其在扩展现实（XR）领域的雄心。通过整合强大的 Gemini AI 能力，谷歌试图为其 XR 生态注入新的活力。本节将介绍 Android 16 的亮点、Android XR 的回归以及相关硬件合作。
+            </p>
+            <div class="space-y-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <button class="card-title-button flex justify-between items-center" data-target="android-16-content">
+                        <h2 class="text-2xl font-semibold text-sky-600">2.1 Android 16 系统亮点</h2>
+                        <span class="chevron text-sky-600"></span>
+                    </button>
+                    <div id="android-16-content" class="mt-4 space-y-2 hidden">
+                        <p class="text-slate-600 text-sm">Android 16 带来一系列设计和功能改进，旨在提升用户体验和安全性。预计2025年下半年正式发布，Pixel 用户6月可获更新。</p>
+                        <ul class="list-disc list-inside text-slate-600 text-sm space-y-1">
+                            <li><strong>Material 3 Expressive 设计:</strong> 全新设计语言，延伸至 Wear OS 6。</li>
+                            <li><strong>"Ongoing notifications" 通知栏:</strong> 便捷即时信息查阅。</li>
+                            <li><strong>增强的诈骗检测功能:</strong> 更强数字欺诈防护。</li>
+                            <li><strong>改进的 Find Hub:</strong> 今年晚些时候支持卫星连接。</li>
+                            <li><strong>Auracast 支持:</strong> 蓝牙广播音频技术，方便多设备音频流切换。</li>
+                            <li><strong>更强大的照片选择器 (预期):</strong> 可能集成云存储支持。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <button class="card-title-button flex justify-between items-center" data-target="android-xr-comeback-content">
+                         <h2 class="text-2xl font-semibold text-sky-600">2.2 Android XR 重磅回归</h2>
+                         <span class="chevron text-sky-600"></span>
+                    </button>
+                    <div id="android-xr-comeback-content" class="mt-4 space-y-4 hidden">
+                        <p class="text-slate-600 text-sm">谷歌高调宣布在 XR 领域重新发力，以 Gemini AI 为核心驱动力，目标是打造下一代个人计算主导平台。</p>
+                        <div class="p-4 border border-slate-200 rounded-md">
+                            <h3 class="text-xl font-medium text-slate-800">硬件合作与产品详情</h3>
+                            <ul class="list-disc list-inside text-slate-600 text-sm space-y-3">
+                                <li>
+                                    <strong>三星 Project Moohan (头显):</strong> 高端 XR 头显，对标苹果 Vision Pro。
+                                    <ul class="list-circle list-inside ml-4 text-xs">
+                                        <li>显示: 索尼 4K Micro-OLED (单眼 3552x3840, 1000尼特, 90Hz)。</li>
+                                        <li>芯片: 高通骁龙 XR2 Plus Gen 2。</li>
+                                        <li>交互: 手势追踪，全彩透视，Gemini 设备端处理。</li>
+                                        <li>发布: 预计2025年晚些时候。</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <strong>Xreal Project Aura (眼镜):</strong> 系留式 AR 智能眼镜。
+                                     <ul class="list-circle list-inside ml-4 text-xs">
+                                        <li>特性: AI 驱动，光学透视，70度 FOV。</li>
+                                        <li>芯片: 高通骁龙 XR。</li>
+                                        <li>功能演示: 搜索，地图导航，实时翻译。</li>
+                                        <li>发布: 更多细节6月AWE公布，预计2025年底或2026年初上市。</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <strong>谷歌自有品牌眼镜:</strong> 与三星、Gentle Monster, Warby Parker 合作。
+                                    <ul class="list-circle list-inside ml-4 text-xs">
+                                        <li>设计: 注重日常佩戴舒适与时尚，1.5亿美元投入与Warby Parker合作。</li>
+                                        <li>功能: 手机同步，扬声器，可选镜内显示，摄像头，麦克风，实时翻译，Gemini 助手。</li>
+                                        <li>发布: 开发者明年可开发应用，产品预计之后发布。</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-semibold text-sky-600 mb-3">2.3 Wear OS 6, Android Auto 及 Google TV 的 Gemini 赋能</h2>
+                    <p class="text-slate-600 text-sm">Gemini AI 能力将逐步渗透到更广泛的安卓生态系统：</p>
+                    <ul class="list-disc list-inside text-slate-600 text-sm space-y-1 mt-2">
+                        <li><strong>Wear OS 6:</strong> 全面采用 Material 3 Expressive 设计，深度集成 Gemini AI。</li>
+                        <li><strong>Android Auto & Google TV:</strong> 扩展 Gemini AI 覆盖，提供个性化推荐、智能控制等。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="search" class="content-section min-h-screen">
+            <h1 class="text-4xl font-bold text-sky-700 mb-6">搜索与信息交互的智能化革命</h1>
+            <p class="text-lg text-slate-600 mb-8">
+                谷歌搜索作为其核心业务，在本次 I/O 大会上也迎来了由 AI 驱动的重大变革。通过引入全新的 AI Mode 和扩展 AI Overviews 功能，谷歌旨在将传统搜索引擎从信息检索工具，转变为能够理解复杂意图、执行具体任务的智能信息交互平台。
+            </p>
+             <div class="space-y-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <button class="card-title-button flex justify-between items-center" data-target="ai-mode-content">
+                        <h2 class="text-2xl font-semibold text-sky-600">3.1 AI Mode 深度解析</h2>
+                        <span class="chevron text-sky-600"></span>
+                    </button>
+                    <div id="ai-mode-content" class="mt-4 space-y-2 hidden">
+                        <p class="text-slate-600 text-sm">全新标签页，提供端到端、深度集成的 AI 搜索体验，能处理更长更复杂查询 (2-3倍长度)。</p>
+                        <ul class="list-disc list-inside text-slate-600 text-sm space-y-1">
+                            <li><strong>技术支撑:</strong> 定制版 Gemini 2.5 (原 Gemini 2.0)，查询扇出技术 (复杂请求分解并行处理)。</li>
+                            <li><strong>美国市场:</strong> 已向所有 Google Search 用户推出。</li>
+                            <li><strong>个性化搜索 (Personal Context):</strong> 即将引入，可选利用搜索历史，连接 Gmail/Drive 等获取更细致上下文。</li>
+                            <li><strong>复杂任务处理 (Agentic Capabilities):</strong> 整合 Project Mariner 网页浏览 AI 代理，可预订餐厅、购票、安排服务 (与 Ticketmaster, StubHub, Resy, Vagaro 等合作)。</li>
+                            <li><strong>数据可视化:</strong> 即将为金融、体育等查询生成定制图表。</li>
+                            <li><strong>Deep Search 整合:</strong> 即将登陆，允许 Gemini 花费额外资源进行深入研究并生成综合报告。</li>
+                            <li><strong>发布计划:</strong> 新功能将首先在 Google Labs 测试。</li>
+                        </ul>
+                        <p class="text-xs text-slate-500 mt-2">AI Mode 标志着谷歌搜索从信息检索工具向“行动引擎”的转变。</p>
+
+                        <div class="mt-6 pt-4 border-t border-slate-200">
+                            <h4 class="text-md font-semibold text-sky-600 mb-2">✨ 模拟 AI Mode 搜索体验</h4>
+                            <p class="text-xs text-slate-500 mb-2">输入一个复杂问题或任务，体验 Gemini 如何像 AI Mode 一样提供摘要信息。</p>
+                            <input type="text" id="aiModeQueryInput" class="gemini-feature-input" placeholder="例如：帮我规划一个为期三天的东京家庭旅行，包含儿童友好活动">
+                            <button id="simulateAiModeSearchBtn" class="gemini-feature-button w-full sm:w-auto">获取 AI Mode 摘要</button>
+                            <div id="aiModeResult" class="gemini-result-area hidden"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <button class="card-title-button flex justify-between items-center" data-target="ai-overviews-content">
+                        <h2 class="text-2xl font-semibold text-sky-600">3.2 AI Overviews 全球拓展与 Deep Research 整合</h2>
+                        <span class="chevron text-sky-600"></span>
+                    </button>
+                    <div id="ai-overviews-content" class="mt-4 space-y-4 hidden">
+                        <div>
+                            <h3 class="text-xl font-medium text-slate-800">AI Overviews</h3>
+                            <p class="text-sm text-slate-600">利用 AI 提供查询结果摘要，已扩展至全球 200+ 国家地区，月用户量 15 亿。美国市场由 Gemini 2.5 驱动。</p>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-medium text-slate-800">Deep Research</h3>
+                            <p class="text-sm text-slate-600">提供更深入、个性化研究报告。可上传文件分析，很快连接 Google Drive/Gmail 增强定制化能力。</p>
+                        </div>
+                    </div>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-semibold text-sky-600 mb-3">3.3 Search Live (相机实时搜索)</h2>
+                    <p class="text-slate-600 text-sm">
+                        创新搜索交互，通过手机摄像头实时“看到你所看到的”，并就捕捉到的物体或场景提问，AI 实时回答。很快能通过展示物体进行实时提问，如同与 AI 自然对话。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="developer-tools" class="content-section min-h-screen">
+            <h1 class="text-4xl font-bold text-sky-700 mb-6">赋能开发者 – 新一代 AI 工具与云平台</h1>
+            <p class="text-lg text-slate-600 mb-8">
+                谷歌深知开发者是推动技术创新和生态繁荣的核心力量。I/O 2025 发布了一系列新一代 AI 工具和云平台更新，旨在通过 AI 全面提升开发效率、降低门槛，并激发更多创新。这些工具共同构建一个全面的“AI 辅助开发”生态系统。
+            </p>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-sky-600 mb-2">Firebase Studio</h3>
+                    <p class="text-sm text-slate-600">云端 AI 工作空间 (Gemini 2.5 驱动)，助开发者快速将想法转为全栈 AI 应用。支持 Figma 设计导入 (通过 builder.io)，后端自动配置 (Firebase Auth, Firestore)，集成 Firebase AI Logic (客户端集成 Gemini API, 混合推理, 增强可观察性)。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-sky-600 mb-2">Jules (异步编码代理)</h3>
+                    <p class="text-sm text-slate-600">并行异步编码代理，与 GitHub 协作。处理技术债、bug修复、多任务管理、构建新功能框架。自动克隆仓库、编辑、测试、创建 PR。公共测试版已开放。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-sky-600 mb-2">Stitch (AI 驱动 UI/UX)</h3>
+                    <p class="text-sm text-slate-600">自然语言/图像提示生成 UI 设计和前端代码 (桌面/移动)。对话式迭代，修改主题风格，导出 CSS/HTML/Figma。已开放试用。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-sky-600 mb-2">Chrome 内置 AI API (Gemini Nano)</h3>
+                    <p class="text-sm text-slate-600">设备端 AI，增强隐私，低延迟。稳定发布 (Chrome 138+): Summarizer, Language Detector, Translator, Prompt API (扩展)。源试用: Writer, Rewriter。Canary: Proofreader, 多模态 Prompt API。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-sky-600 mb-2">Agentic Colab</h3>
+                    <p class="text-sm text-slate-600">全新代理式体验 (Gemini 2.5 Flash 驱动)。自然语言描述目标，Colab 主动编写代码、修复错误、转换逻辑、构建 UI。即将推出。</p>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-sky-600 mb-2">Google Cloud 与 NVIDIA 开发者社区</h3>
+                    <p class="text-sm text-slate-600">新合作，提供专属在线论坛，与谷歌云和 NVIDIA 专家交流。未来提供独家学习内容、教程、计算资源积分。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg md:col-span-2">
+                    <h3 class="text-xl font-semibold text-sky-600 mb-2">其他开发者工具更新</h3>
+                    <ul class="list-disc list-inside text-slate-600 text-sm space-y-1">
+                        <li><strong>ML Kit GenAI APIs (Gemini Nano):</strong> 移动端执行生成式 AI 任务。示例应用 Androidify。</li>
+                        <li><strong>实验性 Interest Invoker API (Web):</strong> 声明式触发 popover 显示/隐藏。</li>
+                        <li><strong>VS Code 中 Baseline 功能状态显示:</strong> 直接显示 Web 功能基线支持状态，将登陆其他 IDE。</li>
+                        <li><strong>Chrome DevTools 中的 AI 助手:</strong> Elements 面板问题修改建议，Performance 面板 "Ask AI" 优化建议。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="innovations" class="content-section min-h-screen">
+            <h1 class="text-4xl font-bold text-sky-700 mb-6">创新硬件与应用体验升级</h1>
+            <p class="text-lg text-slate-600 mb-8">
+                谷歌在 I/O 2025 上展示了 AI 在一系列创新硬件和应用体验升级方面的成果。从沉浸式通讯到智能购物，再到知识获取工具的进化，AI 正全面重塑用户与数字世界的交互方式。
+            </p>
+            <div class="space-y-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <button class="card-title-button flex justify-between items-center" data-target="google-beam-content">
+                        <h2 class="text-2xl font-semibold text-sky-600">5.1 Google Beam (原 Project Starline)</h2>
+                        <span class="chevron text-sky-600"></span>
+                    </button>
+                    <div id="google-beam-content" class="mt-4 hidden">
+                        <p class="text-slate-600 text-sm">AI 核心的 3D 视频通讯平台，将 2D 视频流实时转换为栩栩如生的 3D 影像，实现“面对面”交流。采用6摄像头阵列，AI 实时融合，3D 光场显示器渲染。毫米级头部追踪，60fps。与惠普合作，设备今年晚些时候面向企业早期客户推出 (Deloitte, Duolingo, Salesforce 已签约)。</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                     <button class="card-title-button flex justify-between items-center" data-target="google-meet-content">
+                        <h2 class="text-2xl font-semibold text-sky-600">5.2 Google Meet 实时翻译功能</h2>
+                        <span class="chevron text-sky-600"></span>
+                    </button>
+                    <div id="google-meet-content" class="mt-4 hidden">
+                        <p class="text-slate-600 text-sm">跨语言视频会议中实时翻译，AI 匹配说话者声音特质、语调、面部表情。英语/西班牙语 Beta 版已向 Google AI Pro/Ultra 用户推出，未来几周支持更多语种。</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <button class="card-title-button flex justify-between items-center" data-target="ai-shopping-content">
+                        <h2 class="text-2xl font-semibold text-sky-600">5.3 AI 购物体验 (AI Shopping)</h2>
+                        <span class="chevron text-sky-600"></span>
+                    </button>
+                    <div id="ai-shopping-content" class="mt-4 space-y-3 hidden">
+                        <p class="text-slate-600 text-sm mb-2">全面革新在线购物，打造个性化、智能引导、高效便捷的商业生态。整合到 Search AI Mode，依托 Shopping Graph (全球500亿+商品，每小时20亿+信息刷新)。</p>
+                        <div>
+                            <h4 class="font-medium text-slate-700">AI Mode 智能导购:</h4>
+                            <p class="text-xs text-slate-500">自然语言描述需求，展示图片和个性化商品列表。复杂条件筛选 (如“适合5月波特兰旅行的包袋”)，启动“查询扇出”机制。未来几月在美国 AI Mode 上线。</p>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-slate-700">虚拟试穿 (Virtual Try-On):</h4>
+                            <p class="text-xs text-slate-500">上传全身照，在数十亿服装商品上虚拟试穿。AI 理解人体三维结构和服装材质物理特性。已在美国 Search Labs 提供试用 (裤子、衬衫、连衣裙、半身裙)。</p>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-slate-700">AI 代理式比价与结账 (Agentic Checkout):</h4>
+                            <p class="text-xs text-slate-500">点击“跟踪价格”，设规格和期望价。价格达标自动通知。点击“为我购买”，AI 代理自动加购并用 Google Pay 结账。未来几月在美国商品列表推出。票务合作: Ticketmaster, StubHub, Resy, Vagaro。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <button class="card-title-button flex justify-between items-center" data-target="notebooklm-content">
+                        <h2 class="text-2xl font-semibold text-sky-600">5.4 NotebookLM 移动端应用与功能增强</h2>
+                        <span class="chevron text-sky-600"></span>
+                    </button>
+                    <div id="notebooklm-content" class="mt-4 space-y-2 hidden">
+                        <p class="text-slate-600 text-sm">AI 驱动研究和笔记工具。Android/iOS 独立应用已发布 (Android 5月19日, iOS 5月20日)。</p>
+                        <ul class="list-disc list-inside text-slate-600 text-xs space-y-1">
+                            <li><strong>核心功能:</strong> 上传源材料 (PDF, 网页, YouTube, Google 文档/幻灯片)。</li>
+                            <li><strong>智能摘要:</strong> AI 提炼复杂文档核心内容。</li>
+                            <li><strong>音频概览:</strong> 文档内容转为 AI 生成播客式音频讨论 (80+语言，不同长度，离线下载，后台播放)。</li>
+                            <li><strong>文档问答:</strong> 基于上传文档内容提问。</li>
+                            <li><strong>视频概览 (即将推出):</strong> 笔记内容转为教育性短视频。</li>
+                            <li><strong>思维导图:</strong> 可视化探索信息结构。</li>
+                            <li><strong>Google One AI Ultra 权益:</strong> 今年晚些时候提供更高使用限制和更强模型。</li>
+                        </ul>
+                        <div class="mt-6 pt-4 border-t border-slate-200">
+                            <h4 class="text-md font-semibold text-sky-600 mb-2">✨ 使用 NotebookLM 能力生成学习计划</h4>
+                            <p class="text-xs text-slate-500 mb-2">输入您的学习主题，让 Gemini 帮助您规划学习路径。</p>
+                            <input type="text" id="studyTopicInput" class="gemini-feature-input" placeholder="例如：量子计算入门">
+                            <button id="generateStudyPlanBtn" class="gemini-feature-button w-full sm:w-auto">生成学习计划</button>
+                            <div id="studyPlanResult" class="gemini-result-area hidden"></div>
+                        </div>
+                    </div>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <button class="card-title-button flex justify-between items-center" data-target="ai-ultra-content">
+                        <h2 class="text-2xl font-semibold text-sky-600">5.5 Google One AI Ultra 订阅服务</h2>
+                        <span class="chevron text-sky-600"></span>
+                    </button>
+                    <div id="ai-ultra-content" class="mt-4 space-y-2 hidden">
+                        <p class="text-slate-600 text-sm">顶级 AI 套餐，面向对 AI 能力有极致追求的专业用户。美国定价 $249.99/月 (前3月半价)，将推广至更多地区。</p>
+                        <p class="text-xs text-slate-500 mb-1"><strong>核心权益:</strong></p>
+                        <ul class="list-disc list-inside text-slate-600 text-xs space-y-1">
+                            <li>顶级 Gemini App 体验 (无限 Deep Research, Veo 2/3 视频生成, 抢先体验 Deep Think)。</li>
+                            <li>Flow (AI 电影制作) 最高权限 (1080p, 高级相机控制, Veo 3)。</li>
+                            <li>Whisk (创意可视化) 最高权限 (Whisk Animate - Veo 2)。</li>
+                            <li>NotebookLM 高级功能 (更高限制, 更强模型)。</li>
+                            <li>Gemini in Google Workspace (Gmail, Docs, Vids)。</li>
+                            <li>Gemini in Chrome 早期访问 (5月21日起)。</li>
+                            <li>Project Mariner 访问权限 (代理式研究原型，管理10个任务)。</li>
+                            <li>YouTube Premium (个人版)。</li>
+                            <li>30 TB 云存储空间。</li>
+                        </ul>
+                        <p class="text-xs text-slate-500 mt-1"><strong>对比:</strong> Google AI Pro (原 AI Premium) $20/月，新增 Flow (Veo 2) 和 Gemini in Chrome 早期访问。</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <button class="card-title-button flex justify-between items-center" data-target="gen-media-content">
+                        <h2 class="text-2xl font-semibold text-sky-600">5.6 生成式媒体工具</h2>
+                        <span class="chevron text-sky-600"></span>
+                    </button>
+                    <div id="gen-media-content" class="mt-4 grid md:grid-cols-2 gap-4 hidden">
+                        <div class="p-3 border border-slate-200 rounded-md">
+                            <h4 class="font-medium text-slate-700 text-sm">Flow (AI 电影制作)</h4>
+                            <p class="text-xs text-slate-500">原 VideoFX 升级。专业视频编辑生成，相机/视角控制，编辑/扩展现有片段，集成 Veo 生成内容。单个提示创建剪辑，拼接叙事序列。集成 Veo 3。向 Google AI Pro/Ultra (美国) 提供。</p>
+                        </div>
+                        <div class="p-3 border border-slate-200 rounded-md">
+                            <h4 class="font-medium text-slate-700 text-sm">Imagen 4 (图像生成)</h4>
+                            <p class="text-xs text-slate-500">最新图像生成模型，色彩更丰富，细节更逼真。处理精细纹理 (织物、毛皮) 和准确生成文字表现更佳。已集成到 Gemini 应用。</p>
+                        </div>
+                        <div class="p-3 border border-slate-200 rounded-md">
+                            <h4 class="font-medium text-slate-700 text-sm">Veo 3 (视频生成)</h4>
+                            <p class="text-xs text-slate-500">最新力作，高质量视频画面，原生音频生成 (对话、音效)。首个能直接生成带同步声音视频的模型。增强物理特性模拟。已向用户提供，Ultra 用户早期访问高级功能。</p>
+                        </div>
+                        <div class="p-3 border border-slate-200 rounded-md">
+                            <h4 class="font-medium text-slate-700 text-sm">Gemini Diffusion (文本到图像)</h4>
+                            <p class="text-xs text-slate-500">全新实验性研究模型，生成速度是此前最快模型5倍，编码相关图像生成性能相当。开发者可注册等候名单。</p>
+                        </div>
+                        <div class="p-3 border border-slate-200 rounded-md md:col-span-2">
+                            <h4 class="font-medium text-slate-700 text-sm">Lyria RealTime (交互式音乐生成)</h4>
+                            <p class="text-xs text-slate-500">实验性模型，实时交互创作、控制、演奏音乐。通过 Gemini API 访问，或在 Google AI Studio 入门应用体验。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <button class="card-title-button flex justify-between items-center" data-target="synthid-content">
+                        <h2 class="text-2xl font-semibold text-sky-600">5.7 SynthID Detector (AI 内容识别工具)</h2>
+                        <span class="chevron text-sky-600"></span>
+                    </button>
+                    <div id="synthid-content" class="mt-4 hidden">
+                        <p class="text-slate-600 text-sm">在线验证门户，识别使用谷歌 AI 工具 (Gemini, Imagen, Lyria, Veo 等) 制作的 AI 内容 (图、音、视、文)。扫描 SynthID 数字水印，告知是否 AI 生成并高亮可能带水印部分。水印嵌入隐蔽，鲁棒性强。已向早期测试者 (记者、媒体、研究员) 推出，未来逐步开放。与 NVIDIA (Cosmos 服务嵌入水印)、GetReal Security 合作。</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <button class="card-title-button flex justify-between items-center" data-target="learnlm-content">
+                        <h2 class="text-2xl font-semibold text-sky-600">5.8 LearnLM 与 Gemini 2.5 融合</h2>
+                        <span class="chevron text-sky-600"></span>
+                    </button>
+                    <div id="learnlm-content" class="mt-4 space-y-2 hidden">
+                        <p class="text-slate-600 text-sm">将学习场景优化 LearnLM 模型系列深度融入旗舰 Gemini 2.5，打造更强大个性化 AI 学习工具。Gemini 2.5 Pro 成为全球辅助学习领先模型。</p>
+                        <p class="text-xs text-slate-500 mb-1"><strong>应用场景与功能:</strong></p>
+                        <ul class="list-disc list-inside text-slate-600 text-xs space-y-1">
+                            <li><strong>NotebookLM 学习增强:</strong> Audio/Video Overviews, Mind Maps。</li>
+                            <li><strong>AI Mode & AI Overviews (Search) 学习支持:</strong> 更高级推理和多模态理解，Deep Search 整合。</li>
+                            <li><strong>Search Live (相机搜索) 辅助学习:</strong> 拍摄物体提问，提供信息和资源。</li>
+                            <li><strong>学生专属福利:</strong> 多国大学生免费 Google AI Pro。Gemini 根据学习材料创建定制测验，互动学习，解释对错，学习总结，指导解题，生成图表解释概念。</li>
+                            <li><strong>Learn About (实验项目) 升级:</strong> 更细致解释和相关知识连接，向青少年开放，会话历史，可上传文档。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="outlook" class="content-section min-h-screen">
+            <h1 class="text-4xl font-bold text-sky-700 mb-6">总结与展望：谷歌 I/O 2025 的深远影响与未来趋势</h1>
+            <p class="text-lg text-slate-600 mb-8">
+                谷歌 I/O 2025 大会清晰地勾勒出一个由人工智能全面主导的未来科技图景。AI 不再仅仅是产品中的一个孤立功能，而是正在演变为谷歌所有产品和服务的底层操作系统和核心驱动力。谷歌正不遗余力地构建一个以 AI 为中心的、高度整合的完整生态系统。
+            </p>
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
+                <h2 class="text-2xl font-semibold text-sky-600 mb-4">核心趋势与信号</h2>
+                <ul class="list-disc list-inside text-slate-600 space-y-2">
+                    <li><strong>代理式 AI (Agentic AI) 的崛起:</strong> AI 将成为更主动、更能干的数字助手 (Project Astra, Project Mariner, Jules, Agentic Colab)。</li>
+                    <li><strong>多模态交互成为新常态:</strong> 文本、图像、音频、视频融合处理 (Gemini 2.5, Veo 3, Imagen 4)。</li>
+                    <li><strong>扩展现实（XR）的战略性回归并由 AI 强力赋能:</strong> Android XR 平台与硬件合作，AI 驱动智能沉浸体验。</li>
+                    <li><strong>个性化与情境感知:</strong> 利用个人情境信息提升 AI 服务相关性和实用性 (AI Mode 个性化推荐, Deep Research 用户数据利用)。</li>
+                    <li><strong>开发者生态的 AI 化转型:</strong> 全套 AI 驱动工具链，提升生产效率和创新能力 (Stitch, Gemini Code Assist, Firebase Studio)。</li>
+                    <li><strong>开放与合作并重:</strong> 支持 Gemma 等开源模型，与 NVIDIA, HP 等行业领导者合作。</li>
+                </ul>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-semibold text-sky-600 mb-4">未来展望</h2>
+                <ul class="list-disc list-inside text-slate-600 space-y-2">
+                    <li>持续深化 AI 在所有服务和产品中的集成。</li>
+                    <li>AI 代理能力进一步增强，应用场景扩展。</li>
+                    <li>XR 与 AI 深度结合有望催生新交互范式和杀手级应用。</li>
+                    <li>用户数据隐私保护、AI 生成内容真实性 (SynthID Detector)、伦理问题关注度提升。</li>
+                    <li>AI 商业化模式多元化 (如 Google One AI Ultra 高端订阅)。</li>
+                </ul>
+            </div>
+            <p class="text-lg text-slate-600 mt-8">
+                总体而言，谷歌 I/O 2025 的各项发布构成了构建一个无处不在、以 AI 为原生能力的下一代计算平台的宏大愿景。其实现将取决于技术领先、产品整合、用户信任以及开发者生态的成功构建。“从研究走向现实”不仅是大会主题，更是谷歌 AI 战略根本性转变的宣言。
+            </p>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-800 text-slate-300 text-center p-6 mt-12">
+        <p>&copy; 2025 谷歌 I/O 2025 互动摘要。基于公开信息整理。</p>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('.content-section');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            mobileMenuButton.querySelectorAll('svg').forEach(svg => svg.classList.toggle('hidden'));
+        });
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                if (!mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.add('hidden');
+                    mobileMenuButton.querySelectorAll('svg').forEach(svg => svg.classList.toggle('hidden'));
+                }
+            });
+        });
+        
+        function updateActiveLink() {
+            let index = sections.length;
+            while(--index && window.scrollY + 100 < sections[index].offsetTop) {}
+            navLinks.forEach((link) => link.classList.remove('active'));
+            const desktopLink = document.querySelector(`.hidden.md\\:block a.nav-link[href="#${sections[index].id}"]`);
+            if (desktopLink) desktopLink.classList.add('active');
+            const mobileLink = document.querySelector(`#mobile-menu a.nav-link[href="#${sections[index].id}"]`);
+            if (mobileLink) mobileLink.classList.add('active');
+        }
+
+        window.addEventListener('scroll', updateActiveLink);
+        updateActiveLink();
+
+        const cardTitleButtons = document.querySelectorAll('.card-title-button');
+        cardTitleButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetId = button.getAttribute('data-target');
+                const content = document.getElementById(targetId);
+                const chevron = button.querySelector('.chevron');
+                if (content) {
+                    content.classList.toggle('hidden');
+                     // If opening a card with a Gemini feature, ensure the result area is hidden initially
+                    const geminiResultArea = content.querySelector('.gemini-result-area');
+                    if (geminiResultArea && !content.classList.contains('hidden')) {
+                        // Only hide if we are expanding. If collapsing, leave it as is.
+                    } else if (geminiResultArea && content.classList.contains('hidden')) {
+                         // If we are collapsing, ensure it's hidden.
+                        geminiResultArea.classList.add('hidden');
+                        geminiResultArea.innerHTML = ''; // Clear previous results
+                    }
+                }
+                if (chevron) {
+                    chevron.classList.toggle('open');
+                }
+            });
+        });
+        
+        const aiGrowthCtx = document.getElementById('aiGrowthChart').getContext('2d');
+        const aiGrowthChart = new Chart(aiGrowthCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Token 处理量 (万亿/月)', 'Gemini 开发者增长', 'Vertex AI Gemini 使用增长', 'Gemini App MAU (亿)'],
+                datasets: [{
+                    label: '增长指标',
+                    data: [480, 5, 40, 4],
+                    backgroundColor: ['rgba(59, 130, 246, 0.7)', 'rgba(16, 185, 129, 0.7)', 'rgba(239, 68, 68, 0.7)', 'rgba(245, 158, 11, 0.7)'],
+                    borderColor: ['rgba(59, 130, 246, 1)', 'rgba(16, 185, 129, 1)', 'rgba(239, 68, 68, 1)', 'rgba(245, 158, 11, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                plugins: { legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) { label += ': '; }
+                                if (context.parsed.x !== null) {
+                                    if (context.label === 'Token 处理量 (万亿/月)') label += context.parsed.x + ' 万亿/月 (近50倍)';
+                                    else if (context.label === 'Gemini 开发者增长') label += context.parsed.x + ' 倍';
+                                    else if (context.label === 'Vertex AI Gemini 使用增长') label += context.parsed.x + ' 倍';
+                                    else if (context.label === 'Gemini App MAU (亿)') label += context.parsed.x + ' 亿';
+                                    else label += context.parsed.x;
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { beginAtZero: true, title: { display: true, text: '数值 (Token为万亿, MAU为亿, 其余为倍数)'}},
+                    y: { ticks: { autoSkip: false, 
+                            callback: function(value, index, values) {
+                                const label = this.getLabelForValue(value);
+                                if (label.length > 16) {
+                                    const words = label.split(' ');
+                                    let lines = ['']; let currentLine = 0;
+                                    words.forEach(word => {
+                                        if ((lines[currentLine] + word).length > 16) { currentLine++; lines[currentLine] = ''; }
+                                        lines[currentLine] += word + ' ';
+                                    });
+                                    return lines.map(l => l.trim());
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Gemini API Integration
+        const apiKey = ""; // Placeholder for API key
+
+        async function callGeminiAPI(prompt, resultAreaElement) {
+            resultAreaElement.classList.remove('hidden');
+            resultAreaElement.innerHTML = '<div class="loading-spinner"></div> <p class="text-center text-sm text-slate-500">AI 正在思考中...</p>';
+
+            let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+            const payload = { contents: chatHistory };
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error("API Error:", errorData);
+                    throw new Error(`API 请求失败，状态码：${response.status}. ${errorData?.error?.message || '未知错误'}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    resultAreaElement.textContent = text;
+                } else {
+                    console.error("Unexpected API response structure:", result);
+                    resultAreaElement.textContent = "抱歉，未能从 AI 获取有效回复。请检查控制台获取更多信息。";
+                    if (result.promptFeedback && result.promptFeedback.blockReason) {
+                         resultAreaElement.textContent += `\n原因: ${result.promptFeedback.blockReason}`;
+                         if (result.promptFeedback.blockReasonMessage) {
+                             resultAreaElement.textContent += ` - ${result.promptFeedback.blockReasonMessage}`;
+                         }
+                    }
+                }
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                resultAreaElement.textContent = `发生错误：${error.message}。请稍后再试或检查您的网络连接与API密钥。`;
+            }
+        }
+
+        // NotebookLM Study Plan Generator
+        const generateStudyPlanBtn = document.getElementById('generateStudyPlanBtn');
+        const studyTopicInput = document.getElementById('studyTopicInput');
+        const studyPlanResult = document.getElementById('studyPlanResult');
+
+        if (generateStudyPlanBtn) {
+            generateStudyPlanBtn.addEventListener('click', async () => {
+                const topic = studyTopicInput.value.trim();
+                if (!topic) {
+                    studyPlanResult.classList.remove('hidden');
+                    studyPlanResult.textContent = "请输入一个学习主题。";
+                    return;
+                }
+                const prompt = `假设你是一个基于 NotebookLM 的 AI 学习助手。请根据以下主题，为用户生成一个简洁的学习计划大纲，包含至少3个主要学习模块和针对每个模块的建议学习资源或方法。计划应具有可行性和启发性。主题：${topic}`;
+                callGeminiAPI(prompt, studyPlanResult);
+            });
+        }
+
+        // AI Mode Search Simulation
+        const simulateAiModeSearchBtn = document.getElementById('simulateAiModeSearchBtn');
+        const aiModeQueryInput = document.getElementById('aiModeQueryInput');
+        const aiModeResult = document.getElementById('aiModeResult');
+
+        if (simulateAiModeSearchBtn) {
+            simulateAiModeSearchBtn.addEventListener('click', async () => {
+                const query = aiModeQueryInput.value.trim();
+                if (!query) {
+                    aiModeResult.classList.remove('hidden');
+                    aiModeResult.textContent = "请输入一个搜索查询。";
+                    return;
+                }
+                const prompt = `你现在是谷歌搜索的 AI Mode。请针对以下复杂的用户查询，生成一个全面且易于理解的 AI 摘要 (AI Overview)。这个摘要应该总结关键信息，并如果适用，可以提出可能的后续步骤或相关考虑点，使其对用户有实际帮助。用户查询：${query}`;
+                callGeminiAPI(prompt, aiModeResult);
+            });
+        }
+
+    </script>
+</body>
+</html>
