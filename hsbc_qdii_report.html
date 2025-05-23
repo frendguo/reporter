@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汇丰推荐QDII债券产品分析报告</title>
+    <link href="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-100-M/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-light: #f8f9fa; /* 浅色模式背景 */
+            --text-light: #212529; /* 浅色模式文字 */
+            --card-bg-light: #ffffff; /* 浅色模式卡片背景 */
+            --border-light: #e9ecef; /* 浅色模式边框 */
+            --accent-light: #007bff; /* 浅色模式强调色 */
+            --accent-hover-light: #0056b3;
+
+            --bg-dark: #1a202c; /* 深色模式背景 */
+            --text-dark: #e2e8f0; /* 深色模式文字 */
+            --card-bg-dark: #2d3748; /* 深色模式卡片背景 */
+            --border-dark: #4a5568; /* 深色模式边框 */
+            --accent-dark: #63b3ed; /* 深色模式强调色 */
+            --accent-hover-dark: #4299e1;
+
+            --font-sans: 'Noto Sans SC', Tahoma, Arial, Roboto, "Droid Sans", "Helvetica Neue", "Droid Sans Fallback", "Heiti SC", "Hiragino Sans GB", Simsun, sans-serif;
+            --font-serif: 'Noto Serif SC', serif;
+        }
+
+        .dark {
+            --bg-light: var(--bg-dark);
+            --text-light: var(--text-dark);
+            --card-bg-light: var(--card-bg-dark);
+            --border-light: var(--border-dark);
+            --accent-light: var(--accent-dark);
+            --accent-hover-light: var(--accent-hover-dark);
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-light);
+            color: var(--text-light);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-serif);
+            font-weight: 700;
+        }
+        
+        .content-card {
+            background-color: var(--card-bg-light);
+            border: 1px solid var(--border-light);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .content-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .dark .content-card:hover {
+             box-shadow: 0 10px 15px -3px rgba(255, 255, 255, 0.05), 0 4px 6px -2px rgba(255, 255, 255, 0.02);
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--accent-light) 0%, #a37ff1 100%);
+            color: white;
+        }
+        .dark .hero-section {
+             background: linear-gradient(135deg, var(--accent-dark) 0%, #7a5fb5 100%);
+        }
+
+        .theme-switch-button {
+            background-color: var(--card-bg-light);
+            color: var(--text-light);
+            border: 1px solid var(--border-light);
+        }
+        .dark .theme-switch-button {
+            background-color: var(--card-bg-dark);
+            color: var(--text-dark);
+            border: 1px solid var(--border-dark);
+        }
+
+        .mermaid-diagram {
+            background-color: var(--card-bg-light);
+            border: 1px solid var(--border-light);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            overflow-x: auto; /* Ensure mermaid diagrams are scrollable on small screens */
+        }
+        .dark .mermaid-diagram {
+            background-color: var(--card-bg-dark);
+            border: 1px solid var(--border-dark);
+        }
+        /* 优化 mermaid 图表样式 */
+        .mermaid-diagram .flowchart-link {
+            stroke-width: 2px !important;
+        }
+        .mermaid-diagram .edgeLabel {
+            background-color: transparent !important;
+            font-family: var(--font-sans) !important;
+        }
+        .mermaid-diagram .label {
+            font-family: var(--font-sans) !important;
+        }
+        .mermaid-diagram .node rect, 
+        .mermaid-diagram .node circle, 
+        .mermaid-diagram .node ellipse, 
+        .mermaid-diagram .node polygon, 
+        .mermaid-diagram .node path {
+            stroke-width: 2px !important;
+        }
+        .dark .mermaid-diagram .label {
+            color: var(--text-dark) !important;
+        }
+        .dark .mermaid-diagram .flowchart-link {
+            stroke: #ccc !important;
+        }
+        
+        /* Table styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+        }
+        th, td {
+            border: 1px solid var(--border-light);
+            padding: 0.75rem;
+            text-align: left;
+        }
+        th {
+            background-color: var(--accent-light);
+            color: white;
+            font-family: var(--font-sans);
+            font-weight: 500;
+        }
+        .dark th {
+            background-color: var(--accent-dark);
+            color: var(--bg-dark);
+        }
+        tr:nth-child(even) {
+            background-color: var(--border-light); /* Slightly different background for even rows */
+        }
+        .dark tr:nth-child(even) {
+            background-color: var(--border-dark);
+        }
+
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--border-light);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-light);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-hover-light);
+        }
+        .dark ::-webkit-scrollbar-track {
+            background: var(--border-dark);
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: var(--accent-dark);
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-hover-dark);
+        }
+
+        /* First letter drop cap */
+        .drop-cap::first-letter {
+            font-size: 3em; /* Adjust size as needed */
+            font-family: var(--font-serif);
+            font-weight: bold;
+            float: left;
+            line-height: 0.8em; /* Adjust line height to align properly */
+            margin-right: 0.1em; /* Space between drop cap and text */
+            margin-bottom: -0.1em; /* Fine-tune vertical alignment */
+            color: var(--accent-light);
+        }
+        .dark .drop-cap::first-letter {
+            color: var(--accent-dark);
+        }
+
+        /* Section title styling */
+        .section-title {
+            font-size: 2.25rem; /* Tailwind's text-4xl */
+            margin-bottom: 1.5rem; /* Tailwind's mb-6 */
+            padding-bottom: 0.5rem; /* Tailwind's pb-2 */
+            border-bottom: 2px solid var(--accent-light);
+            display: inline-block; /* To make border only as long as text */
+        }
+        .dark .section-title {
+            border-bottom-color: var(--accent-dark);
+        }
+        
+        .icon-list li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .icon-list li i {
+            margin-right: 0.75rem;
+            color: var(--accent-light);
+            width: 20px; /* Ensure icons align */
+            text-align: center;
+        }
+        .dark .icon-list li i {
+            color: var(--accent-dark);
+        }
+
+        /* Button styling */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-primary {
+            background-color: var(--accent-light);
+            color: white;
+            border: 1px solid var(--accent-light);
+        }
+        .btn-primary:hover {
+            background-color: var(--accent-hover-light);
+            border-color: var(--accent-hover-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .dark .btn-primary {
+            background-color: var(--accent-dark);
+            color: var(--bg-dark);
+            border-color: var(--accent-dark);
+        }
+        .dark .btn-primary:hover {
+            background-color: var(--accent-hover-dark);
+            border-color: var(--accent-hover-dark);
+        }
+    </style>
+</head>
+<body class="antialiased leading-relaxed">
+
+    <header class="sticky top-0 z-50 shadow-md" style="background-color: var(--card-bg-light);">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center py-4">
+            <div class="flex items-center">
+                <i class="fas fa-chart-pie text-3xl mr-3" style="color: var(--accent-light);"></i>
+                <h1 class="text-xl md:text-2xl font-bold">QDII债券产品深度解析</h1>
+            </div>
+            <button id="theme-toggle" class="theme-switch-button p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2" style="border-color: var(--accent-light); color: var(--accent-light);">
+                <i class="fas fa-sun"></i> </button>
+        </div>
+    </header>
+
+    <section class="hero-section py-16 md:py-24 text-center">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">汇丰推荐QDII债券产品分析报告</h2>
+            <p class="text-lg md:text-xl mb-8 max-w-3xl mx-auto">
+                深入剖析四款主流QDII债券基金，助您洞察投资机遇，优化全球资产配置。
+            </p>
+            <a href="#overview" class="btn btn-primary text-lg">
+                <i class="fas fa-arrow-down mr-2"></i> 开始阅读
+            </a>
+        </div>
+    </section>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <section id="overview" class="mb-16 scroll-mt-20">
+            <h2 class="section-title"><i class="fas fa-table mr-2"></i>产品概览及三年收益表现</h2>
+            <p class="mb-6 text-lg drop-cap">
+                针对汇丰中国理财顾问推荐的四款QDII债券类产品，我们首先比较它们近三年的业绩表现。这四只产品分别为：富达基金-美元债券基金、摩根基金-环球企业债券基金、资本集团全球公司债券基金(卢森堡)以及贝莱德环球企业债券基金。下表汇总了各产品的过去三年收益情况（以美元计价的主份额累计回报）：
+            </p>
+            <div class="overflow-x-auto content-card p-4 md:p-6 rounded-lg">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>产品名称</th>
+                            <th>过去一年收益</th>
+                            <th>过去三年累计收益</th>
+                            <th>2020年</th>
+                            <th>2021年</th>
+                            <th>2022年</th>
+                            <th>2023年</th>
+                            <th>2024年(截至Q1)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>富达美元债券基金(A类美元累积)</td>
+                            <td>+3.7%</td>
+                            <td>-0.5%</td>
+                            <td>+12.0%</td>
+                            <td>-1.4%</td>
+                            <td>-14.0%</td>
+                            <td>+6.0%</td>
+                            <td>-0.3%</td>
+                        </tr>
+                        <tr>
+                            <td>摩根环球企业债券基金(美元每月派息)</td>
+                            <td>+5.1%</td>
+                            <td>+4.4%</td>
+                            <td>+8.7%</td>
+                            <td>-1.2%</td>
+                            <td>-14.8%</td>
+                            <td>+8.4%</td>
+                            <td>+4.0%</td>
+                        </tr>
+                        <tr>
+                            <td>资本集团全球公司债券基金(美元Bfdm类)</td>
+                            <td>+3.1%</td>
+                            <td>成立至今+9.1% (无三年数据)</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>+5.8% (5月23日起)</td>
+                            <td>+3.1%</td>
+                        </tr>
+                        <tr>
+                            <td>贝莱德环球企业债券基金(A2美元类)</td>
+                            <td>+6.8%</td>
+                            <td>+3.8%</td>
+                            <td>+8.1%</td>
+                            <td>-2.0%</td>
+                            <td>-14.9%</td>
+                            <td>+9.1%</td>
+                            <td>+3.3%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-6 p-4 content-card rounded-lg">
+                <h4 class="text-xl font-semibold mb-2"><i class="fas fa-info-circle mr-2"></i>重要提示</h4>
+                <ul class="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
+                    <li>上表数据来源于各产品截至2024年底或2025年初的基金公告。富达、摩根、贝莱德产品收益数据以截至2025年一季度左右为准。</li>
+                    <li>资本集团基金成立于2023年5月，其2023年收益为5月23日至年底累计，2024年为全年收益。</li>
+                    <li>2022年四只产品均经历了明显负收益（约-14%至-15%），主要由于全球债券市场在该年受到利率飙升冲击。</li>
+                    <li>2023年随利率趋稳，几只基金均取得正回报。2024年表现分化。</li>
+                    <li>总体而言，近三年摩根环球企业债券基金累计回报最高 (+4.4%)；贝莱德基金亦取得正收益 (+3.8%)；富达基金则基本持平略有损失 (-0.5%)。</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="portfolio-risk" class="mb-16 scroll-mt-20">
+            <h2 class="section-title"><i class="fas fa-balance-scale mr-2"></i>投资组合构成与风险等级</h2>
+            <p class="mb-6 text-lg">
+                四只基金均为风险等级R2（低至中等偏低风险）的海外债券型产品。尽管同属R2，各产品投资组合侧重有所不同，导致风险收益特征存在差异。
+            </p>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="content-card p-6 rounded-lg">
+                    <h3 class="text-2xl font-semibold mb-3"><i class="fas fa-landmark mr-2"></i>富达基金-美元债券基金</h3>
+                    <p class="mb-2"><strong>投资重点：</strong>美国国债及高评级债券为主，至少70%资产投资于美元计价债券。</p>
+                    <p class="mb-2"><strong>信用评级：</strong>AAA/Aa级占7.4%, AA级占54.7%, A级13.6%, BBB级19.4%。高度偏重投资级。</p>
+                    <p class="mb-2"><strong>风险特征：</strong>信用质量高，利率风险(久期)适中 (约6.6年)。波动相对较低，但收益率也相对较低 (到期收益率约4.57%美元计)。</p>
+                </div>
+                <div class="content-card p-6 rounded-lg">
+                    <h3 class="text-2xl font-semibold mb-3"><i class="fas fa-globe-americas mr-2"></i>摩根基金-环球企业债券基金</h3>
+                    <p class="mb-2"><strong>投资重点：</strong>全球投资级企业债，灵活运用衍生品。</p>
+                    <p class="mb-2"><strong>信用评级：</strong>AA级约2.7%, A级29.1%, BBB级高达53.6%。完全聚焦投资级。</p>
+                    <p class="mb-2"><strong>风险特征：</strong>行业和地区配置增厚收益。总体风险水平适中，R2中收益相对较高且波动适中的稳健型 (平均久期约6.0年, 到期收益率达5.69%)。</p>
+                </div>
+                <div class="content-card p-6 rounded-lg">
+                    <h3 class="text-2xl font-semibold mb-3"><i class="fas fa-shield-alt mr-2"></i>资本集团全球公司债券基金</h3>
+                    <p class="mb-2"><strong>投资重点：</strong>全球投资级公司债，融入ESG策略。</p>
+                    <p class="mb-2"><strong>信用评级：</strong>AAA级约2.4%, AA级11.1%, A级40.4%, BBB级41.3%。无高收益债。</p>
+                    <p class="mb-2"><strong>风险特征：</strong>着重资本保值和审慎风险管理。低波动、稳健增值 (到期收益率约5.3%, 平均久期5.8年)。适合极度看重本金安全的投资者。</p>
+                </div>
+                <div class="content-card p-6 rounded-lg">
+                    <h3 class="text-2xl font-semibold mb-3"><i class="fas fa-rocket mr-2"></i>贝莱德环球企业债券基金</h3>
+                    <p class="mb-2"><strong>投资重点：</strong>全球各地公司发行的投资级债券，策略略更进取。</p>
+                    <p class="mb-2"><strong>信用评级：</strong>BBB级约53.2%, A级23.7%, AA及以上2.2%。含约16%次投资级债券 (BB级15.6%)。</p>
+                    <p class="mb-2"><strong>风险特征：</strong>R2风险范围内追求更高收益。业绩在市场向好时表现突出，但波动也略大于纯投资级组合 (到期收益率约4.97%, 久期约6.15年)。</p>
+                </div>
+            </div>
+            <div class="mt-8">
+                <h4 class="text-xl font-semibold mb-3 text-center"><i class="fas fa-chart-bar mr-2"></i>风险收益概览 (概念图)</h4>
+                <div class="mermaid-diagram text-center" id="riskReturnDiagram">
+                <!-- 这里将通过JavaScript动态渲染图表 -->
+                </div>
+            </div>
+             <p class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">注：上图为概念性展示，具体收益预测请参考"未来展望"部分。</p>
+        </section>
+
+        <section id="liquidity" class="mb-16 scroll-mt-20">
+            <h2 class="section-title"><i class="fas fa-water mr-2"></i>流动性与申赎规则</h2>
+            <div class="content-card p-6 rounded-lg">
+                <p class="mb-4 text-lg">所有四款QDII债券产品均为开放式基金，流动性良好，主要特点如下：</p>
+                <ul class="icon-list space-y-3">
+                    <li><i class="fas fa-calendar-day"></i><strong>交易频率:</strong> 每个工作日均可进行申购或赎回。</li>
+                    <li><i class="fas fa-lock-open"></i><strong>存续期限:</strong> 一般没有固定存续期限或封闭期。</li>
+                    <li><i class="fas fa-hourglass-half"></i><strong>资金到账:</strong> 赎回资金通常在T+2或T+3工作日到账 (具体以汇丰QDII业务规定为准)。</li>
+                    <li><i class="fas fa-coins"></i><strong>申购起点:</strong> 通常较低 (如人民币1万元或等值外币)，满足10-20万人民币投资需求。</li>
+                    <li><i class="fas fa-hand-holding-usd"></i><strong>赎回费用:</strong> 长期持有基本无额外成本，或只对超短期持有收取极低费用。</li>
+                    <li><i class="fas fa-exclamation-triangle"></i><strong>潜在限制:</strong> 极端情况下可能因境外市场时差和QDII额度管理存在确认延迟或额度限制，但正常市场环境下流动性充裕。</li>
+                </ul>
+                <p class="mt-4 text-md font-semibold">总体而言，这四款产品的流动性均相当高，无明显差异，可充分满足个人投资者的日常流动性需求。</p>
+            </div>
+        </section>
+
+        <section id="yield-comparison" class="mb-16 scroll-mt-20">
+            <h2 class="section-title"><i class="fas fa-percentage mr-2"></i>收益率与中国国债比较</h2>
+            <div class="content-card p-6 rounded-lg">
+                <p class="mb-4 text-lg">
+                    当前中国人民币国债收益率曲线整体处于较低水平（截至2025年5月中旬，3年期约1.50%，5年期约1.56%）。相较之下，这些QDII海外债券基金投资于美元计价债券，票息收益率显著更高：
+                </p>
+                <ul class="icon-list space-y-2 mb-4">
+                    <li><i class="fas fa-chart-line"></i>富达美元债券基金：到期收益率约 <strong>4.57%</strong> (美元计)</li>
+                    <li><i class="fas fa-chart-line"></i>摩根环球企业债：到期收益率约 <strong>5.69%</strong> (美元计)</li>
+                    <li><i class="fas fa-chart-line"></i>资本集团全球公司债：到期收益率约 <strong>5.3%</strong> (美元计)</li>
+                    <li><i class="fas fa-chart-line"></i>贝莱德环球企业债：到期收益率约 <strong>4.97%</strong> (美元计)</li>
+                </ul>
+                <p class="mb-4 text-lg">
+                    然而，<strong>汇率及对冲因素</strong>对中国投资者实际收益有重要影响。若选择人民币对冲份额，基金会锁定汇率风险，但对冲成本（当前美元利率高于人民币利率约3%-4%）会损耗部分收益差。
+                </p>
+                <p class="mb-4 text-md">
+                    例如，贝莱德基金人民币对冲份额过去一年收益+3.9%，美元份额+6.8%；2024年人民币份额+0.3%，美元份额+3.3%。这反映了美元高利率下对冲后收益被削弱的情况。
+                </p>
+                <p class="font-semibold text-lg">
+                    因此，若完全规避汇率风险，这些产品对人民币投资者的吸引力主要在于有望取得略高于国内无风险利率的回报（预计高出约0.5-1个百分点），同时保持全球债券资产的多元化优势。
+                </p>
+            </div>
+        </section>
+
+        <section id="suitability" class="mb-16 scroll-mt-20">
+            <h2 class="section-title"><i class="fas fa-user-check mr-2"></i>投资者适配性分析</h2>
+            <p class="mb-4 text-lg">假设投资者可投入资金10-20万元人民币，风险承受能力属于稳健偏保守(R2)，且希望以人民币计价投资。基于此：</p>
+            <div class="space-y-6">
+                <div class="content-card p-6 rounded-lg">
+                    <h4 class="text-xl font-semibold mb-2"><i class="fas fa-shield-virus mr-2"></i>本金安全性</h4>
+                    <p>四只基金均为R2，本金相对安全。富达和资本集团信用资质最高。摩根和贝莱德含部分BBB以下债券，信用事件风险略高，但仍在R2范围。对关心本金安全的投资者，四款均可接受，富达/资本集团心理上更安心。</p>
+                </div>
+                <div class="content-card p-6 rounded-lg">
+                    <h4 class="text-xl font-semibold mb-2"><i class="fas fa-hand-holding-heart mr-2"></i>收益潜力 (人民币对冲后)</h4>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li><strong>富达基金:</strong> 票息最低，预期回报可能接近国内国债 (约1%-2%)，难言明显优势。</li>
+                        <li><strong>资本集团基金:</strong> 全投资级，票息尚可 (美元计5%左右)，人民币收益预计年化2%左右。波动小，下行风险低。</li>
+                        <li><strong>摩根基金 & 贝莱德基金:</strong> 收益潜力更突出 (美元计5-6%)，人民币对冲回报年均有望达3%以上。
+                            <ul class="list-circle list-inside ml-6 mt-1">
+                                <li>摩根：不含高收益债，稳健中收益尚可。</li>
+                                <li>贝莱德：通过混合债和部分高收益债增强收益，利差收窄时可能更佳，但信用环境恶化时更易受影响。</li>
+                            </ul>
+                        </li>
+                    </ul>
+                     <p class="mt-3 font-semibold">对于R2稳健型投资者，摩根基金提供了较理想的收益风险平衡。贝莱德适合略激进的稳健投资者。</p>
+                </div>
+                <div class="content-card p-6 rounded-lg">
+                    <h4 class="text-xl font-semibold mb-2"><i class="fas fa-dollar-sign mr-2"></i>币种与流动性</h4>
+                    <p>均提供人民币对冲份额。资金量10-20万足以分散投资。每日开放申赎，流动性佳。</p>
+                </div>
+            </div>
+            <div class="mt-8">
+                 <h4 class="text-xl font-semibold mb-3 text-center"><i class="fas fa-sitemap mr-2"></i>投资决策导图 (概念)</h4>
+                <div class="mermaid-diagram text-center" id="decisionFlowDiagram">
+                <!-- 这里将通过JavaScript动态渲染图表 -->
+                </div>
+            </div>
+        </section>
+
+        <section id="outlook" class="mb-16 scroll-mt-20">
+            <h2 class="section-title"><i class="fas fa-binoculars mr-2"></i>未来三至五年展望与比较</h2>
+            <p class="mb-4 text-lg">全球利率和信用环境是关键影响因素。美联储政策利率已见顶或接近峰值，未来几年大概率进入缓慢降息周期，利好债券价格。</p>
+            <div class="space-y-6">
+                <div class="content-card p-6 rounded-lg">
+                    <h4 class="text-xl font-semibold mb-2"><i class="fas fa-chart-area mr-2"></i>利率趋势影响</h4>
+                    <p>利率下行将带来资本利得。富达基金因持有大量美国国债最直接受益。企业债基金（摩根、资本、贝莱德）也将受益，且票息收益提供基础回报。</p>
+                </div>
+                <div class="content-card p-6 rounded-lg">
+                    <h4 class="text-xl font-semibold mb-2"><i class="fas fa-building mr-2"></i>信用环境影响</h4>
+                    <p>若经济缓增长或软着陆，投资级企业债违约率预计保持低位，信用利差可能收窄，利好企业债基金。温和衰退下，高评级债券有避险属性。贝莱德的高收益仓位在衰退时可能承压。</p>
+                </div>
+                <div class="content-card p-6 rounded-lg">
+                    <h4 class="text-xl font-semibold mb-2"><i class="fas fa-calculator mr-2"></i>收益测算 (未来3-5年年化回报，人民币对冲后)</h4>
+                    <ul class="icon-list">
+                        <li><i class="fas fa-landmark"></i><strong>富达美元债券基金:</strong> 预计 <strong>1% ~ 3%</strong> 左右。</li>
+                        <li><i class="fas fa-globe-americas"></i><strong>摩根环球企业债基金:</strong> 预计 <strong>2% ~ 5%</strong>。大概率稳跑赢国内国债。</li>
+                        <li><i class="fas fa-shield-alt"></i><strong>资本集团全球公司债基金:</strong> 预计 <strong>2% ~ 4%</strong>。下行风险比摩根低。</li>
+                        <li><i class="fas fa-rocket"></i><strong>贝莱德环球企业债券基金:</strong> 预计 <strong>2% ~ 5%+</strong>。乐观时可达5%或更高，不利时可能滑落至2%以下。</li>
+                    </ul>
+                </div>
+            </div>
+             <p class="mt-6 text-lg font-semibold">综合分析，摩根环球企业债券基金和贝莱德环球企业债券基金在未来3-5年内取得较高回报的概率更大。</p>
+        </section>
+
+        <section id="recommendation" class="mb-16 scroll-mt-20">
+            <h2 class="section-title"><i class="fas fa-lightbulb mr-2"></i>投资建议：最佳选择及组合</h2>
+            <p class="mb-4 text-lg">在"本金安全"的大前提下追求收益最大化，推荐排序如下：</p>
+            <div class="space-y-6">
+                <div class="content-card p-6 rounded-lg bg-green-50 dark:bg-green-800 border-green-500 dark:border-green-600">
+                    <h4 class="text-xl font-semibold mb-2 text-green-700 dark:text-green-300"><i class="fas fa-star mr-2"></i>首选：摩根基金-环球企业债券基金</h4>
+                    <p>历史业绩优良，投资组合以投资级公司债为主，风险可控，当前到期收益率高。兼顾安全边际和收益效率。预计人民币对冲年化收益有望达2-4%以上。</p>
+                </div>
+                <div class="content-card p-6 rounded-lg bg-blue-50 dark:bg-blue-800 border-blue-500 dark:border-blue-600">
+                    <h4 class="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-300"><i class="fas fa-check-circle mr-2"></i>备选：贝莱德环球企业债券基金</h4>
+                    <p>适合愿意在R2范围内略提风险偏好以换取更高潜在收益的投资者。持有一定比例高票息债券，上升行情中领跑。需关注其高收益债部分市场状况。</p>
+                </div>
+                <div class="content-card p-6 rounded-lg">
+                    <h4 class="text-xl font-semibold mb-2"><i class="fas fa-shield-alt mr-2"></i>保守型：资本集团全球公司债券基金</h4>
+                    <p>适合极度保守、强调"睡得安稳"的R2投资者。几乎不碰低评级债券，以资本保全为核心。适合作为组合防御部分或辅助配置。</p>
+                </div>
+                 <div class="content-card p-6 rounded-lg bg-yellow-50 dark:bg-yellow-800 border-yellow-500 dark:border-yellow-600">
+                    <h4 class="text-xl font-semibold mb-2 text-yellow-700 dark:text-yellow-300"><i class="fas fa-times-circle mr-2"></i>不建议单独采用：富达美元债券基金</h4>
+                    <p>收益表现欠佳，可能仅提供类似银行人民币理财或国债的收益水平，难以满足"最大化收益"诉求。除非对净值波动极度敏感。</p>
+                </div>
+            </div>
+            <div class="mt-8 content-card p-6 rounded-lg">
+                <h4 class="text-xl font-semibold mb-3"><i class="fas fa-cubes mr-2"></i>核心-卫星配置策略</h4>
+                <p class="text-lg">
+                    建议以 <strong style="color: var(--accent-light);">摩根环球企业债券基金</strong> 作为核心投资标的，搭配适量的 <strong style="color: var(--accent-light);">贝莱德环球企业债券基金</strong> 以争取更高回报。同时，可保持一定比例资金（如20%-30%）在 <strong style="color: var(--accent-light);">资本集团</strong> 或 <strong style="color: var(--accent-light);">富达基金</strong> 此类超稳健基金或国内人民币债券上，以进一步降低组合波动。
+                </p>
+                <p class="mt-3 text-lg">这种策略既确保了整体资产的安全稳健，又合理提高了收益水平。定期复盘，持有3-5年，有望实现超出人民币无风险利率的可观回报。</p>
+            </div>
+        </section>
+        
+        <section id="further-reading" class="mb-16 scroll-mt-20">
+            <h2 class="section-title"><i class="fas fa-book-reader mr-2"></i>延伸阅读</h2>
+            <p class="mb-6 text-lg">为了更深入地理解投资原理和债券市场，推荐以下经典书籍与资料：</p>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="content-card p-6 rounded-lg">
+                    <h4 class="text-xl font-semibold mb-2"><i class="fas fa-book-open mr-2"></i>《聪明的投资者》</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">本杰明·格雷厄姆 著</p>
+                    <p class="mt-2">价值投资的圣经，巴菲特的导师之作，强调安全边际和长期视角。</p>
+                </div>
+                <div class="content-card p-6 rounded-lg">
+                    <h4 class="text-xl font-semibold mb-2"><i class="fas fa-book-open mr-2"></i>《漫步华尔街》</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">伯顿·马尔基尔 著</p>
+                    <p class="mt-2">阐述了有效市场假说和指数基金投资的优势，是理性投资的经典指南。</p>
+                </div>
+                <div class="content-card p-6 rounded-lg">
+                    <h4 class="text-xl font-semibold mb-2"><i class="fas fa-book-open mr-2"></i>《原则：应对变化中的世界秩序》</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">瑞·达利欧 著</p>
+                    <p class="mt-2">桥水基金创始人对历史周期、国家兴衰和宏观经济趋势的深刻洞察。</p>
+                </div>
+                <div class="content-card p-6 rounded-lg">
+                    <h4 class="text-xl font-semibold mb-2"><i class="fas fa-book-open mr-2"></i>《固定收益证券：估值、风险与风险管理》</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Pietro Veronesi 著</p>
+                    <p class="mt-2">一本较为专业的债券教科书，深入讲解固定收益产品的理论与实践。</p>
+                </div>
+                <div class="content-card p-6 rounded-lg">
+                    <h4 class="text-xl font-semibold mb-2"><i class="fas fa-file-alt mr-2"></i>各大金融机构研究报告</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">如高盛、摩根士丹利、以及基金公司官网</p>
+                    <p class="mt-2">关注其发布的关于全球宏观经济、利率市场和债券策略的最新研究。</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="py-8 text-center" style="background-color: var(--card-bg-dark); color: var(--text-dark);">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <p class="text-sm mb-2">
+                参考来源：本报告分析数据主要来源于汇丰银行官网披露的各产品资料、中国债券信息网国债收益率曲线等权威渠道。
+            </p>
+            <p class="text-sm">
+                <strong>免责声明：</strong> 投资有风险，本报告仅基于公开数据和当前市场状况进行分析，仅供参考，不构成任何投资建议。请投资者结合自身情况谨慎决策。
+            </p>
+            <p class="text-sm mt-2">&copy; 2025 QDII债券产品分析报告可视化. 保留所有权利。</p>
+        </div>
+    </footer>
+
+    <!-- 使用最新稳定版本的 Mermaid，加速用 unpkg CDN -->
+    <script src="https://unpkg.com/mermaid@9.3.0/dist/mermaid.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                // 定义图表内容
+                const riskReturnDiagram = `
+                graph LR
+                    subgraph 风险与预期收益R2等级内比较
+                        direction LR
+                        Fidelity["富达美元债券<br/>(较低风险, 较低预期收益<br/>~1-3%人民币对冲后)"]
+                        Capital["资本集团全球公司债<br/>(较低风险, 略高预期收益<br/>~2-4%人民币对冲后)"]
+                        JPMorgan["摩根环球企业债<br/>(中等风险, 中等偏高预期收益<br/>~2-5%人民币对冲后)"]
+                        BlackRock["贝莱德环球企业债<br/>(中等偏高风险, 较高预期收益<br/>~2-5%+人民币对冲后)"]
+                    end
+                    style Fidelity fill:#c7ecee,stroke:#1abc9c,stroke-width:2px
+                    style Capital fill:#dff9fb,stroke:#3498db,stroke-width:2px
+                    style JPMorgan fill:#f6e58d,stroke:#f1c40f,stroke-width:2px
+                    style BlackRock fill:#ffbe76,stroke:#e67e22,stroke-width:2px
+                `;
+                
+                const decisionFlowDiagram = `
+                graph TD
+                    A[开始: R2风险, 10-20万人民币, 人民币计价] --> B{核心诉求?}
+                    B -->|极度保守, 本金安全优先| C["资本集团 (防御型)<br/>富达基金 (极致安全, 收益较低)"]
+                    B -->|稳健, 追求更高收益| D{风险承受度如何?}
+                    D -->|平衡风险与收益, 追求稳健增长| E["摩根环球企业债 (核心配置)<br/>收益风险较均衡"]
+                    D -->|愿承担略高波动换取更高潜在收益| F["贝莱德环球企业债 (卫星配置)<br/>上行潜力较大, 波动也略高"]
+                    C --> G[组合中可作为压舱石]
+                    E --> H[适合作为主要投资标的]
+                    F --> I[适合作为增强收益部分]
+
+                    style A fill:#82ccdd,stroke:#333,stroke-width:2px
+                    style B fill:#f8c291,stroke:#333,stroke-width:2px
+                    style C fill:#c7ecee,stroke:#1abc9c,stroke-width:2px
+                    style D fill:#f8c291,stroke:#333,stroke-width:2px
+                    style E fill:#f6e58d,stroke:#f1c40f,stroke-width:2px
+                    style F fill:#ffbe76,stroke:#e67e22,stroke-width:2px
+                    style G fill:#b8e994,stroke:#333,stroke-width:1px
+                    style H fill:#b8e994,stroke:#333,stroke-width:1px
+                    style I fill:#b8e994,stroke:#333,stroke-width:1px
+                `;
+
+                // Theme switcher logic
+                const themeToggle = document.getElementById('theme-toggle');
+                const sunIcon = '<i class="fas fa-sun"></i>';
+                const moonIcon = '<i class="fas fa-moon"></i>';
+                
+                // 渲染图表函数
+                function renderMermaidCharts() {
+                    const isDarkMode = document.documentElement.classList.contains('dark');
+                    console.log('渲染 Mermaid 图表, 当前主题:', isDarkMode ? 'dark' : 'light');
+                    
+                    // 清除旧图表
+                    document.querySelectorAll('.mermaid-diagram').forEach(container => {
+                        container.innerHTML = '';
+                    });
+                    
+                    // 配置 mermaid
+                    mermaid.initialize({
+                        startOnLoad: false,
+                        theme: isDarkMode ? 'dark' : 'default',
+                        securityLevel: 'loose',
+                        logLevel: 1
+                    });
+                    
+                    // 渲染风险收益图表
+                    const riskContainer = document.getElementById('riskReturnDiagram');
+                    if (riskContainer) {
+                        const riskChart = document.createElement('div');
+                        riskChart.className = 'mermaid';
+                        riskChart.textContent = riskReturnDiagram;
+                        riskContainer.appendChild(riskChart);
+                    }
+                    
+                    // 渲染决策流程图
+                    const decisionContainer = document.getElementById('decisionFlowDiagram');
+                    if (decisionContainer) {
+                        const decisionChart = document.createElement('div');
+                        decisionChart.className = 'mermaid';
+                        decisionChart.textContent = decisionFlowDiagram;
+                        decisionContainer.appendChild(decisionChart);
+                    }
+                    
+                    // 初始化 Mermaid
+                    mermaid.init(undefined, '.mermaid');
+                }
+                
+                // Function to apply theme
+                const applyTheme = (theme) => {
+                    if (theme === 'dark') {
+                        document.documentElement.classList.add('dark');
+                        themeToggle.innerHTML = moonIcon;
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                        themeToggle.innerHTML = sunIcon;
+                    }
+                    
+                    // 切换主题后重新渲染图表
+                    setTimeout(renderMermaidCharts, 200);
+                };
+                
+                // Check for saved theme in localStorage or system preference
+                let currentTheme = localStorage.getItem('theme');
+                if (!currentTheme) {
+                    currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                }
+                applyTheme(currentTheme);
+
+                // Toggle theme on button click
+                themeToggle.addEventListener('click', () => {
+                    const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+                    localStorage.setItem('theme', newTheme);
+                    applyTheme(newTheme);
+                });
+
+                // 初次渲染图表
+                setTimeout(renderMermaidCharts, 500);
+                
+                // Smooth scroll for internal links
+                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                    anchor.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const targetId = this.getAttribute('href');
+                        const targetElement = document.querySelector(targetId);
+                        if (targetElement) {
+                            targetElement.scrollIntoView({
+                                behavior: 'smooth'
+                            });
+                        }
+                    });
+                });
+                
+            } catch (error) {
+                console.error('Mermaid 初始化错误:', error);
+                
+                // 出错时显示提示
+                document.querySelectorAll('.mermaid-diagram').forEach(container => {
+                    container.innerHTML = '<div class="p-4 text-red-500">图表加载失败，请刷新页面重试。</div>';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
